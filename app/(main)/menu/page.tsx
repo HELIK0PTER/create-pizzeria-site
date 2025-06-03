@@ -126,8 +126,8 @@ export default function MenuPage() {
         </div>
 
         {/* Filtres par catégorie */}
-        <div className="container mb-8 sticky top-20 left-46 z-10 w-full">
-          <div className="flex flex-wrap w-full gap-2 bg-white/80 backdrop-blur-sm p-4 rounded-lg">
+        <div className="mb-8 sticky top-20 left-46 z-10 w-full">
+          <div className="flex flex-wrap justify-center w-full gap-2 bg-white/80 backdrop-blur-sm p-4">
             <button
               onClick={() => handleCategoryClick(null)}
               className={cn(
