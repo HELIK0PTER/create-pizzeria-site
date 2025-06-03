@@ -293,6 +293,26 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Section Carte Google Maps */}
+      <section className="py-16 md:py-24">
+        <div className="container mx-auto px-4 text-center">
+          <h2 className="text-3xl md:text-4xl font-bold mb-12 text-gray-900">
+            Retrouvez-nous ici !
+          </h2>
+          <div className="aspect-w-16 aspect-h-9 w-full max-w-4xl mx-auto rounded-lg overflow-hidden shadow-xl">
+            <iframe
+              width="100%"
+              height="450"
+              loading="lazy"
+              allowFullScreen
+              src={
+                `https://www.google.com/maps/embed/v1/place?key=AIzaSyA0fR8fT3mG1i0Ee0rtzwaOIdyobwNVJaw&q=147+Avenue+de+la+République,+75011+Paris`
+              }
+            ></iframe>
+          </div>
+        </div>
+      </section>
+
       {/* Features avec cards modernes */}
       <section className="py-20 bg-white">
         <div className="container mx-auto px-4">
@@ -388,6 +408,7 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
     </div>
   );
 }

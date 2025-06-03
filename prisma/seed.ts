@@ -209,8 +209,7 @@ async function main() {
       data: {
         name: "Margherita",
         slug: "margherita",
-        description:
-          "La classique ! Sauce tomate San Marzano, mozzarella di bufala, basilic frais",
+        description: "La classique italienne avec mozzarella et basilic.",
         image:
           "https://images.unsplash.com/photo-1574071318508-1cdbab80d002?q=80&w=1169&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
         categoryId: categories[0].id,
@@ -225,8 +224,7 @@ async function main() {
       data: {
         name: "Napoli",
         slug: "napoli",
-        description:
-          "Sauce tomate, mozzarella, anchois, câpres, olives noires, origan",
+        description: "Une pizza savoureuse avec anchois, câpres et olives.",
         image:
           "https://images.unsplash.com/photo-1571997478779-2adcbbe9ab2f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
         categoryId: categories[0].id,
@@ -241,8 +239,7 @@ async function main() {
       data: {
         name: "Quattro Stagioni",
         slug: "quattro-stagioni",
-        description:
-          "Quatre saveurs en une : jambon, champignons, artichauts, olives",
+        description: "Quatre saveurs distinctes sur une seule pizza.",
         image:
           "https://images.unsplash.com/photo-1681567604770-0dc826c870ae?q=80&w=1200&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
         categoryId: categories[0].id,
@@ -258,8 +255,7 @@ async function main() {
       data: {
         name: "Prosciutto e Funghi",
         slug: "prosciutto-funghi",
-        description:
-          "Jambon de Parme DOP, champignons de Paris frais, mozzarella",
+        description: "Une combinaison classique de jambon et champignons.",
         image:
           "https://images.unsplash.com/photo-1513104890138-7c749659a591?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
         categoryId: categories[0].id,
@@ -275,7 +271,7 @@ async function main() {
       data: {
         name: "Quattro Formaggi",
         slug: "quattro-formaggi",
-        description: "Mozzarella, gorgonzola DOP, parmesan, chèvre, noix",
+        description: "Un mélange riche de quatre fromages.",
         image:
           "https://images.unsplash.com/photo-1574071318508-1cdbab80d002?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
         categoryId: categories[0].id,
@@ -290,8 +286,7 @@ async function main() {
       data: {
         name: "Diavola",
         slug: "diavola",
-        description:
-          "Pour les amateurs de piment ! Sauce tomate épicée, mozzarella, salami piquant",
+        description: "Une pizza épicée pour les amateurs de sensations fortes.",
         image:
           "https://images.unsplash.com/photo-1595854341625-f33ee10dbf94?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
         categoryId: categories[0].id,
@@ -306,8 +301,7 @@ async function main() {
       data: {
         name: "Vegetariana",
         slug: "vegetariana",
-        description:
-          "Aubergines grillées, courgettes, poivrons, tomates cerises, roquette",
+        description: "Une option fraîche et savoureuse avec des légumes grillés.",
         image:
           "https://images.unsplash.com/photo-1593560708920-61dd98c46a4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
         categoryId: categories[0].id,
@@ -323,8 +317,7 @@ async function main() {
       data: {
         name: "Tartufo",
         slug: "tartufo",
-        description:
-          "Pizza d'exception à la crème de truffe, champignons, parmesan, roquette",
+        description: "Pizza sophistiquée à la crème de truffe.",
         image:
           "https://images.unsplash.com/photo-1628840042765-356cda07504e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
         categoryId: categories[0].id,
@@ -442,7 +435,7 @@ async function main() {
         name: "Tiramisu Maison",
         slug: "tiramisu-maison",
         description:
-          "Le célèbre dessert italien fait maison, mascarpone, café, cacao",
+          "Le célèbre dessert italien fait maison",
         image:
           "https://images.unsplash.com/photo-1571877227200-a0d98ea607e9?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
         categoryId: categories[2].id,
