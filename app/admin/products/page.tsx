@@ -200,6 +200,11 @@ export default function AdminProductsPage() {
     return `${formatPrice(minPrice)} - ${formatPrice(maxPrice)}`;
   };
 
+  // Pour éviter que le clic sur le menu d'actions ne déclenche la navigation
+  const stopRowClick = (e: React.MouseEvent | React.KeyboardEvent) => {
+    e.stopPropagation();
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Header */}
@@ -357,7 +362,19 @@ export default function AdminProductsPage() {
                     </TableRow>
                   ) : (
                     filteredProducts.map((product) => (
-                      <TableRow key={product.id} className="hover:bg-gray-50">
+                      <TableRow
+                        key={product.id}
+                        className="hover:bg-gray-50 cursor-pointer group"
+                        tabIndex={0}
+                        onClick={() => {
+                          window.location.href = `/admin/products/${product.id}`;
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            window.location.href = `/admin/products/${product.id}`;
+                          }
+                        }}
+                      >
                         <TableCell>
                           <div className="flex items-center space-x-3">
                             <div className="flex-shrink-0">
@@ -414,7 +431,11 @@ export default function AdminProductsPage() {
                             {product.variants?.length || 0} variant(s)
                           </span>
                         </TableCell>
-                        <TableCell className="text-right">
+                        <TableCell
+                          className="text-right"
+                          onClick={stopRowClick}
+                          onKeyDown={stopRowClick}
+                        >
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button variant="ghost" className="h-8 w-8 p-0">
@@ -440,7 +461,10 @@ export default function AdminProductsPage() {
                               <DropdownMenuSeparator />
                               <DropdownMenuItem
                                 className="text-red-600"
-                                onClick={() => handleDeleteProduct(product.id)}
+                                onClick={(e) => {
+                                  stopRowClick(e);
+                                  handleDeleteProduct(product.id);
+                                }}
                               >
                                 <Trash2 className="h-4 w-4 mr-2" />
                                 Supprimer
