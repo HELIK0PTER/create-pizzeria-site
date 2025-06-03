@@ -132,8 +132,8 @@ export default function AddProductPage() {
         router.push('/admin/products')
       }, 2000)
 
-    } catch (err: any) {
-      setError(err.message || 'Erreur lors de la création du produit')
+    } catch (err) {
+      setError('Erreur lors de la création du produit : ' + String(err))
     } finally {
       setIsLoading(false)
     }
@@ -320,7 +320,7 @@ export default function AddProductPage() {
           <h3 className="font-semibold text-blue-900 mb-2">💡 Gestion des images</h3>
           <div className="text-sm text-blue-700 space-y-2">
             <p>• <strong>Upload fichier:</strong> Images optimisées et converties en WebP</p>
-            <p>• <strong>URL d'image:</strong> Utilisez des liens directs (Unsplash, etc.)</p>
+            <p>• <strong>URL d&apos;image:</strong> Utilisez des liens directs (Unsplash, etc.)</p>
             <p>• Taille maximale : 10MB (avant optimisation)</p>
             <p>• Résolution optimale : 800x600px</p>
             <p>• Formats acceptés : JPG, PNG, WebP</p>

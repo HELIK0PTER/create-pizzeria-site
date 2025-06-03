@@ -8,7 +8,7 @@ import { Card, CardContent } from "./card";
 import { Alert, AlertDescription } from "./alert";
 import { Upload, X, Loader2, Link } from "lucide-react";
 import { cn } from "@/lib/utils";
-
+import Image from "next/image";
 interface ImageUploadProps {
   onUpload: (url: string) => void;
   currentImage?: string;
@@ -72,43 +72,50 @@ export function ImageUpload({
   };
 
   const handleUrlSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    e.stopPropagation() // Empêcher la propagation vers le formulaire parent
-    
+    e.preventDefault();
+    e.stopPropagation(); // Empêcher la propagation vers le formulaire parent
+
     if (!urlInput.trim()) {
-      setError('Veuillez saisir une URL')
-      return
+      setError("Veuillez saisir une URL");
+      return;
     }
-    
-    setIsLoading(true)
-    setError('')
-    
+
+    setIsLoading(true);
+    setError("");
+
     try {
-      const url = new URL(urlInput.trim())
-      
+      const url = new URL(urlInput.trim());
+
       // Test de chargement de l'image
-      const img = new window.Image()
-      
+      const img = new window.Image();
+
       await new Promise((resolve, reject) => {
-        img.onload = resolve
-        img.onerror = () => reject(new Error('Impossible de charger l\'image'))
-        img.src = url.toString()
-        
+        img.onload = resolve;
+        img.onerror = () => reject(new Error("Impossible de charger l'image"));
+        img.src = url.toString();
+
         // Timeout après 10 secondes
-        setTimeout(() => reject(new Error('Timeout - l\'image met trop de temps à charger')), 10000)
-      })
-      
-      console.log('Image chargée avec succès:', url.toString()) // Debug
-      onUpload(url.toString())
-      setUrlInput('')
+        setTimeout(
+          () =>
+            reject(new Error("Timeout - l'image met trop de temps à charger")),
+          10000
+        );
+      });
+
+      console.log("Image chargée avec succès:", url.toString()); // Debug
+      onUpload(url.toString());
+      setUrlInput("");
     } catch (err: unknown) {
-      console.error('Erreur chargement image:', err) // Debug
-      const errorMessage = err instanceof Error ? err.message : 'Erreur lors du chargement de l\'image'
-      setError(errorMessage)
+      console.error("Erreur chargement image:", err); // Debug
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : "Erreur lors du chargement de l'image";
+      setError(errorMessage);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -185,7 +192,7 @@ export function ImageUpload({
           )}
         >
           <Link className="h-4 w-4 inline mr-2" />
-          URL d'image
+          URL d&apos;image
         </button>
       </div>
 
@@ -194,10 +201,12 @@ export function ImageUpload({
         <Card>
           <CardContent className="p-4">
             <div className="relative group">
-              <img
+              <Image
                 src={currentImage}
                 alt="Preview"
                 className="w-full h-48 object-cover rounded-lg"
+                width={1000}
+                height={1000}
               />
               <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
                 <Button
@@ -255,7 +264,7 @@ export function ImageUpload({
       )}
 
       {/* Mode URL */}
-      {uploadMode === 'url' && !currentImage && (
+      {uploadMode === "url" && !currentImage && (
         <Card>
           <CardContent className="p-6">
             <div className="space-y-4">
@@ -264,13 +273,13 @@ export function ImageUpload({
                   <Link className="h-8 w-8 text-gray-600" />
                 </div>
                 <p className="text-sm font-medium mt-3 mb-1">
-                  Saisir l'URL d'une image
+                  Saisir l&apos;URL d&apos;une image
                 </p>
                 <p className="text-xs text-gray-500">
-                  Collez l'URL complète de votre image
+                  Collez l&apos;URL complète de votre image
                 </p>
               </div>
-              
+
               <div className="space-y-2">
                 <Input
                   type="url"
@@ -279,30 +288,32 @@ export function ImageUpload({
                   onChange={(e) => setUrlInput(e.target.value)}
                   disabled={disabled || isLoading}
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault()
-                      handleUrlSubmit(e as any)
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleUrlSubmit(e as React.FormEvent<HTMLInputElement>);
                     }
                   }}
                 />
               </div>
-              
-              <Button 
+
+              <Button
                 type="button"
-                onClick={(e) => handleUrlSubmit(e as any)}
+                onClick={(e) =>
+                  handleUrlSubmit(e as React.MouseEvent<HTMLButtonElement>)
+                }
                 className="w-full"
                 disabled={disabled || !urlInput.trim() || isLoading}
               >
                 {isLoading ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Test de l'image...
+                    Test de l&apos;image...
                   </>
                 ) : (
-                  'Utiliser cette image'
+                  "Utiliser cette image"
                 )}
               </Button>
-              
+
               {/* Debug info */}
               {urlInput && (
                 <div className="text-xs text-gray-500 bg-gray-50 p-2 rounded">
@@ -326,4 +337,3 @@ export function ImageUpload({
     </div>
   );
 }
- 

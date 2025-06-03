@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { formatPrice } from '@/lib/utils';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { ShoppingBag, Package, Clock, CheckCircle, XCircle } from 'lucide-react';
+import { ShoppingBag, XCircle } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
@@ -59,9 +59,13 @@ export default function OrdersPage() {
         const data = await response.json();
         setOrders(data);
         setError(null);
-      } catch (err: any) {
-        console.error('Erreur lors de la récupération des commandes:', err);
-        setError(err.message || 'Une erreur est survenue lors du chargement de vos commandes.');
+      } catch (err: unknown) {
+        if (err instanceof Error) {
+          console.error('Erreur lors de la récupération des commandes:', err.message);
+        } else {
+          console.error('Erreur lors de la récupération des commandes:', String(err));
+        }
+        setError(err instanceof Error ? err.message : 'Une erreur est survenue lors du chargement de vos commandes : ' + String(err));
         setOrders([]);
       } finally {
         setLoading(false);
@@ -116,7 +120,7 @@ export default function OrdersPage() {
         {orders.length === 0 ? (
           <div className="flex flex-col items-center justify-center min-h-[50vh] text-center">
             <ShoppingBag className="w-16 h-16 text-gray-400 mb-6" />
-            <p className="text-lg text-gray-600 mb-8">Vous n'avez pas encore passé de commande.</p>
+            <p className="text-lg text-gray-600 mb-8">Vous n&apos;avez pas encore passé de commande.</p>
             <Link href="/menu" className="text-red-600 hover:underline font-medium">
               Découvrir notre menu
             </Link>

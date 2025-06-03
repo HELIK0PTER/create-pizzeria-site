@@ -3,6 +3,15 @@ import { prisma } from '@/lib/prisma'
 import { generateOrderNumber } from '@/lib/utils'
 import { auth } from '@/lib/auth'
 
+type OrderItem = {
+  productId: string;
+  variantId?: string | null;
+  quantity: number;
+  unitPrice: number;
+  totalPrice: number;
+  notes?: string | null;
+};
+
 export async function POST(request: Request) {
   try {
     const body = await request.json()
@@ -38,7 +47,7 @@ export async function POST(request: Request) {
         total,
         notes,
         items: {
-          create: items.map((item: any) => ({
+          create: items.map((item: OrderItem) => ({
             productId: item.productId,
             variantId: item.variantId,
             quantity: item.quantity,
@@ -107,7 +116,7 @@ export async function GET(req: Request) {
     // 3. Retourner les commandes
     return NextResponse.json(orders);
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Erreur lors de la récupération des commandes:', error);
     return NextResponse.json({ error: 'Error fetching orders' }, { status: 500 });
   }

@@ -3,9 +3,10 @@ import { prisma } from '@/lib/prisma';
 import { auth } from '@/lib/auth';
 import { Stripe } from 'stripe';
 import { generateOrderNumber } from '@/lib/utils';
+import { User } from '@prisma/client';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-05-28.basil', // Assurez-vous que cette version correspond à celle utilisée ailleurs
+  apiVersion: '2025-05-28.basil',
 });
 
 export async function POST(req: Request) {
@@ -43,21 +44,26 @@ export async function POST(req: Request) {
         userId: userId,
         customerName: authSession.user.name,
         customerEmail: authSession.user.email,
-        customerPhone: (authSession.user as any).phone ?? '', // Provide empty string if phone is null/undefined
-        total: session.amount_total ? session.amount_total / 100 : 0, // Convertir en unité de devise
-        status: 'processing', // Ou un statut initial approprié
+        customerPhone: (authSession.user as User).phone ?? '',
+        deliveryMethod: 'delivery', // Valeur par défaut
+        paymentMethod: 'stripe',
+        paymentStatus: 'paid',
+        subTotal: session.amount_total ? session.amount_total / 100 : 0,
+        total: session.amount_total ? session.amount_total / 100 : 0,
+        status: 'confirmed',
         stripeSessionId: session.id,
-        // Ajoutez d'autres champs de commande si nécessaire (adresse de livraison, mode de livraison, etc.)
-        // Ces informations pourraient être stockées dans la session Stripe metadata ou passées dans la requête initiale de création de session
         items: {
-          create: session.line_items?.data.map((item: any) => ({
-            productId: item.price.product.metadata.productId, // Assurez-vous que l'ID produit est stocké en metadata Stripe
-            quantity: item.quantity,
-            unitPrice: item.price.unit_amount ? item.price.unit_amount / 100 : 0, // Prix unitaire en devise (depuis Stripe)
-            totalPrice: (item.price.unit_amount && item.quantity) ? (item.price.unit_amount / 100) * item.quantity : 0, // Prix total en devise
-            variantId: item.price.product.metadata.variantId || null, // ID de la variante si stocké en metadata
-            notes: item.description, // Utiliser la description comme notes si applicable
-          })),
+          create: session.line_items?.data.map((item) => {
+            const product = item.price?.product as Stripe.Product;
+            return {
+              productId: product?.metadata?.productId || '',
+              quantity: item.quantity || 1,
+              unitPrice: item.price?.unit_amount ? item.price.unit_amount / 100 : 0,
+              totalPrice: (item.price?.unit_amount && item.quantity) ? (item.price.unit_amount / 100) * item.quantity : 0,
+              variantId: product?.metadata?.variantId || null,
+              notes: null,
+            };
+          }) || [],
         },
       },
       include: {
@@ -73,8 +79,9 @@ export async function POST(req: Request) {
     // 4. Retourner la confirmation de commande
     return NextResponse.json({ orderId: order.id });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Erreur lors de la création de la commande:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    const errorMessage = error instanceof Error ? error.message : 'Une erreur inconnue est survenue';
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 } 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Save, AlertTriangle } from "lucide-react";
@@ -58,13 +58,7 @@ export default function EditProductPage() {
   const [error, setError] = useState("");
   const [product, setProduct] = useState<ProductWithRelations | null>(null);
 
-  useEffect(() => {
-    if (params.id) {
-      fetchData();
-    }
-  }, [params.id]);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       setLoading(true);
       const [productRes, categoriesRes] = await Promise.all([
@@ -112,7 +106,13 @@ export default function EditProductPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [params.id]);
+
+  useEffect(() => {
+    if (params.id) {
+      fetchData();
+    }
+  }, [params.id, fetchData]);
 
   const generateSlug = (name: string) => {
     return name
@@ -186,8 +186,8 @@ export default function EditProductPage() {
       }
 
       router.push(`/admin/products/${params.id}`);
-    } catch (err: any) {
-      setError(err.message || "Erreur lors de la mise à jour du produit");
+    } catch (err) {
+      setError("Erreur lors de la mise à jour du produit : " + String(err));
       console.error(err);
     } finally {
       setSaving(false);
@@ -239,7 +239,7 @@ export default function EditProductPage() {
             Modifier le produit
           </h1>
           <p className="text-gray-600 mt-2">
-            Modifiez les informations du produit "{product?.name}"
+            {`Modifiez les informations du produit "${product?.name}"`}
           </p>
         </div>
       </div>
@@ -405,7 +405,7 @@ export default function EditProductPage() {
                   <Label htmlFor="isAvailable">Produit disponible</Label>
                 </div>
                 <p className="text-sm text-gray-600 mt-2">
-                  Les produits indisponibles n'apparaîtront pas sur le site
+                  Les produits indisponibles n&apos;apparaîtront pas sur le site
                 </p>
               </CardContent>
             </Card>
