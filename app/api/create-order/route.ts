@@ -43,7 +43,7 @@ export async function POST(req: Request) {
         userId: userId,
         customerName: authSession.user.name,
         customerEmail: authSession.user.email,
-        customerPhone: authSession.user.phone, // Attention: peut être null si non renseigné
+        customerPhone: (authSession.user as any).phone ?? '', // Provide empty string if phone is null/undefined
         total: session.amount_total ? session.amount_total / 100 : 0, // Convertir en unité de devise
         status: 'processing', // Ou un statut initial approprié
         stripeSessionId: session.id,
