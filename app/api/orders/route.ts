@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { generateOrderNumber } from '@/lib/utils'
+import { auth } from '@/lib/auth'
 
 export async function POST(request: Request) {
   try {
@@ -72,35 +73,42 @@ export async function POST(request: Request) {
   }
 }
 
-export async function GET(request: Request) {
+export async function GET(req: Request) {
   try {
-    const { searchParams } = new URL(request.url)
-    const status = searchParams.get('status')
+    // 1. Récupérer l'utilisateur connecté
+    const authSession = await auth.api.getSession({
+      headers: req.headers,
+    });
 
-    const where: any = {}
-    if (status) {
-      where.status = status
+    if (!authSession?.user) {
+      return NextResponse.json({ error: 'User not authenticated' }, { status: 401 });
     }
 
+    const userId = authSession.user.id;
+
+    // 2. Récupérer les commandes de l'utilisateur
     const orders = await prisma.order.findMany({
-      where,
+      where: {
+        userId: userId,
+      },
       include: {
         items: {
           include: {
-            product: true,
-            variant: true
-          }
-        }
+            product: true, // Inclure les détails du produit
+            variant: true, // Inclure les détails de la variante si applicable
+          },
+        },
       },
-      orderBy: { createdAt: 'desc' }
-    })
+      orderBy: {
+        createdAt: 'desc', // Afficher les commandes les plus récentes en premier
+      },
+    });
 
-    return NextResponse.json(orders)
-  } catch (error) {
-    console.error('Error fetching orders:', error)
-    return NextResponse.json(
-      { error: 'Une erreur est survenue' },
-      { status: 500 }
-    )
+    // 3. Retourner les commandes
+    return NextResponse.json(orders);
+
+  } catch (error: any) {
+    console.error('Erreur lors de la récupération des commandes:', error);
+    return NextResponse.json({ error: 'Error fetching orders' }, { status: 500 });
   }
 } 

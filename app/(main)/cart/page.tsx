@@ -13,6 +13,14 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import Image from "next/image";
+import { loadStripe } from '@stripe/stripe-js';
+import { useSearchParams } from 'next/navigation';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { XCircle } from "lucide-react";
+
+// Chargez votre clé publique Stripe
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
+
 export default function CartPage() {
   const {
     items,
@@ -24,6 +32,9 @@ export default function CartPage() {
     setDeliveryMethod,
     deliveryFee,
   } = useCart();
+
+  const searchParams = useSearchParams();
+  const paymentCanceled = searchParams.get('canceled') === 'true';
 
   const handleQuantityChange = (
     productId: string,
@@ -38,10 +49,59 @@ export default function CartPage() {
     }
   };
 
+  const handleCheckout = async () => {
+    const stripe = await stripePromise;
+    if (!stripe) {
+      console.error('Erreur: Clé publique Stripe non chargée.');
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/create-checkout-session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ items, deliveryMethod, deliveryFee }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Erreur lors de la création de la session de paiement');
+      }
+
+      const session = await response.json();
+
+      // Rediriger l'utilisateur vers la page de paiement Stripe
+      const result = await stripe.redirectToCheckout({ sessionId: session.id });
+
+      if (result.error) {
+        console.error('Erreur lors de la redirection vers Stripe:', result.error.message);
+        // Afficher un message d'erreur à l'utilisateur si nécessaire
+      }
+    } catch (error: any) {
+      console.error('Erreur de paiement:', error.message);
+      // Afficher un message d'erreur à l'utilisateur
+    }
+  };
+
   return (
     <div className="py-8">
       <div className="container mx-auto px-4">
         <h1 className="text-3xl font-bold text-gray-900 mb-8">Votre panier</h1>
+
+        {/* Message d'annulation de paiement */}
+        {paymentCanceled && (
+          <div className="lg:col-span-3 mb-4">
+            <Alert variant="destructive">
+              <XCircle className="h-4 w-4" />
+              <AlertTitle>Paiement Annulé</AlertTitle>
+              <AlertDescription>
+                Votre paiement a été annulé. Vous pouvez modifier votre panier ou réessayer.
+              </AlertDescription>
+            </Alert>
+          </div>
+        )}
 
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Liste des articles */}
@@ -208,11 +268,14 @@ export default function CartPage() {
                 </div>
               </CardContent>
               <CardFooter>
-                <Button className="w-full" size="lg" asChild>
-                  <Link href="/checkout">
-                    Passer la commande
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Link>
+                <Button
+                  className="w-full"
+                  size="lg"
+                  onClick={handleCheckout}
+                  disabled={items.length === 0}
+                >
+                  Passer la commande
+                  <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </CardFooter>
             </Card>

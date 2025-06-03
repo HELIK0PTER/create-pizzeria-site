@@ -222,6 +222,7 @@ model Order {
   paymentMethod   String // stripe, cash
   paymentStatus   String      @default("pending") // pending, paid, failed
   stripePaymentId String?
+  stripeSessionId String?     @unique // ID de la session de paiement Stripe
   subTotal        Float
   deliveryFee     Float       @default(0)
   total           Float

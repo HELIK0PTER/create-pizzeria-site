@@ -32,7 +32,6 @@ export function SignInForm() {
       }, {
         onSuccess: () => {
           router.push('/')
-          router.refresh()
         },
         onError: (ctx) => {
           setError(ctx.error.message || 'Erreur de connexion')
@@ -107,7 +106,7 @@ export function SignInForm() {
           </div>
         </CardContent>
         
-        <CardFooter className="flex flex-col space-y-4">
+        <CardFooter className="flex flex-col space-y-4 pt-6">
           <Button 
             type="submit" 
             className="w-full"
