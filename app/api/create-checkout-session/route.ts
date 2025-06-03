@@ -16,7 +16,7 @@ export async function POST(req: Request) {
     }
 
     // Transformer les articles du panier au format attendu par Stripe
-    const line_items = items.map((item: { product: { name: string; description: string; image: string; price: number }; variant: { name: string; price: number }; quantity: number }) => {
+    const line_items = items.map((item: { product: { id: string; name: string; description: string; image: string; price: number }; variant?: { id: string; name: string; price: number } | null; quantity: number }) => {
       const unit_amount = Math.round((item.product.price + (item.variant?.price || 0)) * 100); // Convertir en centimes
 
       return {
@@ -28,7 +28,7 @@ export async function POST(req: Request) {
             images: item.product.image ? [item.product.image] : undefined,
             metadata: {
               productId: item.product.id,
-              ...(item.variantId && { variantId: item.variantId }),
+              ...(item.variant?.id && { variantId: item.variant.id }),
             },
           },
           unit_amount: unit_amount,

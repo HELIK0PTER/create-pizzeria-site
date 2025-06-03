@@ -4,10 +4,8 @@ import { useEffect, useState } from 'react';
 import { useSession } from '@/lib/auth-client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { formatPrice } from '@/lib/utils';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { ShoppingBag, XCircle } from 'lucide-react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 
