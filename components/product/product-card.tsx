@@ -127,6 +127,24 @@ export function ProductCard({ product }: ProductCardProps) {
             <BaseBadge baseType={extendedProduct.baseType} />
           )}
 
+          {/* Ingrédients */}
+          {extendedProduct.ingredients && (
+            <div className="space-y-2">
+              <h4 className="text-sm font-medium text-gray-900">Ingrédients :</h4>
+              <div className="flex flex-wrap gap-2">
+                {extendedProduct.ingredients.split(',').map((ingredient, index) => (
+                  <Badge 
+                    key={index} 
+                    variant="secondary"
+                    className="bg-orange-50 text-orange-700 border border-orange-200"
+                  >
+                    {ingredient.trim()}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Description */}
           {extendedProduct.description && (
             <div className="space-y-2">

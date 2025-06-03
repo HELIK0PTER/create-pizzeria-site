@@ -11,7 +11,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { User, LogOut, Settings, ShoppingBag } from 'lucide-react'
+import { User, LogOut, Settings, ShoppingBag, Shield } from 'lucide-react'
 import Link from 'next/link'
 
 export function UserMenu() {
@@ -90,6 +90,17 @@ export function UserMenu() {
             <span>Paramètres</span>
           </Link>
         </DropdownMenuItem>
+        {(session?.user as unknown as { role: string })?.role === 'admin' && (
+          <>
+            <DropdownMenuSeparator className='my-[3px] pb-[1px]'/>
+            <DropdownMenuItem asChild>
+              <Link href="/admin" className="cursor-pointer">
+                <Shield className="mr-2 h-4 w-4" />
+              <span>Admin</span>
+            </Link>
+          </DropdownMenuItem>
+          </>
+        )}
         <DropdownMenuSeparator />
         <DropdownMenuItem
           className="cursor-pointer text-red-600 focus:text-red-600"
