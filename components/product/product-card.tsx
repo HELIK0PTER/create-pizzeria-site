@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Product, Category, Variant } from "@prisma/client";
-
+import BaseBadge from "./base-badge";
 interface ProductCardProps {
   product: Product;
 }
@@ -123,9 +123,7 @@ export function ProductCard({ product }: ProductCardProps) {
           
           {/* Base */}
           {extendedProduct.baseType && (
-            <div className="text-sm text-gray-600">
-              Base : {extendedProduct.baseType}
-            </div>
+            <BaseBadge baseType={extendedProduct.baseType} />
           )}
 
           {/* Description */}

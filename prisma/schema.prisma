@@ -176,7 +176,7 @@ model Product {
   isAvailable Boolean     @default(true)
   ingredients String?     // Liste des ingrédients séparés par des virgules
   allergens   String?     // Allergènes
-  baseType    PizzaBaseType @default(Tomate) // Optionnel, par défaut tomate
+  baseType    PizzaBaseType? // Optionnel, seulement pour les pizzas
   variants    Variant[]
   orderItems  OrderItem[]
   createdAt   DateTime    @default(now())

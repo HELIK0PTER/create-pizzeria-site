@@ -22,6 +22,7 @@ import { Separator } from '@/components/ui/separator'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { formatPrice } from '@/lib/utils'
 import { Prisma } from '@prisma/client'
+import BaseBadge from '@/components/product/base-badge'
 
 type ProductWithRelations = Prisma.ProductGetPayload<{
   include: {
@@ -255,6 +256,12 @@ export default function ProductDetailPage() {
                   {product.category?.name || 'Sans catégorie'}
                 </Badge>
               </div>
+              {product.baseType && (
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-600">Base de la pizza</span>
+                  <BaseBadge baseType={product.baseType} />
+                </div>
+              )}
 
               <div className="flex items-center justify-between">
                 <span className="text-gray-600">Prix de base</span>

@@ -202,6 +202,7 @@ async function main() {
   ]);
 
   // 6. Créer les produits - PIZZAS
+  // baseType: "Tomate" | "Crème" | "Barbecue"
   console.log("🍕 Création des pizzas...");
   const pizzaProducts = await Promise.all([
     prisma.product.create({
@@ -217,6 +218,7 @@ async function main() {
         isAvailable: true,
         ingredients: "Sauce tomate, mozzarella di bufala, basilic",
         allergens: "Gluten, Lait",
+        baseType: "Tomate",
       },
     }),
     prisma.product.create({
@@ -232,6 +234,7 @@ async function main() {
         isAvailable: true,
         ingredients: "Sauce tomate, mozzarella, anchois, câpres, olives",
         allergens: "Gluten, Lait, Poisson",
+        baseType: "Tomate",
       },
     }),
     prisma.product.create({
@@ -248,6 +251,7 @@ async function main() {
         ingredients:
           "Sauce tomate, mozzarella, jambon, champignons, artichauts, olives",
         allergens: "Gluten, Lait",
+        baseType: "Tomate",
       },
     }),
     prisma.product.create({
@@ -264,6 +268,7 @@ async function main() {
         ingredients:
           "Sauce tomate, mozzarella, prosciutto di Parma, champignons",
         allergens: "Gluten, Lait",
+        baseType: "Tomate",
       },
     }),
     prisma.product.create({
@@ -278,6 +283,7 @@ async function main() {
         isAvailable: true,
         ingredients: "Mozzarella, gorgonzola, parmesan, chèvre, noix",
         allergens: "Gluten, Lait, Fruits à coque",
+        baseType: "Crème",
       },
     }),
     prisma.product.create({
@@ -293,6 +299,7 @@ async function main() {
         isAvailable: true,
         ingredients: "Sauce tomate épicée, mozzarella, salami piquant, piment",
         allergens: "Gluten, Lait",
+        baseType: "Tomate",
       },
     }),
     prisma.product.create({
@@ -309,6 +316,7 @@ async function main() {
         ingredients:
           "Aubergines, courgettes, poivrons, tomates cerises, roquette",
         allergens: "Gluten, Lait",
+        baseType: "Tomate",
       },
     }),
     prisma.product.create({
@@ -324,6 +332,7 @@ async function main() {
         isAvailable: true,
         ingredients: "Crème de truffe, champignons, parmesan, roquette",
         allergens: "Gluten, Lait",
+        baseType: "Crème",
       },
     }),
   ]);
