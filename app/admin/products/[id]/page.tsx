@@ -1,15 +1,14 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import { 
-  ArrowLeft, 
-  Pencil, 
-  Trash2, 
+import {
+  ArrowLeft,
+  Pencil,
+  Trash2,
   Package,
-  Tag,
   Clock,
   Star,
   AlertTriangle,
@@ -38,17 +37,11 @@ export default function ProductDetailPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
-  useEffect(() => {
-    if (params.id) {
-      fetchProduct()
-    }
-  }, [params.id])
-
-  const fetchProduct = async () => {
+  const fetchProduct = useCallback(async () => {
     try {
       setLoading(true)
       const response = await fetch(`/api/products/${params.id}`)
-      
+
       if (!response.ok) {
         if (response.status === 404) {
           setError('Produit non trouvé')
@@ -66,7 +59,13 @@ export default function ProductDetailPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [params.id])
+
+  useEffect(() => {
+    if (params.id) {
+      fetchProduct()
+    }
+  }, [params.id, fetchProduct])
 
   const handleDeleteProduct = async () => {
     if (!product || !confirm('Êtes-vous sûr de vouloir supprimer ce produit ?')) {

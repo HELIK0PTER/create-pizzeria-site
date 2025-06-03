@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -10,16 +9,14 @@ import { Switch } from '@/components/ui/switch'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Separator } from '@/components/ui/separator'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { 
-  Save, 
-  Clock, 
-  Truck, 
-  CreditCard, 
-  Palette, 
-  Share2, 
-  ShoppingBag,
+import {
+  Save,
+  Clock,
+  Truck,
+  CreditCard,
+  Palette,
+  Share2,
   Info,
   CheckCircle2,
   AlertCircle,
@@ -34,7 +31,7 @@ interface Settings {
   phone: string
   email: string
   address: string
-  openingHours?: any
+  openingHours?: Record<string, { open: string, close: string, closed: boolean }>
   isOpen: boolean
   closedMessage?: string
   clickAndCollectEnabled: boolean
@@ -86,7 +83,6 @@ const days = [
 ]
 
 export default function AdminInfosPage() {
-  const router = useRouter()
   const [settings, setSettings] = useState<Settings>({
     name: '',
     phone: '',
@@ -164,7 +160,7 @@ export default function AdminInfosPage() {
         setMessage({ type: 'error', text: error.error || 'Erreur lors de la sauvegarde' })
       }
     } catch (error) {
-      setMessage({ type: 'error', text: 'Erreur de connexion' })
+      setMessage({ type: 'error', text: 'Erreur de connexion : ' + String(error) })
     } finally {
       setSaving(false)
     }
@@ -176,6 +172,9 @@ export default function AdminInfosPage() {
       openingHours: {
         ...prev.openingHours,
         [day]: {
+          open: "11:00",
+          close: "22:00",
+          closed: false,
           ...prev.openingHours?.[day],
           [field]: value
         }
@@ -335,8 +334,8 @@ export default function AdminInfosPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Status de l'établissement</CardTitle>
-              <CardDescription>Gérez l'ouverture/fermeture de votre pizzeria</CardDescription>
+              <CardTitle>Status de l&apos;établissement</CardTitle>
+              <CardDescription>Gérez l&apos;ouverture/fermeture de votre pizzeria</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center space-x-2">
@@ -368,7 +367,7 @@ export default function AdminInfosPage() {
         <TabsContent value="horaires" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Horaires d'ouverture</CardTitle>
+              <CardTitle>Horaires d&apos;ouverture</CardTitle>
               <CardDescription>Définissez vos horaires pour chaque jour de la semaine</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -485,7 +484,7 @@ export default function AdminInfosPage() {
                       type="number"
                       step="0.10"
                       value={settings.freeDeliveryThreshold || ''}
-                      onChange={(e) => setSettings(prev => ({ ...prev, freeDeliveryThreshold: parseFloat(e.target.value) || null }))}
+                      onChange={(e) => setSettings(prev => ({ ...prev, freeDeliveryThreshold: parseFloat(e.target.value) || undefined }))}
                       placeholder="25.00"
                     />
                   </div>
@@ -576,7 +575,7 @@ export default function AdminInfosPage() {
                           type="number"
                           step="0.10"
                           value={settings.cashMaxAmount || ''}
-                          onChange={(e) => setSettings(prev => ({ ...prev, cashMaxAmount: parseFloat(e.target.value) || null }))}
+                          onChange={(e) => setSettings(prev => ({ ...prev, cashMaxAmount: parseFloat(e.target.value) || undefined }))}
                           placeholder="50.00"
                           className="w-32"
                         />
@@ -652,7 +651,7 @@ export default function AdminInfosPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <Label htmlFor="welcome">Message d'accueil</Label>
+                <Label htmlFor="welcome">Message d&apos;accueil</Label>
                 <Input
                   id="welcome"
                   value={settings.welcomeMessage || ''}
@@ -718,7 +717,7 @@ export default function AdminInfosPage() {
           <Card>
             <CardHeader>
               <CardTitle>Couleurs du thème</CardTitle>
-              <CardDescription>Personnalisez l'apparence de votre site</CardDescription>
+              <CardDescription>Personnalisez l&apos;apparence de votre site</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -799,7 +798,7 @@ export default function AdminInfosPage() {
           <Card>
             <CardHeader>
               <CardTitle>Images</CardTitle>
-              <CardDescription>Logo et images d'en-tête</CardDescription>
+              <CardDescription>Logo et images d&apos;en-tête</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
@@ -813,7 +812,7 @@ export default function AdminInfosPage() {
               </div>
 
               <div>
-                <Label htmlFor="headerImage">Image d'en-tête</Label>
+                <Label htmlFor="headerImage">Image d&apos;en-tête</Label>
                 <Input
                   id="headerImage"
                   value={settings.headerImage || ''}

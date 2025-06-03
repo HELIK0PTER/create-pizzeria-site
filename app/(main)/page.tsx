@@ -2,7 +2,7 @@
 
 import { config } from "@/settings/config";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, Suspense } from "react";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -43,38 +43,6 @@ export default function HomePage() {
     ProductWithRelations[]
   >([]);
   const [loading, setLoading] = useState(true);
-  const searchParams = useSearchParams();
-  const error = searchParams.get("error");
-  const [errorMessage, setErrorMessage] = useState({
-    message: "",
-    type: "",
-  });
-
-  const router = useRouter();
-
-  const handleClearParams = useCallback(() => {
-    setErrorMessage({
-      message: "",
-      type: "",
-    });
-    router.push("/", { scroll: false });
-  }, [router]);
-
-  useEffect(() => {
-    if (error) {
-      const displayError = errors.find((e) => e.type === error);
-      if (displayError) {
-        setErrorMessage(displayError);
-      }
-    }
-
-    // Effacer l'erreur après 5 secondes
-    const timeout = setTimeout(() => {
-      handleClearParams();
-    }, 10000);
-
-    return () => clearTimeout(timeout);
-  }, [error, router, handleClearParams]);
 
   useEffect(() => {
     fetchFeaturedProducts();
@@ -96,20 +64,9 @@ export default function HomePage() {
   return (
     <div className="min-h-screen">
       {/* Message d'erreur d'accès refusé */}
-      {errorMessage.message && (
-        <Alert className="fixed top-20 right-0 w-fit z-50 mx-4 mt-4 border-red-200 bg-red-50 flex items-center justify-between">
-          <AlertDescription className="text-red-800">
-            {errorMessage.message}
-          </AlertDescription>
-          <Button
-            variant="link"
-            className="hover:cursor-pointer"
-            onClick={handleClearParams}
-          >
-            <X className="h-4 w-4" />
-          </Button>
-        </Alert>
-      )}
+      <Suspense>
+        <ErrorMessage />
+      </Suspense>
 
       {/* Hero Section avec gradient moderne */}
       <section className="relative overflow-hidden bg-gradient-to-br from-orange-50 via-red-50 to-pink-50">
@@ -128,8 +85,8 @@ export default function HomePage() {
                   key={index}
                   variant="outline"
                   className="inline-block bg-orange-100 text-orange-800 text-sm px-4 py-2 rounded-md border border-orange-200 shadow-sm max-w-md h-fit"
-              >
-                <Link href={"/menu"}>
+                >
+                  <Link href={"/menu"}>
                     {offer.title}
                     <br />
                     {offer.description}
@@ -420,3 +377,57 @@ export default function HomePage() {
     </div>
   );
 }
+
+const ErrorMessage = () => {
+  const searchParams = useSearchParams();
+  const error = searchParams.get("error");
+  const [errorMessage, setErrorMessage] = useState({
+    message: "",
+    type: "",
+  });
+
+  const router = useRouter();
+
+  const handleClearParams = useCallback(() => {
+    setErrorMessage({
+      message: "",
+      type: "",
+    });
+    router.push("/", { scroll: false });
+  }, [router]);
+
+  useEffect(() => {
+    if (error) {
+      const displayError = errors.find((e) => e.type === error);
+      if (displayError) {
+        setErrorMessage(displayError);
+      }
+    }
+
+    // Effacer l'erreur après 5 secondes
+    const timeout = setTimeout(() => {
+      handleClearParams();
+    }, 10000);
+
+    return () => clearTimeout(timeout);
+  }, [error, router, handleClearParams]);
+
+  return (
+    <>
+      {errorMessage.message && (
+        <Alert className="fixed top-20 right-0 w-fit z-50 mx-4 mt-4 border-red-200 bg-red-50 flex items-center justify-between">
+          <AlertDescription className="text-red-800">
+            {errorMessage.message}
+          </AlertDescription>
+          <Button
+            variant="link"
+            className="hover:cursor-pointer"
+            onClick={handleClearParams}
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </Alert>
+      )}
+    </>
+  );
+};

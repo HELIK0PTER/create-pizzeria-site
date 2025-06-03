@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ShoppingCart, Menu, X, Pizza, Heart, Clock } from "lucide-react";
+import { ShoppingCart, Menu, X, Pizza, Heart } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useCart } from "@/store/cart";
 import { Button } from "@/components/ui/button";

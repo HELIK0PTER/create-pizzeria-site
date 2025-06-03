@@ -1,6 +1,16 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { CartItem, Product, Variant } from "@/types";
+import { Product, Variant } from "@prisma/client";
+
+// Type spécifique pour les items du panier (différent de OrderItem de Prisma)
+interface CartItem {
+  productId: string;
+  variantId?: string | null;
+  quantity: number;
+  notes?: string | null;
+  product: Product;
+  variant?: Variant | null;
+}
 
 interface CartStore {
   items: CartItem[];
@@ -57,11 +67,11 @@ export const useCart = create<CartStore>()(
               ...state.items,
               {
                 productId: product.id,
-                variantId: variant?.id,
+                variantId: variant?.id || null,
                 quantity,
-                notes,
+                notes: notes || null,
                 product,
-                variant,
+                variant: variant || null,
               },
             ],
           };

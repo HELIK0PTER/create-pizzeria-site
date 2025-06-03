@@ -37,7 +37,7 @@ export function SignInForm() {
           setError(ctx.error.message || 'Erreur de connexion')
         }
       })
-    } catch (err) {
+    } catch {
       setError('Une erreur est survenue')
     } finally {
       setIsLoading(false)

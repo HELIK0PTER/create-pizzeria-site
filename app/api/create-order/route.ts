@@ -3,9 +3,10 @@ import { prisma } from '@/lib/prisma';
 import { auth } from '@/lib/auth';
 import { Stripe } from 'stripe';
 import { generateOrderNumber } from '@/lib/utils';
+import { User } from '@prisma/client';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-05-28.basil', // Assurez-vous que cette version correspond à celle utilisée ailleurs
+  apiVersion: '2025-05-28.basil',
 });
 
 export async function POST(req: Request) {
@@ -43,24 +44,37 @@ export async function POST(req: Request) {
         userId: userId,
         customerName: authSession.user.name,
         customerEmail: authSession.user.email,
-        customerPhone: (authSession.user as any).phone ?? '', // Provide empty string if phone is null/undefined
+        customerPhone: (authSession.user as User).phone ?? '',
         total: session.amount_total ? session.amount_total / 100 : 0, // Convertir en unité de devise
         status: 'processing', // Ou un statut initial approprié
         stripeSessionId: session.id,
+        // Les champs suivants récupèrent les valeurs de la session Stripe ou les calculent
         deliveryMethod: session.metadata?.deliveryMethod as string ?? '', // Lire le mode de livraison depuis les métadonnées Stripe et caster en string
         paymentMethod: session.payment_method_types?.[0] as string ?? '', // Lire la méthode de paiement depuis la session Stripe et caster en string
         // Calculer le subTotal en soustrayant les frais de livraison du total
         subTotal: (session.amount_total ? session.amount_total / 100 : 0) - (parseFloat(session.metadata?.deliveryFee as string ?? '0')),
         deliveryFee: parseFloat(session.metadata?.deliveryFee as string ?? '0'), // Lire les frais de livraison depuis les métadonnées
+        // paymentStatus est géré par défaut comme 'pending' dans le schema, 'paid' peut être défini ici si le paiement Stripe est confirmé
+        paymentStatus: 'paid', // Mettre à jour le statut de paiement basé sur la session Stripe
         items: {
-          create: session.line_items?.data.map((item: any) => ({
-            productId: item.price.product.metadata.productId, // Assurez-vous que l'ID produit est stocké en metadata Stripe
-            quantity: item.quantity,
-            unitPrice: item.price.unit_amount ? item.price.unit_amount / 100 : 0, // Prix unitaire en devise (depuis Stripe)
-            totalPrice: (item.price.unit_amount && item.quantity) ? (item.price.unit_amount / 100) * item.quantity : 0, // Prix total en devise
-            variantId: item.price.product.metadata.variantId || null, // ID de la variante si stocké en metadata
-            notes: item.description, // Utiliser la description comme notes si applicable
-          })),
+          create: session.line_items?.data
+            // Filtrer les articles de ligne pour exclure les frais de livraison et s'assurer que le produit est bien un objet expandé
+            ?.filter((item) => (item.description !== 'Frais de livraison' && typeof item.price?.product === 'object' && item.price.product !== null)) // Vérifier que product est un objet non null
+            .map((item) => {
+            const product = item.price?.product as Stripe.Product; // Assertion de type
+            // Accéder aux métadonnées avec vérification optionnelle
+            const productId = product?.metadata?.productId || '';
+            const variantId = product?.metadata?.variantId || null;
+
+            return {
+              productId: productId, // Utiliser l'ID produit vérifié
+              quantity: item.quantity || 1,
+              unitPrice: item.price?.unit_amount ? item.price.unit_amount / 100 : 0,
+              totalPrice: (item.price?.unit_amount && item.quantity) ? (item.price.unit_amount / 100) * item.quantity : 0,
+              variantId: variantId, // Utiliser l'ID variante vérifié
+              notes: null, // Ou récupérer des notes si disponibles
+            };
+          }) || [], // S'assurer que items.create est un tableau vide si line_items.data est null/undefined
         },
       },
       include: {
@@ -76,8 +90,9 @@ export async function POST(req: Request) {
     // 4. Retourner la confirmation de commande
     return NextResponse.json({ orderId: order.id });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Erreur lors de la création de la commande:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    const errorMessage = error instanceof Error ? error.message : 'Une erreur inconnue est survenue';
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 } 

@@ -16,7 +16,7 @@ export async function POST(req: Request) {
     }
 
     // Transformer les articles du panier au format attendu par Stripe
-    const line_items = items.map((item: any) => {
+    const line_items = items.map((item: { product: { name: string; description: string; image: string; price: number }; variant: { name: string; price: number }; quantity: number }) => {
       const unit_amount = Math.round((item.product.price + (item.variant?.price || 0)) * 100); // Convertir en centimes
 
       return {
@@ -68,8 +68,8 @@ export async function POST(req: Request) {
     // Retourner l'ID de la session
     return NextResponse.json({ id: session.id });
 
-  } catch (error: any) {
+  } catch (error) {
     console.error('Erreur lors de la création de la session de paiement:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: String(error) }, { status: 500 });
   }
 } 

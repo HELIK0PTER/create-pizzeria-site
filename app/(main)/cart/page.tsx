@@ -13,13 +13,16 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import Image from "next/image";
-import { loadStripe } from '@stripe/stripe-js';
-import { useSearchParams } from 'next/navigation';
+import { loadStripe } from "@stripe/stripe-js";
+import { useSearchParams } from "next/navigation";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { XCircle } from "lucide-react";
+import { Suspense } from "react";
 
 // Chargez votre clé publique Stripe
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
+const stripePromise = loadStripe(
+  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!
+);
 
 export default function CartPage() {
   const {
@@ -32,9 +35,6 @@ export default function CartPage() {
     setDeliveryMethod,
     deliveryFee,
   } = useCart();
-
-  const searchParams = useSearchParams();
-  const paymentCanceled = searchParams.get('canceled') === 'true';
 
   const handleQuantityChange = (
     productId: string,
@@ -52,22 +52,25 @@ export default function CartPage() {
   const handleCheckout = async () => {
     const stripe = await stripePromise;
     if (!stripe) {
-      console.error('Erreur: Clé publique Stripe non chargée.');
+      console.error("Erreur: Clé publique Stripe non chargée.");
       return;
     }
 
     try {
-      const response = await fetch('/api/create-checkout-session', {
-        method: 'POST',
+      const response = await fetch("/api/create-checkout-session", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ items, deliveryMethod, deliveryFee }),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Erreur lors de la création de la session de paiement');
+        throw new Error(
+          errorData.error ||
+            "Erreur lors de la création de la session de paiement"
+        );
       }
 
       const session = await response.json();
@@ -76,12 +79,18 @@ export default function CartPage() {
       const result = await stripe.redirectToCheckout({ sessionId: session.id });
 
       if (result.error) {
-        console.error('Erreur lors de la redirection vers Stripe:', result.error.message);
+        console.error(
+          "Erreur lors de la redirection vers Stripe:",
+          result.error.message
+        );
         // Afficher un message d'erreur à l'utilisateur si nécessaire
       }
-    } catch (error: any) {
-      console.error('Erreur de paiement:', error.message);
-      // Afficher un message d'erreur à l'utilisateur
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error("Erreur de paiement:", error.message);
+      } else {
+        console.error("Erreur de paiement:", String(error));
+      }
     }
   };
 
@@ -91,17 +100,9 @@ export default function CartPage() {
         <h1 className="text-3xl font-bold text-gray-900 mb-8">Votre panier</h1>
 
         {/* Message d'annulation de paiement */}
-        {paymentCanceled && (
-          <div className="lg:col-span-3 mb-4">
-            <Alert variant="destructive">
-              <XCircle className="h-4 w-4" />
-              <AlertTitle>Paiement Annulé</AlertTitle>
-              <AlertDescription>
-                Votre paiement a été annulé. Vous pouvez modifier votre panier ou réessayer.
-              </AlertDescription>
-            </Alert>
-          </div>
-        )}
+        <Suspense>
+          <PaymentCanceled />
+        </Suspense>
 
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Liste des articles */}
@@ -115,100 +116,103 @@ export default function CartPage() {
           )}
           {items.length > 0 && (
             <div className="lg:col-span-2 space-y-4">
-            {items.map((item) => {
-              const basePrice = item.product.price;
-              const variantPrice = item.variant?.price || 0;
-              const totalPrice = basePrice + variantPrice;
-              return (
-                <Card key={`${item.productId}-${item.variantId}`}>
-                  <CardContent className="p-4">
-                    <div className="flex items-start gap-4">
-                      <div className="w-20 h-20 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <span className="text-3xl">
-                          {item.product.image ? (
-                            <Image
-                              src={item.product.image}
-                              alt={item.product.name}
-                              width={80}
-                              height={80}
-                              className="rounded-lg"
-                            />
-                          ) : (
-                            <span className="text-3xl">🍕</span>
+              {items.map((item) => {
+                const basePrice = item.product.price;
+                const variantPrice = item.variant?.price || 0;
+                const totalPrice = basePrice + variantPrice;
+                return (
+                  <Card key={`${item.productId}-${item.variantId}`}>
+                    <CardContent className="p-4">
+                      <div className="flex items-start gap-4">
+                        <div className="w-20 h-20 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                          <span className="text-3xl">
+                            {item.product.image ? (
+                              <Image
+                                src={item.product.image}
+                                alt={item.product.name}
+                                width={80}
+                                height={80}
+                                className="rounded-lg"
+                              />
+                            ) : (
+                              <span className="text-3xl">🍕</span>
+                            )}
+                          </span>
+                        </div>
+
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-lg">
+                            {item.product.name}
+                          </h3>
+                          {item.variant && (
+                            <p className="text-sm text-gray-600">
+                              {item.variant.name}
+                            </p>
                           )}
-                        </span>
-                      </div>
+                          {item.notes && (
+                            <p className="text-sm text-gray-500 mt-1">
+                              {item.notes}
+                            </p>
+                          )}
 
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-lg">
-                          {item.product.name}
-                        </h3>
-                        {item.variant && (
-                          <p className="text-sm text-gray-600">
-                            {item.variant.name}
-                          </p>
-                        )}
-                        {item.notes && (
-                          <p className="text-sm text-gray-500 mt-1">
-                            {item.notes}
-                          </p>
-                        )}
+                          <div className="flex items-center justify-between mt-4">
+                            <div className="flex items-center gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() =>
+                                  handleQuantityChange(
+                                    item.productId,
+                                    item.variantId || undefined,
+                                    -1
+                                  )
+                                }
+                                disabled={item.quantity <= 1}
+                              >
+                                <Minus className="h-3 w-3" />
+                              </Button>
+                              <span className="w-8 text-center font-medium">
+                                {item.quantity}
+                              </span>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() =>
+                                  handleQuantityChange(
+                                    item.productId,
+                                    item.variantId || undefined,
+                                    1
+                                  )
+                                }
+                              >
+                                <Plus className="h-3 w-3" />
+                              </Button>
+                            </div>
 
-                        <div className="flex items-center justify-between mt-4">
-                          <div className="flex items-center gap-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() =>
-                                handleQuantityChange(
-                                  item.productId,
-                                  item.variantId,
-                                  -1
-                                )
-                              }
-                              disabled={item.quantity <= 1}
-                            >
-                              <Minus className="h-3 w-3" />
-                            </Button>
-                            <span className="w-8 text-center font-medium">
-                              {item.quantity}
-                            </span>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() =>
-                                handleQuantityChange(
-                                  item.productId,
-                                  item.variantId,
-                                  1
-                                )
-                              }
-                            >
-                              <Plus className="h-3 w-3" />
-                            </Button>
-                          </div>
-
-                          <div className="flex items-center gap-4">
-                            <span className="font-semibold">
-                              {formatPrice(totalPrice * item.quantity)}
-                            </span>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() =>
-                                removeItem(item.productId, item.variantId)
-                              }
-                            >
-                              <Trash2 className="h-4 w-4 text-red-600" />
-                            </Button>
+                            <div className="flex items-center gap-4">
+                              <span className="font-semibold">
+                                {formatPrice(totalPrice * item.quantity)}
+                              </span>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() =>
+                                  removeItem(
+                                    item.productId,
+                                    item.variantId || undefined
+                                  )
+                                }
+                              >
+                                <Trash2 className="h-4 w-4 text-red-600" />
+                              </Button>
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
           )}
 
@@ -291,3 +295,25 @@ export default function CartPage() {
     </div>
   );
 }
+
+const PaymentCanceled = () => {
+  const searchParams = useSearchParams();
+  const paymentCanceled = searchParams?.get("canceled") === "true";
+
+  return (
+    <>
+      {paymentCanceled && (
+        <div className="lg:col-span-3 mb-4">
+          <Alert variant="destructive">
+            <XCircle className="h-4 w-4" />
+            <AlertTitle>Paiement Annulé</AlertTitle>
+            <AlertDescription>
+              Votre paiement a été annulé. Vous pouvez modifier votre panier ou
+              réessayer.
+            </AlertDescription>
+          </Alert>
+        </div>
+      )}
+    </>
+  );
+};
