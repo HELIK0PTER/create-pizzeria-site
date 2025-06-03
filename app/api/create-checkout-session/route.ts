@@ -16,7 +16,7 @@ export async function POST(req: Request) {
     }
 
     // Transformer les articles du panier au format attendu par Stripe
-    const line_items = items.map((item: { product: { name: string; description: string; image: string; price: number }; variant: { name: string; price: number }; quantity: number }) => {
+    const line_items = items.map((item: { product: { id: string; name: string; description: string; image: string; price: number }; variant?: { id: string; name: string; price: number } | null; quantity: number }) => {
       const unit_amount = Math.round((item.product.price + (item.variant?.price || 0)) * 100); // Convertir en centimes
 
       return {
@@ -26,6 +26,10 @@ export async function POST(req: Request) {
             name: item.product.name,
             description: item.variant?.name || item.product.description || undefined,
             images: item.product.image ? [item.product.image] : undefined,
+            metadata: {
+              productId: item.product.id,
+              ...(item.variant?.id && { variantId: item.variant.id }),
+            },
           },
           unit_amount: unit_amount,
         },
@@ -55,6 +59,10 @@ export async function POST(req: Request) {
       mode: 'payment',
       success_url: `${req.headers.get('origin')}/order-success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${req.headers.get('origin')}/order-canceled`,
+      metadata: {
+        deliveryMethod: deliveryMethod,
+        deliveryFee: deliveryFee ? String(deliveryFee) : '0', // Convertir en string car les métadonnées Stripe sont string/string
+      },
     });
 
     // Retourner l'ID de la session

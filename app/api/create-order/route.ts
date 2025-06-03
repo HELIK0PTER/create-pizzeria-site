@@ -45,25 +45,36 @@ export async function POST(req: Request) {
         customerName: authSession.user.name,
         customerEmail: authSession.user.email,
         customerPhone: (authSession.user as User).phone ?? '',
-        deliveryMethod: 'delivery', // Valeur par défaut
-        paymentMethod: 'stripe',
-        paymentStatus: 'paid',
-        subTotal: session.amount_total ? session.amount_total / 100 : 0,
-        total: session.amount_total ? session.amount_total / 100 : 0,
-        status: 'confirmed',
+        total: session.amount_total ? session.amount_total / 100 : 0, // Convertir en unité de devise
+        status: 'processing', // Ou un statut initial approprié
         stripeSessionId: session.id,
+        // Les champs suivants récupèrent les valeurs de la session Stripe ou les calculent
+        deliveryMethod: session.metadata?.deliveryMethod as string ?? '', // Lire le mode de livraison depuis les métadonnées Stripe et caster en string
+        paymentMethod: session.payment_method_types?.[0] as string ?? '', // Lire la méthode de paiement depuis la session Stripe et caster en string
+        // Calculer le subTotal en soustrayant les frais de livraison du total
+        subTotal: (session.amount_total ? session.amount_total / 100 : 0) - (parseFloat(session.metadata?.deliveryFee as string ?? '0')),
+        deliveryFee: parseFloat(session.metadata?.deliveryFee as string ?? '0'), // Lire les frais de livraison depuis les métadonnées
+        // paymentStatus est géré par défaut comme 'pending' dans le schema, 'paid' peut être défini ici si le paiement Stripe est confirmé
+        paymentStatus: 'paid', // Mettre à jour le statut de paiement basé sur la session Stripe
         items: {
-          create: session.line_items?.data.map((item) => {
-            const product = item.price?.product as Stripe.Product;
+          create: session.line_items?.data
+            // Filtrer les articles de ligne pour exclure les frais de livraison et s'assurer que le produit est bien un objet expandé
+            ?.filter((item) => (item.description !== 'Frais de livraison' && typeof item.price?.product === 'object' && item.price.product !== null)) // Vérifier que product est un objet non null
+            .map((item) => {
+            const product = item.price?.product as Stripe.Product; // Assertion de type
+            // Accéder aux métadonnées avec vérification optionnelle
+            const productId = product?.metadata?.productId || '';
+            const variantId = product?.metadata?.variantId || null;
+
             return {
-              productId: product?.metadata?.productId || '',
+              productId: productId, // Utiliser l'ID produit vérifié
               quantity: item.quantity || 1,
               unitPrice: item.price?.unit_amount ? item.price.unit_amount / 100 : 0,
               totalPrice: (item.price?.unit_amount && item.quantity) ? (item.price.unit_amount / 100) * item.quantity : 0,
-              variantId: product?.metadata?.variantId || null,
-              notes: null,
+              variantId: variantId, // Utiliser l'ID variante vérifié
+              notes: null, // Ou récupérer des notes si disponibles
             };
-          }) || [],
+          }) || [], // S'assurer que items.create est un tableau vide si line_items.data est null/undefined
         },
       },
       include: {

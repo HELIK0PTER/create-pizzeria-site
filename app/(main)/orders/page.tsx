@@ -4,10 +4,8 @@ import { useEffect, useState } from 'react';
 import { useSession } from '@/lib/auth-client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { formatPrice } from '@/lib/utils';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { ShoppingBag, XCircle } from 'lucide-react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 
@@ -15,7 +13,7 @@ import { Badge } from '@/components/ui/badge';
 interface OrderItemWithProductAndVariant {
   id: string;
   productId: string;
-  product: { name: string; image?: string | null };
+  product: { name: string; image?: string | null; ingredients?: string | null };
   variantId?: string | null;
   variant?: { name: string } | null;
   quantity: number;
@@ -139,35 +137,15 @@ export default function OrdersPage() {
                 <Separator />
                 <CardContent className="pt-6">
                   <div className="space-y-4">
-                    {order.orderItems.map((item) => (
-                      <div key={item.id} className="flex items-start gap-4">
-                         <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                            {item.product.image ? (
-                              <Image
-                                src={item.product.image}
-                                alt={item.product.name}
-                                width={64}
-                                height={64}
-                                className="rounded-lg"
-                              />
-                            ) : (
-                              <span className="text-2xl">🍕</span>
-                            )}
-                          </div>
+                    <p>--- Début Articles ---</p>
+                    {order.orderItems?.map((item) => (
+                      <div key={item.id} className="flex items-start justify-between gap-4">
+                        <p>Item:</p>
                         <div className="flex-1">
-                          <p className="font-medium">{item.product.name}{item.variant ? ` (${item.variant.name})` : ''}</p>
-                          <p className="text-sm text-gray-600">Quantité: {item.quantity}</p>
-                          <p className="text-sm text-gray-600">Prix unitaire: {formatPrice(item.unitPrice)}</p>
-                           {item.notes && <p className="text-sm text-gray-500 mt-1">Notes: {item.notes}</p>}
+                          <p className="font-medium">{item.product?.name}{item.variant ? ` (${item.variant.name})` : ''}</p>
                         </div>
-                        <span className="font-semibold">{formatPrice(item.totalPrice)}</span>
                       </div>
                     ))}
-                  </div>
-                  <Separator className="mt-6"/>
-                  <div className="flex justify-between items-center font-semibold text-lg mt-4">
-                    <span>Total</span>
-                    <span className="text-orange-600">{formatPrice(order.total)}</span>
                   </div>
                 </CardContent>
               </Card>
