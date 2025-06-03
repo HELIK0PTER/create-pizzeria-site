@@ -1,0 +1,69 @@
+# 🖼️ Guide des Images pour Bella Pizza
+
+## Structure des dossiers :
+
+/public/images/
+├── pizzas/          # Images des pizzas (ex: margherita.jpg)
+├── categories/      # Images des catégories (ex: pizzas.jpg)
+├── boissons/        # Images des boissons (ex: coca-cola.jpg)
+├── desserts/        # Images des desserts (ex: tiramisu.jpg)
+└── uploads/         # Images uploadées par les utilisateurs
+
+## Comment ajouter des images :
+
+### 1. Images statiques (pour les produits du seed)
+- Placez vos images dans les dossiers correspondants
+- Nommez-les selon les slugs des produits
+- Formats recommandés : JPG, PNG, WebP
+- Résolution recommandée : 800x600px
+
+Exemples :
+- /images/pizzas/margherita.jpg
+- /images/pizzas/regina.jpg
+- /images/boissons/coca-cola.jpg
+
+### 2. Images uploadées dynamiquement
+- Utilisez le composant ImageUpload dans vos formulaires
+- Les images sont automatiquement optimisées en WebP
+- Redimensionnement automatique à 800x600px max
+- Stockées dans /images/uploads/
+
+## Types de fichiers supportés :
+- JPEG (.jpg, .jpeg)
+- PNG (.png)
+- WebP (.webp)
+
+## Taille maximale : 10MB (avant optimisation)
+
+## Optimisations automatiques :
+- Conversion en WebP (meilleure compression)
+- Redimensionnement intelligent
+- Compression avec qualité 85%
+
+## Exemples d'utilisation :
+
+### Dans un composant React :
+```jsx
+import { ImageUpload } from '@/components/ui/image-upload'
+
+function MonFormulaire() {
+  const [imageUrl, setImageUrl] = useState('')
+  
+  return (
+    <ImageUpload
+      value={imageUrl}
+      onChange={setImageUrl}
+      onRemove={() => setImageUrl('')}
+    />
+  )
+}
+```
+
+### Dans le code du seed :
+Les chemins d'images dans le seed pointent vers les dossiers statiques :
+- image: '/images/pizzas/margherita.jpg'
+
+### Images par défaut :
+Si vous n'avez pas d'images, vous pouvez utiliser des placeholders :
+- https://placehold.co/800x600/orange/white?text=Pizza
+- https://via.placeholder.com/800x600/ff6b35/ffffff?text=Bella+Pizza 
