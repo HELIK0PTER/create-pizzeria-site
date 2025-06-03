@@ -19,6 +19,7 @@ Une application web moderne et complète pour permettre aux pizzérias d'avoir u
 ## 🎯 Aperçu
 
 Pizza Shop est une solution e-commerce clé en main pour les pizzérias souhaitant :
+
 - Attirer plus de clients avec une présence en ligne professionnelle
 - Permettre la commande en ligne (livraison et click & collect)
 - Gérer facilement leur menu et leurs commandes
@@ -27,6 +28,7 @@ Pizza Shop est une solution e-commerce clé en main pour les pizzérias souhaita
 ## ✨ Fonctionnalités
 
 ### Côté Client
+
 - **Catalogue produits** : Navigation intuitive par catégories (pizzas, boissons, desserts)
 - **Variantes produits** : Gestion des tailles et options pour chaque produit
 - **Panier intelligent** : Sauvegarde automatique, modification des quantités
@@ -35,6 +37,7 @@ Pizza Shop est une solution e-commerce clé en main pour les pizzérias souhaita
 - **Recherche et filtres** : Trouvez rapidement vos produits préférés
 
 ### Côté Admin
+
 - **Tableau de bord** : Vue d'ensemble des ventes et statistiques
 - **Gestion du menu** : Ajout/modification/suppression de produits
 - **Gestion des disponibilités** : Marquer des produits comme indisponibles
@@ -42,6 +45,7 @@ Pizza Shop est une solution e-commerce clé en main pour les pizzérias souhaita
 - **Configuration du site** : Personnalisation des couleurs, logo, informations
 
 ### Fonctionnalités techniques
+
 - **Paiement sécurisé** : Intégration Stripe pour les paiements en ligne
 - **Base de données** : SQLite avec Prisma ORM
 - **Authentification** : Système de connexion pour les clients et administrateurs
@@ -50,6 +54,7 @@ Pizza Shop est une solution e-commerce clé en main pour les pizzérias souhaita
 ## 🛠 Technologies utilisées
 
 - **Frontend** :
+
   - Next.js 15 (App Router)
   - TypeScript
   - Tailwind CSS
@@ -58,6 +63,7 @@ Pizza Shop est une solution e-commerce clé en main pour les pizzérias souhaita
   - Framer Motion (animations)
 
 - **Backend** :
+
   - Next.js API Routes
   - Prisma ORM
   - SQLite (base de données)
@@ -71,6 +77,7 @@ Pizza Shop est une solution e-commerce clé en main pour les pizzérias souhaita
 ## 📦 Installation
 
 ### Prérequis
+
 - Node.js 18+ installé
 - npm ou yarn
 - Un compte Stripe (pour les paiements)
@@ -78,18 +85,21 @@ Pizza Shop est une solution e-commerce clé en main pour les pizzérias souhaita
 ### Étapes d'installation
 
 1. **Cloner le repository**
+
 ```bash
-git clone https://github.com/votre-username/pizza-shop.git
-cd pizza-shop
+git clone https://github.com/HELIK0PTER/create-pizzeria-site.git
+cd create-pizzeria-site
 ```
 
 2. **Installer les dépendances**
+
 ```bash
-npm install
+npm i
 ```
 
 3. **Configurer les variables d'environnement**
 Créez un fichier `.env.local` à la racine du projet :
+
 ```env
 # Database
 DATABASE_URL="file:./dev.db"
@@ -108,12 +118,14 @@ NEXT_PUBLIC_SITE_URL=http://localhost:3000
 ```
 
 4. **Initialiser la base de données**
+
 ```bash
 npx prisma db push
 npm run seed
 ```
 
 5. **Lancer le serveur de développement**
+
 ```bash
 npm run dev
 ```
@@ -133,10 +145,17 @@ L'application sera accessible sur `http://localhost:3000`
 ### Configuration initiale
 
 Après l'installation, connectez-vous avec le compte admin par défaut :
-- Email : `admin@pizzadelicia.fr`
-- Mot de passe : `admin123`
+
+- Email : `admin@pizza.fr`
+- Mdp : `admin`
 
 ⚠️ **Important** : Changez immédiatement ce mot de passe en production !
+
+> * Créez un compte avec votre adresse mail
+> * Déconnectez vous puis connectez vous avec le compte admin
+> * Donnez vous les droits d'administrateur
+> * Déconnectez vous du compte admin et reconnectez vous avec vôtre compte
+> * Dans l'interface admin supprimez le compte admin par défaut
 
 ## 🚀 Utilisation
 
@@ -145,6 +164,7 @@ Après l'installation, connectez-vous avec le compte admin par défaut :
 L'interface d'administration est accessible via `/admin` après connexion avec un compte administrateur.
 
 Fonctionnalités disponibles :
+
 - Dashboard avec statistiques de vente
 - Gestion des produits et catégories
 - Gestion des commandes
@@ -160,12 +180,12 @@ Fonctionnalités disponibles :
 
 ## 📁 Structure du projet
 
-```
+```any
 pizza-shop/
 ├── app/                    # Pages et routes Next.js
 │   ├── api/               # API Routes
 │   ├── admin/             # Pages administration
-│   ├── (shop)/            # Pages boutique
+│   ├── (main)/            # Pages boutique
 │   └── layout.tsx         # Layout principal
 ├── components/            # Composants React réutilisables
 │   ├── ui/               # Composants UI de base
@@ -181,6 +201,7 @@ pizza-shop/
 ## 📡 API Endpoints
 
 ### Produits
+
 - `GET /api/products` - Liste des produits
 - `GET /api/products/[id]` - Détails d'un produit
 - `POST /api/products` - Créer un produit (admin)
@@ -188,15 +209,18 @@ pizza-shop/
 - `DELETE /api/products/[id]` - Supprimer un produit (admin)
 
 ### Catégories
+
 - `GET /api/categories` - Liste des catégories
 - `POST /api/categories` - Créer une catégorie (admin)
 
 ### Commandes
+
 - `GET /api/orders` - Liste des commandes (admin)
 - `POST /api/orders` - Créer une commande
 - `PUT /api/orders/[id]` - Mettre à jour le statut (admin)
 
 ### Authentification
+
 - `POST /api/auth/login` - Connexion
 - `POST /api/auth/register` - Inscription
 - `POST /api/auth/logout` - Déconnexion
@@ -206,6 +230,7 @@ pizza-shop/
 ### Thème et couleurs
 
 Les couleurs principales peuvent être modifiées dans :
+
 - `tailwind.config.js` pour les couleurs globales
 - Table `SiteConfig` en base de données pour une personnalisation dynamique
 
@@ -230,6 +255,7 @@ Tous les textes sont centralisés et peuvent être facilement modifiés pour s'a
 ### Autres plateformes
 
 L'application est compatible avec toute plateforme supportant Node.js :
+
 - Netlify
 - Railway
 - Heroku
@@ -238,13 +264,14 @@ L'application est compatible avec toute plateforme supportant Node.js :
 ### Base de données en production
 
 Pour la production, nous recommandons de migrer vers PostgreSQL :
+
 1. Modifiez le provider dans `prisma/schema.prisma`
 2. Mettez à jour `DATABASE_URL`
 3. Exécutez les migrations
 
 ## 🤝 Contribution
 
-Les contributions sont les bienvenues ! 
+Les contributions sont les bienvenues !
 
 1. Fork le projet
 2. Créez votre branche (`git checkout -b feature/AmazingFeature`)
@@ -259,8 +286,9 @@ Ce projet est sous licence MIT. Voir le fichier `LICENSE` pour plus de détails.
 ## 💡 Support
 
 Pour toute question ou support :
+
 - Ouvrez une issue sur GitHub
-- Contactez-nous à support@pizzashop.com
+- Contactez-nous à <matheuskg.pro@gmail.com>
 
 ---
 

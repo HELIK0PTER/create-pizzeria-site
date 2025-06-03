@@ -76,13 +76,22 @@ async function main() {
 
   // 2. Créer les utilisateurs
   console.log("👥 Création des utilisateurs...");
-  await prisma.user.create({
+  const admin = await prisma.user.create({
     data: {
-      name: "Matheus Kops Guedes",
-      email: "matheuskopsguedes@gmail.com",
+      name: "Admin",
+      email: "admin@pizza.fr",
       emailVerified: true,
       phone: "06 12 34 56 78",
       role: "admin",
+    },
+  });
+
+  await prisma.account.create({
+    data: {
+      providerId: "google",
+      userId: admin.id,
+      accountId: admin.id,
+      password: "admin",
     },
   });
 
