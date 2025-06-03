@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { Plus, Info, Star, Clock } from "lucide-react";
 import { useCart } from "@/store/cart";
@@ -15,7 +15,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Product, Category, Variant } from "@prisma/client";
 import BaseBadge from "./base-badge";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface ProductCardProps {
   product: Product;
@@ -32,15 +32,41 @@ export function ProductCard({ product }: ProductCardProps) {
     extendedProduct.variants?.find((v) => v.isDefault) ||
       extendedProduct.variants?.[0]
   );
-  const [isAdding, setIsAdding] = useState(false);
+  const [clickCount, setClickCount] = useState(0);
+  const [showPopup, setShowPopup] = useState(false);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const price = extendedProduct.price + (selectedVariant?.price || 0);
 
   const handleAddToCart = () => {
-    setIsAdding(true);
+    // Ajouter l'item au panier
     addItem(extendedProduct, selectedVariant);
-    setTimeout(() => setIsAdding(false), 1000);
+    
+    // Augmenter le compteur
+    setClickCount(prev => prev + 1);
+    setShowPopup(true);
+    
+    // Clear le timeout précédent s'il existe
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+    
+    // Programmer le reset après 2000ms
+    timeoutRef.current = setTimeout(() => {
+      setShowPopup(false);
+      // Reset le compteur après la fin de l'animation de fade out
+      setTimeout(() => setClickCount(0), 300);
+    }, 2000);
   };
+
+  // Cleanup du timeout au démontage du composant
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
 
   return (
     <Card className="h-full w-full flex flex-col flex-1 justify-between group overflow-hidden border-0 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 py-0">
@@ -197,21 +223,35 @@ export function ProductCard({ product }: ProductCardProps) {
 
       {/* Footer avec bouton */}
       <CardFooter className="p-6 pt-0">
-        <motion.div
-          className="w-full"
-          animate={isAdding ? { scale: [1, 0.95, 1] } : {}}
-          transition={{ duration: 0.3 }}
-        >
+        <div className="w-full relative">
           <Button
             onClick={handleAddToCart}
-            disabled={!extendedProduct.isAvailable || isAdding}
+            disabled={!extendedProduct.isAvailable}
             size="lg"
             className="w-full bg-orange-600 hover:bg-orange-700 text-white font-semibold rounded-xl transition-all duration-200 shadow-md hover:shadow-lg"
           >
             <Plus className="h-5 w-5 mr-2" />
-            {isAdding ? "Ajouté !" : extendedProduct.isAvailable ? "Ajouter au panier" : "Indisponible"}
+            {extendedProduct.isAvailable ? "Ajouter au panier" : "Indisponible"}
           </Button>
-        </motion.div>
+          
+          {/* Popup de compteur */}
+          <AnimatePresence>
+            {showPopup && clickCount > 0 && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8, y: 8 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.8, y: -10 }}
+                transition={{ duration: 0.3 }}
+                className="absolute -top-11 right-0 bg-green-500 text-white text-sm text-center font-bold w-12 px-2 py-2 rounded-lg shadow-lg z-10"
+              >
+                <div className="relative">
+                  +{clickCount}
+                  <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-3 h-3 bg-green-500 transform rotate-45"></div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       </CardFooter>
     </Card>
   );
