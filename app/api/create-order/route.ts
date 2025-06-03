@@ -47,8 +47,11 @@ export async function POST(req: Request) {
         total: session.amount_total ? session.amount_total / 100 : 0, // Convertir en unité de devise
         status: 'processing', // Ou un statut initial approprié
         stripeSessionId: session.id,
-        // Ajoutez d'autres champs de commande si nécessaire (adresse de livraison, mode de livraison, etc.)
-        // Ces informations pourraient être stockées dans la session Stripe metadata ou passées dans la requête initiale de création de session
+        deliveryMethod: session.metadata?.deliveryMethod as string ?? '', // Lire le mode de livraison depuis les métadonnées Stripe et caster en string
+        paymentMethod: session.payment_method_types?.[0] as string ?? '', // Lire la méthode de paiement depuis la session Stripe et caster en string
+        // Calculer le subTotal en soustrayant les frais de livraison du total
+        subTotal: (session.amount_total ? session.amount_total / 100 : 0) - (parseFloat(session.metadata?.deliveryFee as string ?? '0')),
+        deliveryFee: parseFloat(session.metadata?.deliveryFee as string ?? '0'), // Lire les frais de livraison depuis les métadonnées
         items: {
           create: session.line_items?.data.map((item: any) => ({
             productId: item.price.product.metadata.productId, // Assurez-vous que l'ID produit est stocké en metadata Stripe

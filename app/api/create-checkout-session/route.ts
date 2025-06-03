@@ -26,6 +26,10 @@ export async function POST(req: Request) {
             name: item.product.name,
             description: item.variant?.name || item.product.description || undefined,
             images: item.product.image ? [item.product.image] : undefined,
+            metadata: {
+              productId: item.product.id,
+              ...(item.variantId && { variantId: item.variantId }),
+            },
           },
           unit_amount: unit_amount,
         },
@@ -55,6 +59,10 @@ export async function POST(req: Request) {
       mode: 'payment',
       success_url: `${req.headers.get('origin')}/order-success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${req.headers.get('origin')}/order-canceled`,
+      metadata: {
+        deliveryMethod: deliveryMethod,
+        deliveryFee: deliveryFee ? String(deliveryFee) : '0', // Convertir en string car les métadonnées Stripe sont string/string
+      },
     });
 
     // Retourner l'ID de la session
