@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Product, Category, Variant } from "@prisma/client";
+import { motion } from "framer-motion";
 
 interface ProductCardProps {
   product: Product;
@@ -30,11 +31,14 @@ export function ProductCard({ product }: ProductCardProps) {
     extendedProduct.variants?.find((v) => v.isDefault) ||
       extendedProduct.variants?.[0]
   );
+  const [isAdding, setIsAdding] = useState(false);
 
   const price = extendedProduct.price + (selectedVariant?.price || 0);
 
   const handleAddToCart = () => {
+    setIsAdding(true);
     addItem(extendedProduct, selectedVariant);
+    setTimeout(() => setIsAdding(false), 1000);
   };
 
   return (
@@ -75,15 +79,11 @@ export function ProductCard({ product }: ProductCardProps) {
             )}
           </div>
 
-          {/* Note et temps de préparation (fictifs pour l'exemple) */}
+          {/* Note */}
           <div className="absolute top-4 right-4 flex flex-col gap-2">
             <div className="flex items-center gap-1 bg-white/90 backdrop-blur-sm rounded-full px-2 py-1">
               <Star className="h-3 w-3 text-yellow-500 fill-current" />
-              <span className="text-xs font-medium text-gray-700">4.8</span>
-            </div>
-            <div className="flex items-center gap-1 bg-white/90 backdrop-blur-sm rounded-full px-2 py-1">
-              <Clock className="h-3 w-3 text-gray-500" />
-              <span className="text-xs text-gray-700">15-20min</span>
+              <span className="text-xs font-medium text-gray-600">4.8</span>
             </div>
           </div>
 
@@ -123,16 +123,49 @@ export function ProductCard({ product }: ProductCardProps) {
           
           {/* Base */}
           {extendedProduct.baseType && (
-            <div className="text-sm text-gray-600">
-              Base : {extendedProduct.baseType}
+            <div className="space-y-2">
+              <h4 className="text-sm font-medium text-gray-900">Base :</h4>
+              <Badge 
+                variant="secondary"
+                className={
+                  extendedProduct.baseType === 'Tomate'
+                    ? 'bg-red-600 text-white border border-red-800'
+                    : extendedProduct.baseType === 'Crème'
+                    ? 'bg-white text-gray-600 border border-gray-300'
+                    : 'bg-gray-100 text-gray-600 border border-gray-300'
+                }
+              >
+                {extendedProduct.baseType}
+              </Badge>
+            </div>
+          )}
+
+          {/* Ingrédients */}
+          {extendedProduct.ingredients && (
+            <div className="space-y-2">
+              <h4 className="text-sm font-medium text-gray-900">Ingrédients :</h4>
+              <div className="flex flex-wrap gap-2">
+                {extendedProduct.ingredients.split(',').map((ingredient, index) => (
+                  <Badge 
+                    key={index} 
+                    variant="secondary"
+                    className="bg-orange-50 text-orange-600 border border-orange-200"
+                  >
+                    {ingredient.trim()}
+                  </Badge>
+                ))}
+              </div>
             </div>
           )}
 
           {/* Description */}
           {extendedProduct.description && (
-            <p className="text-sm text-gray-600 leading-relaxed line-clamp-2">
-              {extendedProduct.description}
-            </p>
+            <div className="space-y-2">
+              <h4 className="text-sm font-medium text-gray-900">Description :</h4>
+              <p className="text-sm text-gray-600 leading-relaxed">
+                {extendedProduct.description}
+              </p>
+            </div>
           )}
 
           {/* Variants/Tailles */}
@@ -151,7 +184,7 @@ export function ProductCard({ product }: ProductCardProps) {
                       ${
                         selectedVariant?.id === variant.id
                           ? "bg-orange-600 text-white border-orange-600 shadow-md"
-                          : "bg-white text-gray-700 border-gray-200 hover:border-orange-300 hover:bg-orange-50"
+                          : "bg-white text-gray-600 border-gray-200 hover:border-orange-300 hover:bg-orange-50"
                       }
                     `}
                   >
@@ -177,15 +210,21 @@ export function ProductCard({ product }: ProductCardProps) {
 
       {/* Footer avec bouton */}
       <CardFooter className="p-6 pt-0">
-        <Button
-          onClick={handleAddToCart}
-          disabled={!extendedProduct.isAvailable}
-          size="lg"
-          className="w-full bg-orange-600 hover:bg-orange-700 text-white font-semibold rounded-xl transition-all duration-200 shadow-md hover:shadow-lg"
+        <motion.div
+          className="w-full"
+          animate={isAdding ? { scale: [1, 0.95, 1] } : {}}
+          transition={{ duration: 0.3 }}
         >
-          <Plus className="h-5 w-5 mr-2" />
-          {extendedProduct.isAvailable ? "Ajouter au panier" : "Indisponible"}
-        </Button>
+          <Button
+            onClick={handleAddToCart}
+            disabled={!extendedProduct.isAvailable || isAdding}
+            size="lg"
+            className="w-full bg-orange-600 hover:bg-orange-700 text-white font-semibold rounded-xl transition-all duration-200 shadow-md hover:shadow-lg"
+          >
+            <Plus className="h-5 w-5 mr-2" />
+            {isAdding ? "Ajouté !" : extendedProduct.isAvailable ? "Ajouter au panier" : "Indisponible"}
+          </Button>
+        </motion.div>
       </CardFooter>
     </Card>
   );
