@@ -1,5 +1,7 @@
 "use client";
 
+import { config } from "@/settings/config";
+
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import {
@@ -117,13 +119,23 @@ export default function HomePage() {
           <div className="absolute -bottom-40 -left-40 h-80 w-80 rounded-full bg-gradient-to-br from-yellow-400/20 to-orange-400/20 blur-3xl" />
         </div>
 
-        <div className="relative container mx-auto px-4 pt-20 md:pt-32">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div className="space-y-8">
+        <div className="relative container mx-auto px-4 pt-10 md:pt-26">
+          <div className="md:grid xl:grid-cols-2 gap-12 items-center">
+            <div className="space-y-8 flex flex-col items-center text-center xl:items-start xl:text-left">
               {/* Badge avec animation */}
-              <Badge className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 text-sm">
-                🔥 Nouvelle offre : Livraison gratuite dès 25€
-              </Badge>
+              {config.offers.map((offer, index) => (
+                <Button
+                  key={index}
+                  variant="outline"
+                  className="inline-block bg-orange-100 text-orange-800 text-sm px-4 py-2 rounded-md border border-orange-200 shadow-sm max-w-md h-fit"
+              >
+                <Link href={"/menu"}>
+                    {offer.title}
+                    <br />
+                    {offer.description}
+                  </Link>
+                </Button>
+              ))}
 
               <div className="space-y-6">
                 <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold leading-tight">
@@ -138,7 +150,7 @@ export default function HomePage() {
                   </span>
                 </h1>
 
-                <p className="text-xl text-gray-600 leading-relaxed max-w-2xl">
+                <p className="text-xl text-gray-600 leading-relaxed text-pretty max-w-2xl">
                   Savourez l&apos;authenticité italienne avec nos pizzas
                   artisanales, préparées avec des ingrédients premium et cuites
                   au feu de bois.
@@ -187,16 +199,16 @@ export default function HomePage() {
               </div>
 
               {/* Informations de livraison */}
-              <div className="flex items-center gap-4 p-4 bg-white/60 backdrop-blur-sm rounded-xl border border-orange-100">
+              <div className="w-fit flex items-center gap-4 p-4 pr-10 max-w-lg bg-white/60 backdrop-blur-sm rounded-xl border border-orange-100">
                 <MapPin className="h-5 w-5 text-orange-600" />
-                <span className="text-sm font-medium text-gray-700">
-                  Livraison dans toute la ville • Zone de livraison étendue
+                <span className="text-sm font-medium text-gray-700 text-wrap">
+                  {config.delivery_zone_text}
                 </span>
               </div>
             </div>
 
             {/* Image/Illustration côté droit */}
-            <div className="relative lg:h-[600px] flex items-center justify-center">
+            <div className="hidden relative lg:h-[600px] xl:flex items-center justify-center">
               <div className="relative">
                 <div className="absolute inset-0 bg-gradient-to-r from-orange-400 to-red-400 rounded-full blur-3xl opacity-20 animate-pulse" />
                 <div className="relative text-[300px] lg:text-[400px] opacity-80">
@@ -305,9 +317,7 @@ export default function HomePage() {
               height="450"
               loading="lazy"
               allowFullScreen
-              src={
-                `https://www.google.com/maps/embed/v1/place?key=AIzaSyA0fR8fT3mG1i0Ee0rtzwaOIdyobwNVJaw&q=147+Avenue+de+la+République,+75011+Paris`
-              }
+              src={`https://www.google.com/maps/embed/v1/place?key=AIzaSyA0fR8fT3mG1i0Ee0rtzwaOIdyobwNVJaw&q=147+Avenue+de+la+République,+75011+Paris`}
             ></iframe>
           </div>
         </div>
@@ -385,8 +395,7 @@ export default function HomePage() {
             Une envie soudaine de pizza ?
           </h2>
           <p className="text-xl mb-8 opacity-90 max-w-2xl mx-auto">
-            Commandez en ligne et savourez nos créations artisanales livrées
-            directement chez vous
+            {config.cta_text}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button
@@ -408,7 +417,6 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-
     </div>
   );
 }
