@@ -3,6 +3,7 @@ import { prismaAdapter } from "better-auth/adapters/prisma";
 import { nextCookies } from "better-auth/next-js";
 import { admin } from "better-auth/plugins";
 import { prisma } from "./prisma";
+import * as bcrypt from "bcryptjs";
 
 export const auth = betterAuth({
   database: prismaAdapter(prisma, {
@@ -11,6 +12,14 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
     requireEmailVerification: false, // Vous pouvez l'activer plus tard
+    password: {
+      hash: async (password: string) => {
+        return await bcrypt.hash(password, 12);
+      },
+      verify: async ({ password, hash }: { password: string; hash: string }) => {
+        return await bcrypt.compare(password, hash);
+      },
+    },
   },
   session: {
     expiresIn: 60 * 60 * 24 * 7, // 7 jours

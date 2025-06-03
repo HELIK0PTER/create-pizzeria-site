@@ -1,5 +1,5 @@
 import { PrismaClient } from "@prisma/client";
-
+import * as bcrypt from "bcryptjs";
 const prisma = new PrismaClient();
 
 async function main() {
@@ -74,26 +74,35 @@ async function main() {
     },
   });
 
-  // 2. Créer les utilisateurs
-  console.log("👥 Création des utilisateurs...");
-  const admin = await prisma.user.create({
+  // 2. Créer l'utilisateur admin
+  console.log("👤 Création de l'utilisateur admin...");
+  const hashedPassword = await bcrypt.hash("1234admin", 12);
+  
+  const adminUser = await prisma.user.create({
     data: {
       name: "Admin",
-      email: "admin@pizza.fr",
+      email: "admin@admin.com",
       emailVerified: true,
-      phone: "06 12 34 56 78",
       role: "admin",
     },
   });
 
+  // Créer le compte pour l'authentification par email/mot de passe
   await prisma.account.create({
     data: {
-      providerId: "google",
-      userId: admin.id,
-      accountId: admin.id,
-      password: "admin",
+      accountId: adminUser.id,
+      providerId: "credential",
+      userId: adminUser.id,
+      password: hashedPassword,
     },
   });
+
+  console.log("✅ Utilisateur admin créé avec succès !");
+  console.log("   📧 Email: admin@admin.com");
+  console.log("   🔑 Mot de passe: 1234admin");
+
+  // 3. Créer les utilisateurs clients
+  console.log("👥 Création des utilisateurs clients...");
 
   const customers = await Promise.all([
     prisma.user.create({
@@ -125,7 +134,7 @@ async function main() {
     }),
   ]);
 
-  // 3. Créer les adresses
+  // 4. Créer les adresses
   console.log("🏠 Création des adresses...");
   await Promise.all([
     prisma.address.create({
@@ -160,7 +169,7 @@ async function main() {
     }),
   ]);
 
-  // 4. Créer les catégories
+  // 5. Créer les catégories
   console.log("📂 Création des catégories...");
   const categories = await Promise.all([
     prisma.category.create({
@@ -301,7 +310,8 @@ async function main() {
       data: {
         name: "Vegetariana",
         slug: "vegetariana",
-        description: "Une option fraîche et savoureuse avec des légumes grillés.",
+        description:
+          "Une option fraîche et savoureuse avec des légumes grillés.",
         image:
           "https://images.unsplash.com/photo-1593560708920-61dd98c46a4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
         categoryId: categories[0].id,
@@ -434,8 +444,7 @@ async function main() {
       data: {
         name: "Tiramisu Maison",
         slug: "tiramisu-maison",
-        description:
-          "Le célèbre dessert italien fait maison",
+        description: "Le célèbre dessert italien fait maison",
         image:
           "https://images.unsplash.com/photo-1571877227200-a0d98ea607e9?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
         categoryId: categories[2].id,

@@ -11,69 +11,61 @@ datasource db {
 }
 
 // Configuration complète de la pizzeria
+
 model Settings {
-  id            String   @id @default(cuid()) @map("id")
-  
+  id                       String   @id @default(cuid()) @map("id")
   // Informations de base
-  name          String   @default("Bella Pizza")
-  slogan        String?  @default("Les meilleures pizzas de la ville")
-  logo          String?
-  phone         String   @default("01 23 45 67 89")
-  email         String   @default("contact@bellapizza.fr")
-  address       String   @default("123 Rue de la Pizza, 75001 Paris")
-  
+  name                     String   @default("Bella Pizza")
+  slogan                   String?  @default("Les meilleures pizzas de la ville")
+  logo                     String?
+  phone                    String   @default("01 23 45 67 89")
+  email                    String   @default("contact@bellapizza.fr")
+  address                  String   @default("123 Rue de la Pizza, 75001 Paris")
   // Horaires (JSON avec structure pour chaque jour)
-  openingHours  Json?    // Sera initialisé par code
-  isOpen        Boolean  @default(true)
-  closedMessage String?  @default("Nous sommes actuellement fermés")
-  
+  openingHours             Json? // Sera initialisé par code
+  isOpen                   Boolean  @default(true)
+  closedMessage            String?  @default("Nous sommes actuellement fermés")
   // Services
-  clickAndCollectEnabled Boolean @default(true)
-  deliveryEnabled       Boolean @default(true)
-  
+  clickAndCollectEnabled   Boolean  @default(true)
+  deliveryEnabled          Boolean  @default(true)
   // Paramètres de livraison
-  deliveryZone          Json?    // Codes postaux ou rayon - initialisé par code
-  deliveryFee           Float    @default(3.50)
-  freeDeliveryThreshold Float?   @default(25.00)
-  minOrderAmount        Float    @default(15.00)
-  deliveryTime          String   @default("30-45 min")
-  
+  deliveryZone             Json? // Codes postaux ou rayon - initialisé par code
+  deliveryFee              Float    @default(3.50)
+  freeDeliveryThreshold    Float?   @default(25.00)
+  minOrderAmount           Float    @default(15.00)
+  deliveryTime             String   @default("30-45 min")
   // Paramètres Click & Collect
-  preparationTime       String   @default("15-20 min")
-  pickupInstructions    String?  @default("Présentez-vous à l'accueil avec votre numéro de commande")
-  
+  preparationTime          String   @default("15-20 min")
+  pickupInstructions       String?  @default("Présentez-vous à l'accueil avec votre numéro de commande")
   // Options de paiement
-  cashEnabled           Boolean  @default(true)
-  cardEnabled           Boolean  @default(true)
-  onlinePaymentEnabled  Boolean  @default(true)
-  cashMaxAmount         Float?   @default(50.00) // Prix maximum pour paiement espèces
-  ticketsRestaurantEnabled Boolean @default(true)
-  checkEnabled          Boolean  @default(false)
-  
+  cashEnabled              Boolean  @default(true)
+  cardEnabled              Boolean  @default(true)
+  onlinePaymentEnabled     Boolean  @default(true)
+  cashMaxAmount            Float?   @default(50.00) // Prix maximum pour paiement espèces
+  ticketsRestaurantEnabled Boolean  @default(true)
+  checkEnabled             Boolean  @default(false)
   // Réseaux sociaux et communication
-  facebookUrl           String?
-  instagramUrl          String?
-  websiteUrl            String?
-  welcomeMessage        String?  @default("Bienvenue chez Bella Pizza !")
-  specialAnnouncement   String?  // Message temporaire (promos, fermetures)
-  
+  facebookUrl              String?
+  instagramUrl             String?
+  websiteUrl               String?
+  welcomeMessage           String?  @default("Bienvenue chez Bella Pizza !")
+  specialAnnouncement      String? // Message temporaire (promos, fermetures)
   // Personnalisation visuelle
-  primaryColor          String   @default("#EA580C") // Orange
-  secondaryColor        String   @default("#FED7AA") // Orange clair
-  backgroundColor       String   @default("#FFFFFF")
-  headerImage           String?  // Image de fond d'accueil
-  
+  primaryColor             String   @default("#EA580C") // Orange
+  secondaryColor           String   @default("#FED7AA") // Orange clair
+  backgroundColor          String   @default("#FFFFFF")
+  headerImage              String? // Image de fond d'accueil
   // Emails admin
-  adminEmail            String   @default("admin@bellapizza.fr")
-  orderNotificationEmail Boolean @default(true)
-  
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  
+  adminEmail               String   @default("admin@bellapizza.fr")
+  orderNotificationEmail   Boolean  @default(true)
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
+
   @@map("settings")
 }
 
 // Utilisateurs - Compatible avec Better Auth
+
 model User {
   id            String    @id @default(cuid())
   name          String
@@ -84,48 +76,59 @@ model User {
   role          String    @default("customer") // customer ou admin
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
-  
   // Relations Better Auth
   sessions      Session[]
   accounts      Account[]
-  
   // Relations existantes
   addresses     Address[]
   orders        Order[]
+  banned        Boolean?
+  banReason     String?
+  banExpires    DateTime?
+
+  @@map("user")
 }
 
 // Sessions Better Auth
+
 model Session {
-  id        String   @id @default(cuid())
-  expiresAt DateTime
-  token     String   @unique
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  ipAddress String?
-  userAgent String?
-  userId    String
-  user      User     @relation(references: [id], fields: [userId], onDelete: Cascade)
+  id             String   @id @default(cuid())
+  expiresAt      DateTime
+  token          String   @unique
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  ipAddress      String?
+  userAgent      String?
+  userId         String
+  user           User     @relation(references: [id], fields: [userId], onDelete: Cascade)
+  impersonatedBy String?
+
+  @@map("session")
 }
 
 // Comptes OAuth Better Auth
+
 model Account {
-  id                String  @id @default(cuid())
-  accountId         String
-  providerId        String
-  userId            String
-  accessToken       String?
-  refreshToken      String?
-  idToken           String?
-  accessTokenExpiresAt DateTime?
+  id                    String    @id @default(cuid())
+  accountId             String
+  providerId            String
+  userId                String
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
   refreshTokenExpiresAt DateTime?
-  scope             String?
-  password          String?
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-  user              User    @relation(references: [id], fields: [userId], onDelete: Cascade)
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  user                  User      @relation(references: [id], fields: [userId], onDelete: Cascade)
+
+  @@map("account")
 }
 
 // Vérifications Better Auth
+
 model Verification {
   id         String   @id @default(cuid())
   identifier String
@@ -133,9 +136,12 @@ model Verification {
   expiresAt  DateTime
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
+
+  @@map("verification")
 }
 
 // Adresses de livraison
+
 model Address {
   id         String   @id @default(cuid())
   userId     String
@@ -150,6 +156,7 @@ model Address {
 }
 
 // Catégories de produits
+
 model Category {
   id          Int       @id @default(autoincrement())
   name        String
@@ -164,31 +171,33 @@ model Category {
 }
 
 // Produits (pizzas, boissons, desserts, etc.)
+
 model Product {
-  id          String      @id @default(cuid())
+  id          String         @id @default(cuid())
   name        String
-  slug        String      @unique
+  slug        String         @unique
   description String?
   image       String?
   categoryId  Int
-  category    Category    @relation(fields: [categoryId], references: [id])
+  category    Category       @relation(fields: [categoryId], references: [id])
   price       Float
-  isAvailable Boolean     @default(true)
-  ingredients String?     // Liste des ingrédients séparés par des virgules
-  allergens   String?     // Allergènes
+  isAvailable Boolean        @default(true)
+  ingredients String? // Liste des ingrédients séparés par des virgules
+  allergens   String? // Allergènes
   baseType    PizzaBaseType? // Optionnel, seulement pour les pizzas
   variants    Variant[]
   orderItems  OrderItem[]
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
 }
 
 // Variantes de produits (tailles, options)
+
 model Variant {
   id         String      @id @default(cuid())
   productId  String
   product    Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
-  name       String      // Ex: "Petite", "Moyenne", "Grande"
+  name       String // Ex: "Petite", "Moyenne", "Grande"
   price      Float
   isDefault  Boolean     @default(false)
   orderItems OrderItem[]
@@ -197,6 +206,7 @@ model Variant {
 }
 
 // Commandes
+
 model Order {
   id              String      @id @default(cuid())
   orderNumber     String      @unique
@@ -206,10 +216,10 @@ model Order {
   customerEmail   String
   customerPhone   String
   deliveryAddress String?
-  deliveryMethod  String      // delivery ou pickup
+  deliveryMethod  String // delivery ou pickup
   pickupTime      DateTime?
   status          String      @default("pending") // pending, confirmed, preparing, ready, delivering, completed, cancelled
-  paymentMethod   String      // stripe, cash
+  paymentMethod   String // stripe, cash
   paymentStatus   String      @default("pending") // pending, paid, failed
   stripePaymentId String?
   subTotal        Float
@@ -222,6 +232,7 @@ model Order {
 }
 
 // Articles de commande
+
 model OrderItem {
   id         String   @id @default(cuid())
   orderId    String
@@ -233,12 +244,13 @@ model OrderItem {
   quantity   Int
   unitPrice  Float
   totalPrice Float
-  notes      String?  // Notes spéciales pour cet article
+  notes      String? // Notes spéciales pour cet article
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 }
 
 // Analytics simples
+
 model DailyStats {
   id          String   @id @default(cuid())
   date        DateTime @unique
