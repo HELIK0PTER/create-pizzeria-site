@@ -22,6 +22,7 @@ import { ProductCard } from "@/components/product/product-card";
 import { Prisma } from "@prisma/client";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import Image from "next/image";
 
 type ProductWithRelations = Prisma.ProductGetPayload<{
   include: {
@@ -68,139 +69,54 @@ export default function HomePage() {
         <ErrorMessage />
       </Suspense>
 
-      {/* Hero Section avec gradient moderne */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-orange-50 via-red-50 to-pink-50">
-        {/* Formes géométriques décoratives */}
-        <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute -top-40 -right-40 h-80 w-80 rounded-full bg-gradient-to-br from-orange-400/20 to-red-400/20 blur-3xl" />
-          <div className="absolute -bottom-40 -left-40 h-80 w-80 rounded-full bg-gradient-to-br from-yellow-400/20 to-orange-400/20 blur-3xl" />
-        </div>
+      {/* Hero Section: Background Image Layout */}
+      <section 
+        className="relative overflow-hidden h-screen flex items-center bg-gray-50"
+      >
+        {/* Background Image */}
+        <Image
+          src="https://images.unsplash.com/photo-1513104890138-7c749659a591?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+          alt="Délicieuse pizza artisanale en fond"
+          fill
+          className="object-cover z-0"
+          sizes="100vw"
+          quality={100}
+        />
+        {/* Overlay pour améliorer la lisibilité */}
+        <div className="absolute inset-0 bg-black/60 z-10"></div>
 
-        <div className="relative container mx-auto px-4 pt-10 md:pt-26">
-          <div className="md:grid xl:grid-cols-2 gap-12 items-center">
-            <div className="space-y-8 flex flex-col items-center text-center xl:items-start xl:text-left">
-              {/* Badge avec animation */}
-              {config.offers.map((offer, index) => (
-                <Button
-                  key={index}
-                  variant="outline"
-                  className="inline-block bg-orange-100 text-orange-800 text-sm px-4 py-2 rounded-md border border-orange-200 shadow-sm max-w-md h-fit"
-                >
-                  <Link href={"/menu"}>
-                    {offer.title}
-                    <br />
-                    {offer.description}
-                  </Link>
-                </Button>
-              ))}
+        {/* Contenu de la Hero Section */} 
+        <div className="relative z-10 container mx-auto px-4 text-white text-center">
+           {/* La section des offres a été retirée comme demandé */}
 
-              <div className="space-y-6">
-                <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold leading-tight">
-                  <span className="bg-gradient-to-r from-gray-900 via-orange-800 to-red-800 bg-clip-text text-transparent">
-                    Pizza Artisanale
-                  </span>
-                  <br />
-                  <span className="text-gray-700">Livrée en</span>
-                  <span className="bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
-                    {" "}
-                    15min
-                  </span>
-                </h1>
+           <div className="space-y-6 mb-8 animate-fadeInUp animation-delay-200">
+             <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold leading-tight drop-shadow-lg">
+                Bella <span className="text-orange-400">Pizza</span>
+             </h1>
 
-                <p className="text-xl text-gray-600 leading-relaxed text-pretty max-w-2xl">
-                  Savourez l&apos;authenticité italienne avec nos pizzas
-                  artisanales, préparées avec des ingrédients premium et cuites
-                  au feu de bois.
-                </p>
-              </div>
+             <p className="text-xl leading-relaxed text-pretty max-w-2xl mx-auto opacity-90 drop-shadow-md">
+                Découvrez Bella Pizza, où l&apos;authenticité italienne rencontre la rapidité.
+                Savourez nos pizzas artisanales, faites maison avec des ingrédients frais et premium,
+                cuites au feu de bois et livrées chez vous en 15 minutes.
+             </p>
+           </div>
 
-              {/* Stats en ligne */}
-              <div className="flex flex-wrap gap-6 text-sm">
-                <div className="flex items-center gap-2">
-                  <Star className="h-5 w-5 text-yellow-500 fill-current" />
-                  <span className="font-semibold">4.9/5</span>
-                  <span className="text-gray-500">(2.1k avis)</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Users className="h-5 w-5 text-blue-500" />
-                  <span className="font-semibold">15k+</span>
-                  <span className="text-gray-500">clients satisfaits</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Award className="h-5 w-5 text-purple-500" />
-                  <span className="font-semibold">Prix</span>
-                  <span className="text-gray-500">Meilleure Pizza 2024</span>
-                </div>
-              </div>
+           {/* Stats et Infos de livraison */}
+           {/* Vous pouvez ajouter d'autres stats ou infos ici si nécessaire */}
 
-              {/* Boutons CTA */}
-              <div className="flex flex-col sm:flex-row gap-4">
-                <Button
-                  size="lg"
-                  asChild
-                  className="bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
-                >
-                  <Link href="/menu">
-                    Commander maintenant
-                    <ArrowRight className="ml-2 h-5 w-5" />
-                  </Link>
-                </Button>
-                <Button
-                  size="lg"
-                  variant="outline"
-                  asChild
-                  className="border-2 border-orange-200 text-orange-700 hover:bg-orange-50"
-                >
-                  <Link href="/menu">Découvrir le menu</Link>
-                </Button>
-              </div>
-
-              {/* Informations de livraison */}
-              <div className="w-fit flex items-center gap-4 p-4 pr-10 max-w-lg bg-white/60 backdrop-blur-sm rounded-xl border border-orange-100">
-                <MapPin className="h-5 w-5 text-orange-600" />
-                <span className="text-sm font-medium text-gray-700 text-wrap">
-                  {config.delivery_zone_text}
-                </span>
-              </div>
-            </div>
-
-            {/* Image/Illustration côté droit */}
-            <div className="hidden relative lg:h-[600px] xl:flex items-center justify-center">
-              <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-r from-orange-400 to-red-400 rounded-full blur-3xl opacity-20 animate-pulse" />
-                <div className="relative text-[300px] lg:text-[400px] opacity-80">
-                  🍕
-                </div>
-                <div className="absolute top-10 right-10 bg-white rounded-full p-3 shadow-lg">
-                  <Star className="h-6 w-6 text-yellow-500 fill-current" />
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className="flex justify-center mt-10 mb-10">
-            <Link
-              href="#menu"
-              scroll={false}
-              onClick={(e) => {
-                e.preventDefault();
-                const menuElement = document.getElementById("menu");
-                if (menuElement) {
-                  const headerOffset = 80; // Hauteur approximative du header
-                  const elementPosition =
-                    menuElement.getBoundingClientRect().top;
-                  const offsetPosition =
-                    elementPosition + window.pageYOffset - headerOffset;
-
-                  window.scrollTo({
-                    top: offsetPosition,
-                    behavior: "smooth",
-                  });
-                }
-              }}
-            >
-              <ArrowDown className="h-6 w-6 text-gray-500 animate-bounce" />
-            </Link>
-          </div>
+           {/* Boutons CTA */}
+           <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fadeInUp animation-delay-600">
+             <Button
+               size="lg"
+               asChild
+               className="bg-orange-600 hover:bg-orange-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+             >
+               <Link href="/menu">
+                 Commander maintenant
+                 <ArrowRight className="ml-2 h-5 w-5" />
+               </Link>
+             </Button>
+           </div>
         </div>
       </section>
 
