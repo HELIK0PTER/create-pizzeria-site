@@ -7,7 +7,7 @@ import * as bcrypt from "bcryptjs";
 
 export const auth = betterAuth({
   database: prismaAdapter(prisma, {
-    provider: "sqlite", // Changez en "postgresql" si vous utilisez Postgres
+    provider: "postgresql",
   }),
   emailAndPassword: {
     enabled: true,
