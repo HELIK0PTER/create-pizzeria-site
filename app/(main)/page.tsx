@@ -125,7 +125,7 @@ export default function HomePage() {
         id="menu"
         className="py-20 bg-gradient-to-br from-gray-50 to-orange-50 scroll-mt-20"
       >
-        <div className="container mx-auto px-4">
+        <div className="container mx-auto md:px-4">
           <div className="text-center mb-16">
             <Badge variant="secondary" className="mb-4">
               Nos best-sellers
@@ -139,7 +139,7 @@ export default function HomePage() {
           </div>
 
           {loading ? (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+            <div className="grid grid-cols-1 gap-0 md:grid-cols-2 md:gap-8 lg:grid-cols-3 mb-12">
               {[...Array(6)].map((_, i) => (
                 <div key={i} className="animate-pulse">
                   <div className="bg-gray-200 aspect-square rounded-lg mb-4"></div>
@@ -149,7 +149,7 @@ export default function HomePage() {
               ))}
             </div>
           ) : featuredProducts.length > 0 ? (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+            <div className="grid grid-cols-1 gap-0 md:grid-cols-2 md:gap-8 lg:grid-cols-3 mb-12">
               {featuredProducts.map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))}
@@ -323,7 +323,7 @@ const ErrorMessage = () => {
     // Effacer l'erreur après 5 secondes
     const timeout = setTimeout(() => {
       handleClearParams();
-    }, 10000);
+    }, 90000);
 
     return () => clearTimeout(timeout);
   }, [error, router, handleClearParams]);
@@ -331,8 +331,8 @@ const ErrorMessage = () => {
   return (
     <>
       {errorMessage.message && (
-        <Alert className="fixed top-20 right-0 w-fit z-50 mx-4 mt-4 border-red-200 bg-red-50 flex items-center justify-between">
-          <AlertDescription className="text-red-800">
+        <Alert className="fixed top-0 right-0 w-fit z-[100] mx-4 mt-4 border-amber-200 bg-amber-50 flex items-center justify-between">
+          <AlertDescription className="text-amber-800 font-black">
             {errorMessage.message}
           </AlertDescription>
           <Button

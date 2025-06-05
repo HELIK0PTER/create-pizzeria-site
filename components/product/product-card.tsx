@@ -125,7 +125,7 @@ export function ProductCard({ product }: ProductCardProps) {
       </CardHeader>
 
       {/* Contenu */}
-      <CardContent className="p-6">
+      <CardContent className="p-4 sm:p-6">
         <div className="space-y-4">
           {/* Titre et prix */}
           <div className="space-y-2">
@@ -222,7 +222,7 @@ export function ProductCard({ product }: ProductCardProps) {
       </CardContent>
 
       {/* Footer avec bouton */}
-      <CardFooter className="p-6 pt-0">
+      <CardFooter className="p-4 pt-0 sm:p-6">
         <div className="w-full relative">
           <Button
             onClick={handleAddToCart}

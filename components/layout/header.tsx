@@ -10,37 +10,18 @@ import { Separator } from "@/components/ui/separator";
 import { UserMenu } from "@/components/auth/user-menu";
 import { cn } from "@/lib/utils";
 import { usePathname } from "next/navigation";
+import ScrollingBanner from "@/components/layout/ScrollingBanner"
 
-function Header() {
+function BaseHeader() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
-  const [isVisible, setIsVisible] = useState(true);
-  const [lastScrollY, setLastScrollY] = useState(0);
 
   const { getItemsCount } = useCart();
   const itemsCount = getItemsCount();
 
   useEffect(() => {
     setIsMounted(true);
-
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-
-      if (currentScrollY > lastScrollY && currentScrollY > 100) {
-        setIsVisible(false);
-      } else if (currentScrollY < 50) {
-        setIsVisible(true);
-      }
-
-      setLastScrollY(currentScrollY);
-    };
-
-    window.addEventListener('scroll', handleScroll);
-
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-    };
-  }, [lastScrollY]);
+  });
 
   const currentPath = usePathname();
   const isActive = (path: string) => currentPath === path
@@ -53,10 +34,7 @@ function Header() {
   ]
 
   return (
-    <header className={cn(
-      "sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-md shadow-lg transform transition-transform duration-300",
-      isVisible ? "translate-y-0" : "-translate-y-full"
-    )}>
+    <div className="border-b bg-background backdrop-blur-md shadow-lg">
       <div className="grid grid-cols-3 lg:grid-cols-5 h-20 w-full px-4 md:px-8">
         {/* Logo avec animation */}
         <Link href="/" className="group flex items-center space-x-3">
@@ -216,7 +194,71 @@ function Header() {
           </div>
         </nav>
       </div>
+    </div>
+  )
+}
+
+function FixedHeader() {
+  return (
+    <header className={cn(
+      "absolute top-0 z-50 w-full transform transition-transform duration-300",
+    )}>
+      <BaseHeader />
+      <ScrollingBanner />
     </header>
+  );
+}
+
+function ScrollingHeader() {
+  const [currentScroll, setCurrentScroll] = useState(0)
+  const [isScrolling, setIsScrolling] = useState(false);
+  const [lastScroll, setLastScroll] = useState(0)
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setCurrentScroll(window.scrollY)
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, [window.scrollY]);
+
+  useEffect(() => {
+    const compareLastScroll = () => {
+      setIsScrolling(
+        (currentScroll < lastScroll) && (currentScroll > 150)
+      )
+      setLastScroll(currentScroll)
+    }
+
+    const handleLastScroll = () => {
+      setTimeout(compareLastScroll, 50)
+    }
+
+    window.addEventListener('scroll', handleLastScroll)
+    return () => {
+      window.removeEventListener('scroll', handleLastScroll)
+    }
+  }, [currentScroll])
+
+  return (
+    <div className={cn(
+      "sticky top-[0px] z-40 w-full border-b bg-background/80 backdrop-blur-md shadow-lg transform transition-transform duration-300",
+      isScrolling ? "translate-y-0" : "translate-y-[-150px]" 
+    )}>
+      <ScrollingBanner />
+      <BaseHeader />
+    </div>
+  )
+}
+
+function Header() {
+  return (
+    <>
+      <FixedHeader />
+      <ScrollingHeader />
+    </>
   );
 }
 
