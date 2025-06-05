@@ -3,10 +3,10 @@
 import { useState, useEffect } from "react";
 import { ProductCard } from "@/components/product/product-card";
 import { Category, Product } from "@prisma/client";
-import { cn } from "@/lib/utils";
 import { Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import FilterZone from "@/components/layout/filter-zone";
 
 export default function MenuPage() {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -125,36 +125,11 @@ export default function MenuPage() {
           </div>
         </div>
 
-        {/* Filtres par catégorie */}
-        <div className="mb-8 sticky top-20 left-46 z-10 w-full">
-          <div className="flex flex-wrap justify-center w-full gap-2 bg-white/80 backdrop-blur-sm p-4">
-            <button
-              onClick={() => handleCategoryClick(null)}
-              className={cn(
-                "px-4 py-2 rounded-full border transition-colors",
-                !selectedCategory
-                  ? "bg-red-600 text-white border-red-600"
-                  : "bg-white text-gray-700 border-gray-300 hover:border-red-600"
-              )}
-            >
-              Tous les produits
-            </button>
-            {categories.map((category) => (
-              <button
-                key={category.id}
-                onClick={() => handleCategoryClick(category.id)}
-                className={cn(
-                  "px-4 py-2 rounded-full border transition-colors",
-                  selectedCategory === category.id
-                    ? "bg-red-600 text-white border-red-600"
-                    : "bg-white text-gray-700 border-gray-300 hover:border-red-600"
-                )}
-              >
-                {category.name}
-              </button>
-            ))}
-          </div>
-        </div>
+        <FilterZone
+          items={categories}
+          action={handleCategoryClick}
+          selectedCategory={selectedCategory}
+        />
 
         <div className="mb-8 container mx-auto px-4">
           {/* Affichage des résultats de recherche */}
