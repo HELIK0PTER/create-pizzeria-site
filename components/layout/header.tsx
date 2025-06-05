@@ -14,12 +14,33 @@ import { usePathname } from "next/navigation";
 function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
+
   const { getItemsCount } = useCart();
   const itemsCount = getItemsCount();
 
   useEffect(() => {
     setIsMounted(true);
-  }, []);
+
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+
+      if (currentScrollY > lastScrollY && currentScrollY > 100) {
+        setIsVisible(false);
+      } else if (currentScrollY < 50) {
+        setIsVisible(true);
+      }
+
+      setLastScrollY(currentScrollY);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, [lastScrollY]);
 
   const currentPath = usePathname();
   const isActive = (path: string) => currentPath === path
@@ -32,7 +53,10 @@ function Header() {
   ]
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-md shadow-lg">
+    <header className={cn(
+      "sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-md shadow-lg transform transition-transform duration-300",
+      isVisible ? "translate-y-0" : "-translate-y-full"
+    )}>
       <div className="grid grid-cols-3 lg:grid-cols-5 h-20 w-full px-4 md:px-8">
         {/* Logo avec animation */}
         <Link href="/" className="group flex items-center space-x-3">
