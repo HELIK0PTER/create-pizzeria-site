@@ -21,7 +21,7 @@ function BaseHeader() {
 
   useEffect(() => {
     setIsMounted(true);
-  });
+  },[]);
 
   const currentPath = usePathname();
   const isActive = (path: string) => currentPath === path
@@ -222,7 +222,7 @@ function ScrollingHeader() {
     return () => {
       window.removeEventListener('scroll', handleScroll);
     };
-  }, [window.scrollY]);
+  }, []);
 
   useEffect(() => {
     const compareLastScroll = () => {
@@ -240,7 +240,7 @@ function ScrollingHeader() {
     return () => {
       window.removeEventListener('scroll', handleLastScroll)
     }
-  }, [currentScroll])
+  }, [currentScroll, lastScroll])
 
   return (
     <div className={cn(

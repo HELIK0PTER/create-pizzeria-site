@@ -18,10 +18,10 @@ export default function AboutPage() {
                 </CardHeader>
                 <CardContent className="text-gray-700 space-y-4">
                   <p>
-                    Bienvenue chez Bella Pizza, né d'une passion pour l'authentique pizza napolitaine. Notre aventure a commencé il y a 15 ans dans un petit fournil avec le rêve de partager les saveurs traditionnelles de l'Italie.
+                    {`Bienvenue chez Bella Pizza, né d'une passion pour l'authentique pizza napolitaine. Notre aventure a commencé il y a 15 ans dans un petit fournil avec le rêve de partager les saveurs traditionnelles de l'Italie.`}
                   </p>
                   <p>
-                    Nous utilisons des ingrédients frais et de qualité supérieure, sourcés localement autant que possible, et une pâte longuement pétrie et maturée pour garantir cette texture légère et aérée caractéristique.
+                    {`Nous utilisons des ingrédients frais et de qualité supérieure, sourcés localement autant que possible, et une pâte longuement pétrie et maturée pour garantir cette texture légère et aérée caractéristique.`}
                   </p>
                 </CardContent>
               </Card>
@@ -59,10 +59,10 @@ export default function AboutPage() {
                 </CardHeader>
                 <CardContent className="text-gray-700 space-y-4">
                   <p>
-                    Chez Bella Pizza, nous croyons en la qualité, la fraîcheur et la convivialité. Chaque pizza est préparée avec soin et passion, comme si nous la préparions pour notre propre famille.
+                    {`Chez Bella Pizza, nous croyons en la qualité, la fraîcheur et la convivialité. Chaque pizza est préparée avec soin et passion, comme si nous la préparions pour notre propre famille.`}
                   </p>
                   <p>
-                    Nous nous engageons à offrir une expérience culinaire exceptionnelle, de la sélection des ingrédients à la dernière bouchée, tout en respectant l'environnement et en soutenant les producteurs locaux.
+                    {`Nous nous engageons à offrir une expérience culinaire exceptionnelle, de la sélection des ingrédients à la dernière bouchée, tout en respectant l'environnement et en soutenant les producteurs locaux.`}
                   </p>
                 </CardContent>
               </Card>
