@@ -1,6 +1,7 @@
 "use client";
 
 import { config } from "@/settings/config";
+import DropdownInfo from "@/components/layout/dropdownInfo";
 
 import { useState, useEffect, useCallback, Suspense } from "react";
 import Link from "next/link";
@@ -93,7 +94,7 @@ export default function HomePage() {
              <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold leading-tight drop-shadow-lg">
                 Bella <span className="text-orange-400">Pizza</span>
              </h1>
-
+             <DropdownInfo />
              <p className="text-xl leading-relaxed text-pretty max-w-2xl mx-auto opacity-90 drop-shadow-md">
                 Découvrez Bella Pizza, où l&apos;authenticité italienne rencontre la rapidité.
                 Savourez nos pizzas artisanales, faites maison avec des ingrédients frais et premium,
