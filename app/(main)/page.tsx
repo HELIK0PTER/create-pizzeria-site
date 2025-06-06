@@ -5,17 +5,7 @@ import DropdownInfo from "@/components/layout/dropdownInfo";
 
 import { useState, useEffect, useCallback, Suspense } from "react";
 import Link from "next/link";
-import {
-  ArrowRight,
-  Clock,
-  Pizza,
-  Star,
-  MapPin,
-  Award,
-  Users,
-  X,
-  ArrowDown,
-} from "lucide-react";
+import { ArrowRight, Clock, Pizza, Award, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -71,9 +61,7 @@ export default function HomePage() {
       </Suspense>
 
       {/* Hero Section: Background Image Layout */}
-      <section 
-        className="relative overflow-hidden h-screen flex items-center bg-gray-50"
-      >
+      <section className="relative overflow-hidden h-screen flex items-center bg-gray-50">
         {/* Background Image */}
         <Image
           src="https://images.unsplash.com/photo-1513104890138-7c749659a591?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
@@ -86,15 +74,15 @@ export default function HomePage() {
         {/* Overlay pour améliorer la lisibilité */}
         <div className="absolute inset-0 bg-black/60 z-10"></div>
 
-        {/* Contenu de la Hero Section */} 
+        {/* Contenu de la Hero Section */}
         <div className="relative z-10 container mx-auto px-4 text-white text-center">
-           {/* La section des offres a été retirée comme demandé */}
+          {/* La section des offres a été retirée comme demandé */}
 
            <div className="space-y-6 mb-8 animate-fadeInUp animation-delay-200">
              <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold leading-tight drop-shadow-lg">
                 Bella <span className="text-orange-400">Pizza</span>
              </h1>
-             <DropdownInfo />
+
              <p className="text-xl leading-relaxed text-pretty max-w-2xl mx-auto opacity-90 drop-shadow-md">
                 Découvrez Bella Pizza, où l&apos;authenticité italienne rencontre la rapidité.
                 Savourez nos pizzas artisanales, faites maison avec des ingrédients frais et premium,
@@ -102,22 +90,22 @@ export default function HomePage() {
              </p>
            </div>
 
-           {/* Stats et Infos de livraison */}
-           {/* Vous pouvez ajouter d'autres stats ou infos ici si nécessaire */}
+          {/* Stats et Infos de livraison */}
+          {/* Vous pouvez ajouter d'autres stats ou infos ici si nécessaire */}
 
-           {/* Boutons CTA */}
-           <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fadeInUp animation-delay-600">
-             <Button
-               size="lg"
-               asChild
-               className="bg-orange-600 hover:bg-orange-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
-             >
-               <Link href="/menu">
-                 Commander maintenant
-                 <ArrowRight className="ml-2 h-5 w-5" />
-               </Link>
-             </Button>
-           </div>
+          {/* Boutons CTA */}
+          <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fadeInUp animation-delay-600">
+            <Button
+              size="lg"
+              asChild
+              className="bg-orange-600 hover:bg-orange-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+            >
+              <Link href="/menu">
+                Commander maintenant
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Link>
+            </Button>
+          </div>
         </div>
       </section>
 

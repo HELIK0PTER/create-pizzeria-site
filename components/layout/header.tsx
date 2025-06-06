@@ -21,7 +21,7 @@ function BaseHeader() {
 
   useEffect(() => {
     setIsMounted(true);
-  });
+  },[]);
 
   const currentPath = usePathname();
   const isActive = (path: string) => currentPath === path
@@ -222,30 +222,25 @@ function ScrollingHeader() {
     return () => {
       window.removeEventListener('scroll', handleScroll);
     };
-  }, [window.scrollY]);
+  }, []);
 
   useEffect(() => {
-    const compareLastScroll = () => {
-      setIsScrolling(
-        (currentScroll < lastScroll) && (currentScroll > 150)
-      )
-      setLastScroll(currentScroll)
-    }
+    const handleScroll = () => {
+      const isScrollingUp = currentScroll < lastScroll && currentScroll > 150;
+      setIsScrolling(isScrollingUp);
+      setLastScroll(currentScroll);
+    };
 
-    const handleLastScroll = () => {
-      setTimeout(compareLastScroll, 50)
-    }
-
-    window.addEventListener('scroll', handleLastScroll)
+    window.addEventListener('scroll', handleScroll);
     return () => {
-      window.removeEventListener('scroll', handleLastScroll)
-    }
-  }, [currentScroll])
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, [currentScroll, lastScroll]);
 
   return (
     <div className={cn(
       "sticky top-[0px] z-40 w-full border-b bg-background/80 backdrop-blur-md shadow-lg transform transition-transform duration-300",
-      isScrolling ? "translate-y-0" : "translate-y-[-150px]" 
+      isScrolling ? "translate-y-0" : "translate-y-[-150px]"
     )}>
       <ScrollingBanner />
       <BaseHeader />
