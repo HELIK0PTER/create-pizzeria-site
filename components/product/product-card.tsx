@@ -69,7 +69,7 @@ export function ProductCard({ product }: ProductCardProps) {
   }, []);
 
   return (
-    <Card className="h-full w-full flex flex-col flex-1 justify-between group overflow-hidden border-0 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 py-0">
+    <Card className="h-full w-full sm:w-full flex flex-col flex-1 justify-between group overflow-hidden border-0 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 py-0">
       {/* Image Header */}
       <CardHeader className="p-0 relative">
         <div className="relative aspect-square bg-gradient-to-br from-orange-50 to-red-50 overflow-hidden">
@@ -128,31 +128,33 @@ export function ProductCard({ product }: ProductCardProps) {
       <CardContent className="p-4 sm:p-6">
         <div className="space-y-4">
           {/* Titre et prix */}
-          <div className="space-y-2">
-            <h3 className="font-semibold text-xl text-gray-900 leading-tight">
-              {extendedProduct.name}
-            </h3>
-            <div className="flex items-center justify-between">
-              <span className="text-2xl font-bold text-orange-600">
-                {formatPrice(price)}
-              </span>
-              {(extendedProduct.ingredients || extendedProduct.allergens) && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-gray-500 hover:text-orange-600"
-                >
-                  <Info className="h-4 w-4" />
-                </Button>
+          <div className="space-y-2 flex justify-between">
+            <div>
+              <h3 className="font-semibold text-xl text-gray-900 leading-tight">
+                {extendedProduct.name}
+              </h3>
+              <div className="flex items-center justify-between">
+                <span className="text-2xl font-bold text-orange-600">
+                  {formatPrice(price)}
+                </span>
+                {(extendedProduct.ingredients || extendedProduct.allergens) && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-gray-500 hover:text-orange-600"
+                  >
+                    <Info className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+            </div>
+            <div>
+              {/* Base */}
+              {extendedProduct.baseType && (
+                <BaseBadge baseType={extendedProduct.baseType} />
               )}
             </div>
           </div>
-          
-          {/* Base */}
-          {extendedProduct.baseType && (
-            <BaseBadge baseType={extendedProduct.baseType} />
-          )}
-
           {/* Ingrédients */}
           {extendedProduct.ingredients && (
             <div className="space-y-2">

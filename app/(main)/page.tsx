@@ -82,6 +82,7 @@ export default function HomePage() {
              <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold leading-tight drop-shadow-lg">
                 Bella <span className="text-orange-400">Pizza</span>
              </h1>
+            
 
              <p className="text-xl leading-relaxed text-pretty max-w-2xl mx-auto opacity-90 drop-shadow-md">
                 Découvrez Bella Pizza, où l&apos;authenticité italienne rencontre la rapidité.
@@ -108,13 +109,13 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-
+      <DropdownInfo />
       {/* Featured Products avec design amélioré */}
       <section
         id="menu"
         className="py-20 bg-gradient-to-br from-gray-50 to-orange-50 scroll-mt-20"
       >
-        <div className="container mx-auto md:px-4">
+        <div className="container mx-auto md:px-4 flex flex-col items-center">
           <div className="text-center mb-16">
             <Badge variant="secondary" className="mb-4">
               Nos best-sellers
@@ -138,7 +139,7 @@ export default function HomePage() {
               ))}
             </div>
           ) : featuredProducts.length > 0 ? (
-            <div className="grid grid-cols-1 gap-0 md:grid-cols-2 md:gap-8 lg:grid-cols-3 mb-12">
+            <div className="grid grid-cols-1 md:grid-cols-2 md:gap-8 lg:grid-cols-3 mb-12 place-items-center gap-5 w-[90%] sm:w-full">
               {featuredProducts.map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))}
