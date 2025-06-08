@@ -153,7 +153,7 @@ function BaseHeader() {
               key={item.name}
               href={item.href}
               className={cn(
-                "group flex items-center justify-between px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200",
+                "group flex items-center justify-between px-4 py-3 text-sm text-right font-medium rounded-lg transition-all duration-200",
                 "hover:bg-orange-50 hover:text-orange-600",
                 item.active && "bg-orange-50 text-orange-600"
               )}
@@ -165,10 +165,10 @@ function BaseHeader() {
                   : "none",
               }}
             >
-              <span>{item.name}</span>
               {item.active && (
                 <div className="h-2 w-2 bg-orange-600 rounded-full" />
               )}
+              <span className="ml-auto">{item.name}</span>
             </Link>
           ))}
 
@@ -239,7 +239,7 @@ function ScrollingHeader() {
 
   return (
     <div className={cn(
-      "sticky top-[0px] z-40 w-full border-b bg-background/80 backdrop-blur-md shadow-lg transform transition-transform duration-300",
+      "fixed top-[0px] z-40 w-full border-b bg-background/80 backdrop-blur-md shadow-lg transform transition-transform duration-300",
       isScrolling ? "translate-y-0" : "translate-y-[-150px]"
     )}>
       <ScrollingBanner />

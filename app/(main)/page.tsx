@@ -1,6 +1,6 @@
 "use client";
 
-import { config } from "@/settings/config";
+import { variables } from "@/settings/config";
 import DropdownInfo from "@/components/layout/dropdownInfo";
 
 import { useState, useEffect, useCallback, Suspense } from "react";
@@ -61,7 +61,7 @@ export default function HomePage() {
       </Suspense>
 
       {/* Hero Section: Background Image Layout */}
-      <section className="relative overflow-hidden h-screen flex items-center bg-gray-50">
+      <section className="relative overflow-hidden h-[calc(100vh-100px)] flex items-center bg-gray-50">
         {/* Background Image */}
         <Image
           src="https://images.unsplash.com/photo-1513104890138-7c749659a591?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
@@ -258,7 +258,7 @@ export default function HomePage() {
             Une envie soudaine de pizza ?
           </h2>
           <p className="text-xl mb-8 opacity-90 max-w-2xl mx-auto">
-            {config.cta_text}
+            {variables.cta_text}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button

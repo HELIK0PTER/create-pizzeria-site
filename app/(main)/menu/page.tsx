@@ -97,7 +97,7 @@ export default function MenuPage() {
   return (
     <div className="py-8">
       <div className="mx-auto px-4">
-        <h1 className="ml-[10%] text-4xl font-bold text-gray-900 mb-8">
+        <h1 className="text-center md:text-left md:ml-[10%] text-4xl font-bold text-gray-900 mb-8">
           Notre Menu
         </h1>
 
