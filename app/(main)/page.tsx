@@ -180,7 +180,7 @@ export default function HomePage() {
               height="450"
               loading="lazy"
               allowFullScreen
-              src={`https://www.google.com/maps/embed/v1/place?key=AIzaSyA0fR8fT3mG1i0Ee0rtzwaOIdyobwNVJaw&q=147+Avenue+de+la+République,+75011+Paris`}
+              src={`https://www.google.com/maps/embed/v1/place?key=${process.env.GOOGLEMAPS_API_KEY}&q=147+Avenue+de+la+République,+75011+Paris`}
             ></iframe>
           </div>
         </div>
