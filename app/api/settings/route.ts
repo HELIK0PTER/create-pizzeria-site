@@ -29,9 +29,6 @@ const defaultSettings = {
   ticketsRestaurantEnabled: variables.ticketsRestaurantEnabled,
   checkEnabled: variables.checkEnabled,
   welcomeMessage: variables.welcomeMessage,
-  primaryColor: variables.primaryColor,
-  secondaryColor: variables.secondaryColor,
-  backgroundColor: variables.backgroundColor,
   adminEmail: variables.adminEmail,
   orderNotificationEmail: variables.orderNotificationEmail,
 };
