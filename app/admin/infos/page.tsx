@@ -22,7 +22,7 @@ import {
   AlertCircle,
   Euro
 } from 'lucide-react'
-
+import { variables } from '@/settings/config'
 interface Settings {
   id?: string
   name: string
@@ -262,7 +262,7 @@ export default function AdminInfosPage() {
                     id="name"
                     value={settings.name}
                     onChange={(e) => setSettings(prev => ({ ...prev, name: e.target.value }))}
-                    placeholder="Bella Pizza"
+                    placeholder={variables.title}
                   />
                 </div>
                 <div>
@@ -656,7 +656,7 @@ export default function AdminInfosPage() {
                   id="welcome"
                   value={settings.welcomeMessage || ''}
                   onChange={(e) => setSettings(prev => ({ ...prev, welcomeMessage: e.target.value }))}
-                  placeholder="Bienvenue chez Bella Pizza !"
+                  placeholder={`Bienvenue chez ${variables.title} !`}
                 />
               </div>
 

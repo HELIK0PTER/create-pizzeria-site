@@ -11,6 +11,7 @@ import { UserMenu } from "@/components/auth/user-menu";
 import { cn } from "@/lib/utils";
 import { usePathname } from "next/navigation";
 import ScrollingBanner from "@/components/layout/ScrollingBanner"
+import { variables } from "@/settings/config";
 
 function BaseHeader() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -44,10 +45,10 @@ function BaseHeader() {
           </div>
           <div className="hidden sm:block">
             <span className="text-2xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
-              Bella Pizza
+              {variables.title}
             </span>
             <p className="text-xs text-gray-500 -mt-1">
-              Authentique • Délicieux
+              {variables.subtitle1} • {variables.subtitle2}
             </p>
           </div>
         </Link>
@@ -73,9 +74,11 @@ function BaseHeader() {
         <div className="col-span-2 lg:col-span-1 flex items-center justify-end space-x-3">
           {/* Statut de livraison */}
           <div className="hidden xl:flex items-center space-x-2 text-sm">
-            <Badge variant="secondary" className="bg-green-100 text-green-700">
-              Livraison ouverte
-            </Badge>
+            {(variables.deliveryEnabled || variables.clickAndCollectEnabled) && (
+              <Badge variant="secondary" className="bg-green-100 text-green-700">
+                {variables.deliveryEnabled ? "En Livraison disponible" : "En Click & Collect disponible"}
+              </Badge>
+            )}
           </div>
 
           {/* Actions utilisateur */}
@@ -281,7 +284,7 @@ export function AdminHeader() {
                 <div className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-gray-900">Bella Pizza</h1>
+                <h1 className="text-xl font-bold text-gray-900">{variables.title}</h1>
                 <p className="text-xs text-gray-500">Administration</p>
               </div>
             </Link>

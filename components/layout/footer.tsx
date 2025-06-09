@@ -1,19 +1,10 @@
 import Link from "next/link";
-import {
-  Pizza,
-  MapPin,
-  Phone,
-  Mail,
-  Clock,
-  Facebook,
-  Instagram,
-  Globe,
-  Shield,
-} from "lucide-react";
+import { Pizza, MapPin, Phone, Mail, Clock, Shield } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-
+import { variables } from "@/settings/config";
 export default function Footer() {
   const currentYear = new Date().getFullYear();
 
@@ -31,17 +22,13 @@ export default function Footer() {
     { name: "Administration", href: "/admin", icon: Shield },
   ];
 
-  const socialLinks = [
-    { name: "Facebook", href: "#", icon: Facebook },
-    { name: "Instagram", href: "#", icon: Instagram },
-    { name: "Site web", href: "#", icon: Globe },
-  ];
+  const socialLinks = variables.social_links;
 
   return (
     <footer className="bg-gray-900 text-white">
       {/* Section principale */}
       <div className="container mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
           {/* Logo et description */}
           <div className="space-y-4">
             <Link href="/" className="group flex items-center space-x-3">
@@ -51,17 +38,15 @@ export default function Footer() {
               </div>
               <div>
                 <span className="text-2xl font-bold bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent">
-                  Bella Pizza
+                  {variables.title}
                 </span>
                 <p className="text-xs text-gray-400 -mt-1">
-                  Authentique • Délicieux
+                  {variables.subtitle1} • {variables.subtitle2}
                 </p>
               </div>
             </Link>
             <p className="text-gray-300 text-sm leading-relaxed">
-              Les meilleures pizzas artisanales de la ville, préparées avec des
-              ingrédients frais et de qualité. Livraison rapide et click &
-              collect disponibles.
+              {variables.slogan}
             </p>
             <div className="flex items-center gap-2">
               <Badge
@@ -134,6 +119,23 @@ export default function Footer() {
 
           {/* Réseaux sociaux et liens */}
           <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-white">Liens utiles</h3>
+            {legalLinks.map((link) => {
+              const Icon = link.icon;
+              return (
+                <Link
+                  key={link.name}
+                  href={link.href}
+                  className="flex items-center space-x-2 text-xs text-gray-400 hover:text-orange-400 transition-colors duration-200"
+                >
+                  {Icon && <Icon className="h-3 w-3" />}
+                  <span>{link.name}</span>
+                </Link>
+              );
+            })}
+          </div>
+
+          <div className="space-y-4">
             <h3 className="text-lg font-semibold text-white">Suivez-nous</h3>
             <div className="flex space-x-3">
               {socialLinks.map((social) => {
@@ -154,25 +156,6 @@ export default function Footer() {
                 );
               })}
             </div>
-
-            <div className="space-y-2 pt-4">
-              <h4 className="text-sm font-medium text-gray-200">
-                Liens utiles
-              </h4>
-              {legalLinks.map((link) => {
-                const Icon = link.icon;
-                return (
-                  <Link
-                    key={link.name}
-                    href={link.href}
-                    className="flex items-center space-x-2 text-xs text-gray-400 hover:text-orange-400 transition-colors duration-200"
-                  >
-                    {Icon && <Icon className="h-3 w-3" />}
-                    <span>{link.name}</span>
-                  </Link>
-                );
-              })}
-            </div>
           </div>
         </div>
       </div>
@@ -183,7 +166,7 @@ export default function Footer() {
       <div className="container mx-auto px-4 py-6">
         <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
           <div className="text-sm text-gray-400">
-            © {currentYear} Bella Pizza. Tous droits réservés.
+            © {currentYear} {variables.title}. Tous droits réservés.
           </div>
           <div className="flex items-center space-x-4 text-xs text-gray-500">
             <span>Fait avec ❤️ pour les amateurs de pizza</span>

@@ -1,0 +1,1 @@
+export const GOOGLEMAPS_SECRET = process.env.NEXT_PUBLIC_GOOGLEMAPS_SECRET;

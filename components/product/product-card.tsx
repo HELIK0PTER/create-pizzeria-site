@@ -78,6 +78,7 @@ export function ProductCard({ product }: ProductCardProps) {
               src={extendedProduct.image}
               alt={extendedProduct.name}
               fill
+              sizes="500px"
               className="object-cover transition-transform duration-300 group-hover:scale-105"
             />
           ) : (

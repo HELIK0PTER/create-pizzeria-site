@@ -37,6 +37,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Product, Order, Category, Settings as PizzaSettings } from "@prisma/client";
 import { formatPrice } from "@/lib/utils";
+import { variables } from "@/settings/config";
 
 // Types pour les statistiques
 interface DashboardStats {
@@ -148,7 +149,7 @@ export default function AdminDashboard() {
           <div>
             <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
               <Pizza className="h-8 w-8 text-orange-600" />
-              Dashboard {settings?.name || "Bella Pizza"}
+              Dashboard {settings?.name || variables.title}
             </h1>
             <p className="text-gray-600 mt-1">
               Vue d&apos;ensemble de votre pizzeria

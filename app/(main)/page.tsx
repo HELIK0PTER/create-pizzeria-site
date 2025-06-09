@@ -14,6 +14,7 @@ import { Prisma } from "@prisma/client";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import Image from "next/image";
+import { GOOGLEMAPS_SECRET } from "@/utils/environement";
 
 type ProductWithRelations = Prisma.ProductGetPayload<{
   include: {
@@ -35,8 +36,10 @@ export default function HomePage() {
     ProductWithRelations[]
   >([]);
   const [loading, setLoading] = useState(true);
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
+    setIsMounted(true);
     fetchFeaturedProducts();
   }, []);
 
@@ -53,6 +56,8 @@ export default function HomePage() {
     }
   };
 
+  if (!isMounted) return null;
+
   return (
     <div className="min-h-screen">
       {/* Message d'erreur d'accès refusé */}
@@ -64,6 +69,7 @@ export default function HomePage() {
       <section className="relative overflow-hidden h-[calc(100vh-100px)] flex items-center bg-gray-50">
         {/* Background Image */}
         <Image
+          priority
           src="https://images.unsplash.com/photo-1513104890138-7c749659a591?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
           alt="Délicieuse pizza artisanale en fond"
           fill
@@ -78,18 +84,16 @@ export default function HomePage() {
         <div className="relative z-10 container mx-auto px-4 text-white text-center">
           {/* La section des offres a été retirée comme demandé */}
 
-           <div className="space-y-6 mb-8 animate-fadeInUp animation-delay-200">
-             <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold leading-tight drop-shadow-lg">
-                Bella <span className="text-orange-400">Pizza</span>
-             </h1>
-            
+          <div className="space-y-6 mb-8 animate-fadeInUp animation-delay-200">
+            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold leading-tight drop-shadow-lg">
+              {variables.title_part1}{" "}
+              <span className="text-orange-400">{variables.title_part2}</span>
+            </h1>
 
-             <p className="text-xl leading-relaxed text-pretty max-w-2xl mx-auto opacity-90 drop-shadow-md">
-                Découvrez Bella Pizza, où l&apos;authenticité italienne rencontre la rapidité.
-                Savourez nos pizzas artisanales, faites maison avec des ingrédients frais et premium,
-                cuites au feu de bois et livrées chez vous en 15 minutes.
-             </p>
-           </div>
+            <p className="text-xl leading-relaxed text-pretty max-w-2xl mx-auto opacity-90 drop-shadow-md">
+              {variables.cta_text}
+            </p>
+          </div>
 
           {/* Stats et Infos de livraison */}
           {/* Vous pouvez ajouter d'autres stats ou infos ici si nécessaire */}
@@ -127,6 +131,8 @@ export default function HomePage() {
               Découvrez les créations qui ont conquis le cœur de nos clients
             </p>
           </div>
+
+          {/* TODO : Séparer les pizzas dans un composant coté client pour pouvoir gérer cette page coté serveur */}
 
           {loading ? (
             <div className="grid grid-cols-1 gap-0 md:grid-cols-2 md:gap-8 lg:grid-cols-3 mb-12">
@@ -175,13 +181,15 @@ export default function HomePage() {
             Retrouvez-nous ici !
           </h2>
           <div className="aspect-w-16 aspect-h-9 w-full max-w-4xl mx-auto rounded-lg overflow-hidden shadow-xl">
-            <iframe
-              width="100%"
-              height="450"
-              loading="lazy"
-              allowFullScreen
-              src={`https://www.google.com/maps/embed/v1/place?key=${process.env.GOOGLEMAPS_API_KEY}&q=147+Avenue+de+la+République,+75011+Paris`}
-            ></iframe>
+            {isMounted && (
+              <iframe
+                width="100%"
+                height="450"
+                loading="lazy"
+                allowFullScreen
+                src={`https://www.google.com/maps/embed/v1/place?key=${GOOGLEMAPS_SECRET}&q=147+Avenue+de+la+République,+75011+Paris`}
+              ></iframe>
+            )}
           </div>
         </div>
       </section>
