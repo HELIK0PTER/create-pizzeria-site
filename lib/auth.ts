@@ -43,8 +43,25 @@ export const auth = betterAuth({
   baseURL: process.env.BETTER_AUTH_URL || "http://localhost:3000",
   trustedOrigins: [
     process.env.BETTER_AUTH_URL || "http://localhost:3000",
-    "http://localhost:3000"
+    "http://localhost:3000",
+    "https://create-pizzeria-site.vercel.app"
   ],
+  // Configuration des cookies pour résoudre les problèmes CORS
+  cookies: {
+    domain: process.env.NODE_ENV === 'production' ? '.vercel.app' : 'localhost',
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
+  },
+  // Configuration CORS explicite
+  cors: {
+    enabled: true,
+    allowedOrigins: [
+      process.env.BETTER_AUTH_URL || "http://localhost:3000",
+      "http://localhost:3000",
+      "https://create-pizzeria-site.vercel.app"
+    ],
+    allowCredentials: true
+  },
   plugins: [
     admin(), // Plugin admin pour la gestion avancée des utilisateurs et sessions
     nextCookies(), // Plugin pour la gestion des cookies Next.js
