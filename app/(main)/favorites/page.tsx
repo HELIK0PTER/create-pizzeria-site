@@ -39,10 +39,10 @@ export default function FavoritesPage() {
         }
 
         const data = await response.json();
-        setFavoriteProducts(data.map((fav: any) => fav.product));
-      } catch (err: any) {
+        setFavoriteProducts(data.map((fav: { product: Product }) => fav.product));
+      } catch (err: unknown) {
         console.error("Erreur lors du chargement des favoris:", err);
-        setError(err.message || "Une erreur est survenue lors du chargement de vos favoris.");
+        setError((err instanceof Error) ? err.message : "Une erreur est survenue lors du chargement de vos favoris.");
         setFavoriteProducts([]);
       } finally {
         setLoading(false);
@@ -94,7 +94,7 @@ export default function FavoritesPage() {
         {favoriteProducts.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-gray-500 text-lg">
-              Vous n'avez pas encore de produits favoris.
+              Vous n&apos;avez pas encore de produits favoris.
             </p>
             <p className="text-gray-500 text-md mt-2">
               Cliquez sur le cœur <Heart className="inline-block h-4 w-4 text-orange-500 fill-current" /> sur les produits du menu pour les ajouter ici !

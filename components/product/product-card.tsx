@@ -24,7 +24,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
   DialogClose
 } from "@/components/ui/dialog";
 
@@ -457,7 +456,7 @@ export function ProductCard({ product, isCompact }: ProductCardProps) {
           <DialogHeader>
             <DialogTitle>Choisir une taille pour {extendedProduct.name}</DialogTitle>
             <DialogDescription>
-              Sélectionnez la taille de votre pizza avant de l'ajouter au panier.
+              Sélectionnez la taille de votre pizza avant de l&apos;ajouter au panier.
             </DialogDescription>
           </DialogHeader>
           <div className="grid grid-cols-2 gap-3 py-4">

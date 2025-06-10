@@ -1,6 +1,5 @@
 // app/api/favorites/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
 import { auth } from "@/lib/auth"; // Assurez-vous que 'auth' est bien exporté de cette manière
 import { prisma } from "@/lib/prisma"; // Assurez-vous que 'prisma' est exporté de cette manière
 
