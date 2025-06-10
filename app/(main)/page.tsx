@@ -15,6 +15,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import Image from "next/image";
 import { GOOGLEMAPS_SECRET } from "@/utils/environement";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 type ProductWithRelations = Prisma.ProductGetPayload<{
   include: {
@@ -37,6 +39,7 @@ export default function HomePage() {
   >([]);
   const [loading, setLoading] = useState(true);
   const [isMounted, setIsMounted] = useState(false);
+  const [isCompactView, setIsCompactView] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
@@ -132,10 +135,19 @@ export default function HomePage() {
             </p>
           </div>
 
+          <div className="flex items-center space-x-2 mb-8">
+            <Label htmlFor="toggle-view">Vue compacte</Label>
+            <Switch
+              id="toggle-view"
+              checked={isCompactView}
+              onCheckedChange={setIsCompactView}
+            />
+          </div>
+
           {/* TODO : Séparer les pizzas dans un composant coté client pour pouvoir gérer cette page coté serveur */}
 
           {loading ? (
-            <div className="grid grid-cols-1 gap-0 md:grid-cols-2 md:gap-8 lg:grid-cols-3 mb-12">
+            <div className={`grid ${isCompactView ? "grid-cols-1" : "grid-cols-1 md:grid-cols-2 md:gap-8 lg:grid-cols-3"} mb-12 place-items-center gap-5 w-[90%] sm:w-full`}>
               {[...Array(6)].map((_, i) => (
                 <div key={i} className="animate-pulse">
                   <div className="bg-gray-200 aspect-square rounded-lg mb-4"></div>
@@ -145,9 +157,9 @@ export default function HomePage() {
               ))}
             </div>
           ) : featuredProducts.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 md:gap-8 lg:grid-cols-3 mb-12 place-items-center gap-5 w-[90%] sm:w-full">
+            <div className={`grid ${isCompactView ? "grid-cols-1" : "grid-cols-1 md:grid-cols-2 md:gap-8 lg:grid-cols-3"} mb-12 place-items-center gap-5 w-[90%] sm:w-full`}>
               {featuredProducts.map((product) => (
-                <ProductCard key={product.id} product={product} />
+                <ProductCard key={product.id} product={product} isCompact={isCompactView} />
               ))}
             </div>
           ) : (

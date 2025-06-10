@@ -118,6 +118,7 @@ model User {
   orders        Order[]
   accounts      Account[]
   sessions      Session[]
+  favorites     Favorite[]
 
   @@map("user")
 }
@@ -211,6 +212,19 @@ model Product {
   orderItems  OrderItem[]
   category    Category       @relation(fields: [categoryId], references: [id])
   variants    Variant[]
+  favorites   Favorite[]
+}
+
+model Favorite {
+  id        String   @id @default(cuid())
+  userId    String
+  productId String
+  createdAt DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
 }
 
 model Variant {

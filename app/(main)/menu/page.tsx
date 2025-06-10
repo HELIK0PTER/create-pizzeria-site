@@ -7,6 +7,8 @@ import { Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import FilterZone from "@/components/layout/filter-zone";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 export default function MenuPage() {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -14,6 +16,7 @@ export default function MenuPage() {
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
+  const [isCompactView, setIsCompactView] = useState(false);
 
   useEffect(() => {
     // Charger les données une seule fois au début
@@ -125,6 +128,16 @@ export default function MenuPage() {
           </div>
         </div>
 
+        {/* Contrôle de la taille de la liste */}
+        <div className="flex items-center justify-center space-x-2 mb-8">
+          <Label htmlFor="toggle-menu-view">Vue compacte</Label>
+          <Switch
+            id="toggle-menu-view"
+            checked={isCompactView}
+            onCheckedChange={setIsCompactView}
+          />
+        </div>
+
         <FilterZone
           items={categories}
           action={handleCategoryClick}
@@ -142,7 +155,7 @@ export default function MenuPage() {
 
           {/* Grille de produits */}
           {loading ? (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className={`grid ${isCompactView ? "grid-cols-1" : "md:grid-cols-2 lg:grid-cols-3"} gap-6`}>
               {[...Array(6)].map((_, i) => (
                 <div key={i} className="animate-pulse">
                   <div className="bg-gray-200 aspect-square rounded-lg mb-4"></div>
@@ -152,9 +165,9 @@ export default function MenuPage() {
               ))}
             </div>
           ) : filteredProducts.length > 0 ? (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className={`grid ${isCompactView ? "grid-cols-1" : "md:grid-cols-2 lg:grid-cols-3"} gap-6`}>
               {filteredProducts.map((product: Product) => (
-                <ProductCard key={product.id} product={product} />
+                <ProductCard key={product.id} product={product} isCompact={isCompactView} />
               ))}
             </div>
           ) : (

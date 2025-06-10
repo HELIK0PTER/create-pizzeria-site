@@ -83,9 +83,9 @@ function BaseHeader() {
 
           {/* Actions utilisateur */}
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" asChild className="relative p-5">
+            <Button variant="ghost" size="sm" asChild className="relative p-5 group">
               <Link href="/favorites">
-                <Heart className="h-5 w-5" />
+                <Heart className="h-5 w-5 transition-transform group-hover:scale-110 group-hover:fill-red-500" />
                 <span className="sr-only">Favoris</span>
               </Link>
             </Button>
