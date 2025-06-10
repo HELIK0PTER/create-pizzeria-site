@@ -16,7 +16,7 @@ const nextConfig = {
         headers: [
           {
             key: 'Access-Control-Allow-Origin',
-            value: process.env.BETTER_AUTH_URL || '*',
+            value: process.env.NEXT_PUBLIC_BETTER_AUTH_URL || '*',
           },
           {
             key: 'Access-Control-Allow-Methods',

@@ -40,9 +40,9 @@ export const auth = betterAuth({
   },
   // Configuration pour la production
   secret: process.env.BETTER_AUTH_SECRET || "fallback-secret-for-development-only",
-  baseURL: process.env.BETTER_AUTH_URL || "http://localhost:3000",
+  baseURL: process.env.NEXT_PUBLIC_BETTER_AUTH_URL || "http://localhost:3000",
   trustedOrigins: [
-    process.env.BETTER_AUTH_URL || "http://localhost:3000",
+    process.env.NEXT_PUBLIC_BETTER_AUTH_URL || "http://localhost:3000",
     "http://localhost:3000",
     "https://create-pizzeria-site.vercel.app"
   ],
@@ -56,7 +56,7 @@ export const auth = betterAuth({
   cors: {
     enabled: true,
     allowedOrigins: [
-      process.env.BETTER_AUTH_URL || "http://localhost:3000",
+      process.env.NEXT_PUBLIC_BETTER_AUTH_URL || "http://localhost:3000",
       "http://localhost:3000",
       "https://create-pizzeria-site.vercel.app"
     ],
