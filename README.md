@@ -98,23 +98,25 @@ npm i
 ```
 
 3. **Configurer les variables d'environnement**
-Créez un fichier `.env.local` à la racine du projet :
+Créez un fichier `.env` à la racine du projet :
 
 ```env
 # Database
-DATABASE_URL="file:./dev.db"
+DATABASE_URL=
 
-# NextAuth
-NEXTAUTH_URL=http://localhost:3000
-NEXTAUTH_SECRET=votre-secret-super-secure
+# Better Auth
+NEXT_PUBLIC_BETTER_AUTH_URL=
+BETTER_AUTH_SECRET=
 
 # Stripe
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_votre_cle_publique
-STRIPE_SECRET_KEY=sk_test_votre_cle_secrete
-STRIPE_WEBHOOK_SECRET=whsec_votre_webhook_secret
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=
+STRIPE_SECRET_KEY=
 
 # Site
-NEXT_PUBLIC_SITE_URL=http://localhost:3000
+NEXT_PUBLIC_SITE_URL=
+
+# Google API Key
+NEXT_PUBLIC_GOOGLEMAPS_SECRET=
 ```
 
 4. **Initialiser la base de données**
@@ -144,12 +146,7 @@ L'application sera accessible sur `http://localhost:3000`
 
 ### Configuration initiale
 
-Après l'installation, connectez-vous avec le compte admin par défaut :
-
-- Email : `admin@pizza.fr`
-- Mdp : `admin`
-
-⚠️ **Important** : Changez immédiatement ce mot de passe en production !
+⚠️ **Important** : Changez immédiatement le mot de passe admin transmis en production !
 
 > * Créez un compte avec votre adresse mail
 > * Déconnectez vous puis connectez vous avec le compte admin
