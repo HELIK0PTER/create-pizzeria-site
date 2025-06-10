@@ -4,11 +4,12 @@ import "./globals.css";
 
 import Footer from "@/components/layout/footer";
 import { CheckSession } from "@/components/auth/check-session";
+import { variables } from "@/settings/config";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Pizza Shop - Commandez vos pizzas en ligne",
+  title: `${variables.title} - Commandez vos pizzas en ligne`,
   description:
     "Commandez vos pizzas préférées en ligne pour une livraison rapide ou un retrait en magasin",
 };
