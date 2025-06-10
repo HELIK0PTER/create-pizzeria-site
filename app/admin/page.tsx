@@ -69,7 +69,7 @@ export default function AdminDashboard() {
       setLoading(true);
       const [productsRes, ordersRes, categoriesRes, settingsRes] = await Promise.all([
         fetch("/api/products"),
-        fetch("/api/orders"),
+        fetch("/api/orders?admin=true"),
         fetch("/api/categories"),
         fetch("/api/settings"),
       ]);
@@ -280,19 +280,28 @@ export default function AdminDashboard() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {orders.slice(0, 5).map((order) => (
-                      <TableRow key={order.id}>
-                        <TableCell className="font-medium">
-                          {order.orderNumber}
-                        </TableCell>
-                        <TableCell>{order.customerName}</TableCell>
-                        <TableCell>{formatPrice(order.total)}</TableCell>
-                        <TableCell>{getStatusBadge(order.status)}</TableCell>
-                        <TableCell>
-                          {new Date(order.createdAt).toLocaleDateString()}
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                    {orders
+                      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+                      .slice(0, 5)
+                      .map((order) => (
+                        <TableRow key={order.id}>
+                          <TableCell className="font-medium">
+                            #{order.orderNumber}
+                          </TableCell>
+                          <TableCell>{order.customerName}</TableCell>
+                          <TableCell>{formatPrice(order.total)}</TableCell>
+                          <TableCell>{getStatusBadge(order.status)}</TableCell>
+                          <TableCell>
+                            {new Date(order.createdAt).toLocaleDateString('fr-FR', {
+                              day: '2-digit',
+                              month: '2-digit',
+                              year: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </TableCell>
+                        </TableRow>
+                      ))}
                   </TableBody>
                 </Table>
                 {orders.length === 0 && (

@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { Product, Variant } from "@prisma/client";
+import { Product, Variant, Category } from "@prisma/client";
+import { useEffect } from "react";
 
 // Type spécifique pour les items du panier (différent de OrderItem de Prisma)
 interface CartItem {
@@ -8,17 +9,38 @@ interface CartItem {
   variantId?: string | null;
   quantity: number;
   notes?: string | null;
-  product: Product;
+  product: Product & { category: Category };
   variant?: Variant | null;
+}
+
+// Type pour les promotions appliquées
+interface PromotionApplied {
+  type: 'delivery' | 'pickup';
+  description: string;
+  pizzasFree: number;
+  totalPizzas: number;
+}
+
+// Type pour les settings promotions
+interface PromotionSettings {
+  promotionsEnabled: boolean;
+  deliveryPromotionEnabled: boolean;
+  deliveryPromotionBuy: number;
+  deliveryPromotionGet: number;
+  pickupPromotionEnabled: boolean;
+  pickupPromotionBuy: number;
+  pickupPromotionGet: number;
+  promotionDescription: string;
 }
 
 interface CartStore {
   items: CartItem[];
   deliveryMethod: "delivery" | "pickup";
   deliveryFee: number;
+  promotionSettings: PromotionSettings | null;
 
   addItem: (
-    product: Product,
+    product: Product & { category: Category },
     variant?: Variant,
     quantity?: number,
     notes?: string
@@ -36,11 +58,74 @@ interface CartStore {
   ) => void;
   clearCart: () => void;
   setDeliveryMethod: (method: "delivery" | "pickup") => void;
+  setPromotionSettings: (settings: PromotionSettings) => void;
+  saveLastOrder: (orderData: {
+    items: CartItem[];
+    deliveryMethod: "delivery" | "pickup";
+    total: number;
+    orderDate: string;
+    pizzaCount: number;
+  }) => void;
 
+  // Méthodes pour calculer les prix avec promotions
+  getPizzaItems: () => CartItem[];
+  getPromotionApplied: () => PromotionApplied | null;
   getSubTotal: () => number;
+  getPromotionDiscount: () => number;
+  getSubTotalWithPromotion: () => number;
   getTotal: () => number;
   getItemsCount: () => number;
 }
+
+// Fonction utilitaire pour vérifier si un produit est une pizza
+const isPizza = (product: Product & { category: Category }): boolean => {
+  return product.category.slug === "pizzas" || product.baseType !== null;
+};
+
+// Fonction pour calculer la promotion applicable
+const calculatePromotion = (
+  pizzaItems: CartItem[],
+  deliveryMethod: "delivery" | "pickup",
+  settings: PromotionSettings | null
+): PromotionApplied | null => {
+  if (!settings || !settings.promotionsEnabled) {
+    return null;
+  }
+
+  const isDelivery = deliveryMethod === "delivery";
+  const promotionEnabled = isDelivery 
+    ? settings.deliveryPromotionEnabled 
+    : settings.pickupPromotionEnabled;
+
+  if (!promotionEnabled) {
+    return null;
+  }
+
+  const buyCount = isDelivery 
+    ? settings.deliveryPromotionBuy 
+    : settings.pickupPromotionBuy;
+  const getCount = isDelivery 
+    ? settings.deliveryPromotionGet 
+    : settings.pickupPromotionGet;
+
+  // Calculer le nombre total de pizzas
+  const totalPizzas = pizzaItems.reduce((sum, item) => sum + item.quantity, 0);
+
+  // Calculer le nombre de pizzas gratuites
+  const promotionGroups = Math.floor(totalPizzas / (buyCount + getCount));
+  const pizzasFree = promotionGroups * getCount;
+
+  if (pizzasFree > 0) {
+    return {
+      type: isDelivery ? 'delivery' : 'pickup',
+      description: `${buyCount} achetées = ${getCount} offerte${getCount > 1 ? 's' : ''}`,
+      pizzasFree,
+      totalPizzas
+    };
+  }
+
+  return null;
+};
 
 export const useCart = create<CartStore>()(
   persist(
@@ -48,6 +133,7 @@ export const useCart = create<CartStore>()(
       items: [],
       deliveryMethod: "delivery",
       deliveryFee: 3.5,
+      promotionSettings: null,
 
       addItem: (product, variant, quantity = 1, notes) => {
         set((state) => {
@@ -121,6 +207,24 @@ export const useCart = create<CartStore>()(
         });
       },
 
+      setPromotionSettings: (settings) => {
+        set({ promotionSettings: settings });
+      },
+
+      // Récupérer uniquement les pizzas
+      getPizzaItems: () => {
+        const { items } = get();
+        return items.filter(item => isPizza(item.product));
+      },
+
+      // Calculer la promotion appliquée
+      getPromotionApplied: () => {
+        const { deliveryMethod, promotionSettings } = get();
+        const pizzaItems = get().getPizzaItems();
+        return calculatePromotion(pizzaItems, deliveryMethod, promotionSettings);
+      },
+
+      // Sous-total sans promotion
       getSubTotal: () => {
         const { items } = get();
         return items.reduce((total, item) => {
@@ -130,14 +234,58 @@ export const useCart = create<CartStore>()(
         }, 0);
       },
 
+      // Calcul de la remise promotion
+      getPromotionDiscount: () => {
+        const promotion = get().getPromotionApplied();
+        if (!promotion) return 0;
+
+        const pizzaItems = get().getPizzaItems();
+        
+        // Trier les pizzas par prix croissant pour offrir les moins chères
+        const sortedPizzaItems = [...pizzaItems].sort((a, b) => {
+          const priceA = a.product.price + (a.variant?.price || 0);
+          const priceB = b.product.price + (b.variant?.price || 0);
+          return priceA - priceB;
+        });
+
+        let pizzasToDiscount = promotion.pizzasFree;
+        let discount = 0;
+
+        for (const item of sortedPizzaItems) {
+          if (pizzasToDiscount <= 0) break;
+
+          const itemPrice = item.product.price + (item.variant?.price || 0);
+          const discountQuantity = Math.min(pizzasToDiscount, item.quantity);
+          
+          discount += itemPrice * discountQuantity;
+          pizzasToDiscount -= discountQuantity;
+        }
+
+        return discount;
+      },
+
+      // Sous-total avec promotion appliquée
+      getSubTotalWithPromotion: () => {
+        return get().getSubTotal() - get().getPromotionDiscount();
+      },
+
+      // Total final
       getTotal: () => {
         const { deliveryFee } = get();
-        return get().getSubTotal() + deliveryFee;
+        return get().getSubTotalWithPromotion() + deliveryFee;
       },
 
       getItemsCount: () => {
         const { items } = get();
         return items.reduce((count, item) => count + item.quantity, 0);
+      },
+
+      saveLastOrder: (orderData) => {
+        try {
+          localStorage.setItem("lastOrder", JSON.stringify(orderData));
+        } catch (error) {
+          console.error("Erreur lors de la sauvegarde de la dernière commande:", error);
+        }
       },
     }),
     {
@@ -145,3 +293,47 @@ export const useCart = create<CartStore>()(
     }
   )
 );
+
+// Hook pour charger automatiquement les settings de promotion
+export const usePromotionSettings = () => {
+  const setPromotionSettings = useCart(state => state.setPromotionSettings);
+
+  useEffect(() => {
+    const loadPromotionSettings = async () => {
+      try {
+        const response = await fetch('/api/settings');
+        if (response.ok) {
+          const settings = await response.json();
+          setPromotionSettings({
+            promotionsEnabled: settings.promotionsEnabled || false,
+            deliveryPromotionEnabled: settings.deliveryPromotionEnabled || false,
+            deliveryPromotionBuy: settings.deliveryPromotionBuy || 2,
+            deliveryPromotionGet: settings.deliveryPromotionGet || 1,
+            pickupPromotionEnabled: settings.pickupPromotionEnabled || false,
+            pickupPromotionBuy: settings.pickupPromotionBuy || 1,
+            pickupPromotionGet: settings.pickupPromotionGet || 1,
+            promotionDescription: settings.promotionDescription || "Promotions sur les pizzas !",
+          });
+        }
+      } catch (error) {
+        console.error('Erreur lors du chargement des paramètres de promotion:', error);
+      }
+    };
+
+    loadPromotionSettings();
+  }, [setPromotionSettings]);
+};
+
+// Fonction utilitaire pour récupérer la dernière commande depuis localStorage
+export const getLastOrder = () => {
+  try {
+    if (typeof window !== "undefined") {
+      const lastOrder = localStorage.getItem("lastOrder");
+      return lastOrder ? JSON.parse(lastOrder) : null;
+    }
+    return null;
+  } catch (error) {
+    console.error("Erreur lors de la récupération de la dernière commande:", error);
+    return null;
+  }
+};

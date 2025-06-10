@@ -39,8 +39,19 @@ export function ProductCard({ product }: ProductCardProps) {
   const price = extendedProduct.price + (selectedVariant?.price || 0);
 
   const handleAddToCart = () => {
-    // Ajouter l'item au panier
-    addItem(extendedProduct, selectedVariant);
+    // Vérifier que le produit a une catégorie avant d'ajouter au panier
+    if (!extendedProduct.category) {
+      console.error('Le produit n\'a pas de catégorie associée');
+      return;
+    }
+
+    // Ajouter l'item au panier avec le type correct
+    const productWithCategory = {
+      ...extendedProduct,
+      category: extendedProduct.category
+    } as Product & { category: Category };
+    
+    addItem(productWithCategory, selectedVariant);
     
     // Augmenter le compteur
     setClickCount(prev => prev + 1);

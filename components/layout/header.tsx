@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { ShoppingCart, Menu, X, Pizza, Heart } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useCart } from "@/store/cart";
+import { useCart, usePromotionSettings } from "@/store/cart";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -202,6 +202,9 @@ function BaseHeader() {
 }
 
 function FixedHeader() {
+  // Charger les settings de promotion au démarrage
+  usePromotionSettings();
+
   return (
     <header className={cn(
       "absolute top-0 z-50 w-full transform transition-transform duration-300",
@@ -263,41 +266,43 @@ function Header() {
 // Composant AdminHeader pour l'administration
 export function AdminHeader() {
   const pathname = usePathname();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const adminNavigation = [
     { name: "Dashboard", href: "/admin", active: pathname === "/admin" },
     { name: "Produits", href: "/admin/products", active: pathname.startsWith("/admin/products") },
     { name: "Commandes", href: "/admin/orders", active: pathname.startsWith("/admin/orders") },
     { name: "Utilisateurs", href: "/admin/users", active: pathname.startsWith("/admin/users") },
+    { name: "Notifications", href: "/admin/notifications", active: pathname.startsWith("/admin/notifications") },
     { name: "Paramètres", href: "/admin/infos", active: pathname.startsWith("/admin/infos") },
   ];
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-white shadow-sm">
-      <div className="max-w-7xl mx-auto px-6 py-4">
+      <div className="max-w-7xl mx-auto px-4 md:px-6 py-4">
         <div className="flex items-center justify-between">
           {/* Logo Admin */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 md:gap-4">
             <Link href="/admin" className="flex items-center gap-2">
               <div className="relative">
-                <Pizza className="h-8 w-8 text-orange-600" />
-                <div className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full" />
+                <Pizza className="h-6 w-6 md:h-8 md:w-8 text-orange-600" />
+                <div className="absolute -top-1 -right-1 h-2 w-2 md:h-3 md:w-3 bg-red-500 rounded-full" />
               </div>
-              <div>
-                <h1 className="text-xl font-bold text-gray-900">{variables.title}</h1>
+              <div className="hidden sm:block">
+                <h1 className="text-lg md:text-xl font-bold text-gray-900">{variables.title}</h1>
                 <p className="text-xs text-gray-500">Administration</p>
               </div>
             </Link>
           </div>
 
-          {/* Navigation Admin */}
-          <nav className="hidden md:flex items-center space-x-1">
+          {/* Navigation Admin Desktop */}
+          <nav className="hidden lg:flex items-center space-x-1">
             {adminNavigation.map((item) => (
               <Link
                 key={item.name}
                 href={item.href}
                 className={cn(
-                  "px-4 py-2 text-sm font-medium rounded-lg transition-colors",
+                  "px-3 py-2 text-sm font-medium rounded-lg transition-colors",
                   item.active
                     ? "bg-orange-100 text-orange-600"
                     : "text-gray-600 hover:text-orange-600 hover:bg-orange-50"
@@ -310,13 +315,78 @@ export function AdminHeader() {
 
           {/* Actions */}
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" asChild>
+            <Button variant="outline" size="sm" asChild className="hidden sm:flex">
               <Link href="/menu">
                 <Pizza className="h-4 w-4 mr-2" />
-                Voir le site
+                {`Voir le site`}
               </Link>
             </Button>
+
+            {/* Menu mobile toggle */}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="lg:hidden relative p-2"
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+            >
+              <div className="relative flex items-center justify-center w-5 h-10">
+                <Menu
+                  className={cn(
+                    "h-5 w-5 absolute transition-all duration-300",
+                    isMenuOpen ? "rotate-180 opacity-0" : "rotate-0 opacity-100"
+                  )}
+                />
+                <X
+                  className={cn(
+                    "h-5 w-5 absolute transition-all duration-300",
+                    isMenuOpen
+                      ? "rotate-0 opacity-100"
+                      : "-rotate-180 opacity-0"
+                  )}
+                />
+              </div>
+            </Button>
           </div>
+        </div>
+
+        {/* Navigation mobile */}
+        <div
+          className={cn(
+            "lg:hidden overflow-hidden transition-all duration-300 ease-out",
+            isMenuOpen ? "max-h-96 opacity-100 mt-4" : "max-h-0 opacity-0"
+          )}
+        >
+          <nav className="py-2 space-y-1">
+            {adminNavigation.map((item, index) => (
+              <Link
+                key={item.name}
+                href={item.href}
+                className={cn(
+                  "block px-3 py-2 text-sm font-medium rounded-lg transition-colors",
+                  item.active
+                    ? "bg-orange-100 text-orange-600"
+                    : "text-gray-600 hover:text-orange-600 hover:bg-orange-50"
+                )}
+                onClick={() => setIsMenuOpen(false)}
+                style={{
+                  animationDelay: `${index * 50}ms`,
+                }}
+              >
+                {item.name}
+              </Link>
+            ))}
+            
+            <div className="pt-2 mt-2 border-t">
+              <Link
+                href="/menu"
+                className="flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                <Pizza className="h-4 w-4 mr-2" />
+                {`Voir le site`}
+              </Link>
+            </div>
+          </nav>
         </div>
       </div>
     </header>

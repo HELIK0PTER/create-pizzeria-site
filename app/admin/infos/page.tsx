@@ -20,7 +20,8 @@ import {
   Info,
   CheckCircle2,
   AlertCircle,
-  Euro
+  Euro,
+  Gift
 } from 'lucide-react'
 import { variables } from '@/settings/config'
 interface Settings {
@@ -60,6 +61,23 @@ interface Settings {
   headerImage?: string
   adminEmail: string
   orderNotificationEmail: boolean
+  
+  // Champs de promotion
+  promotionsEnabled: boolean
+  deliveryPromotionEnabled: boolean
+  deliveryPromotionBuy: number
+  deliveryPromotionGet: number
+  pickupPromotionEnabled: boolean
+  pickupPromotionBuy: number
+  pickupPromotionGet: number
+  promotionDescription: string
+  
+  // Champs de temps d'attente et messages personnalisés
+  deliveryWaitTimeMin: number
+  deliveryWaitTimeMax: number
+  pickupWaitTimeMin: number
+  pickupWaitTimeMax: number
+  orderSuccessMessage: string
 }
 
 const defaultOpeningHours = {
@@ -104,7 +122,24 @@ export default function AdminInfosPage() {
     secondaryColor: '#FED7AA',
     backgroundColor: '#FFFFFF',
     adminEmail: '',
-    orderNotificationEmail: true
+    orderNotificationEmail: true,
+    
+    // Champs de promotion
+    promotionsEnabled: false,
+    deliveryPromotionEnabled: false,
+    deliveryPromotionBuy: 2,
+    deliveryPromotionGet: 1,
+    pickupPromotionEnabled: false,
+    pickupPromotionBuy: 1,
+    pickupPromotionGet: 1,
+    promotionDescription: 'Promotions sur les pizzas !',
+    
+    // Champs de temps d'attente et messages personnalisés
+    deliveryWaitTimeMin: 0,
+    deliveryWaitTimeMax: 0,
+    pickupWaitTimeMin: 0,
+    pickupWaitTimeMax: 0,
+    orderSuccessMessage: ''
   })
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -220,7 +255,7 @@ export default function AdminInfosPage() {
       )}
 
       <Tabs defaultValue="general" className="w-full">
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="grid w-full grid-cols-4 h-fit">
           <TabsTrigger value="general" className="flex items-center gap-2">
             <Info className="w-4 h-4" />
             Général
@@ -237,6 +272,10 @@ export default function AdminInfosPage() {
             <CreditCard className="w-4 h-4" />
             Paiements
           </TabsTrigger>
+          <TabsTrigger value="commandes" className="flex items-center gap-2">
+            <Clock className="w-4 h-4" />
+            Commandes
+          </TabsTrigger>
           <TabsTrigger value="communication" className="flex items-center gap-2">
             <Share2 className="w-4 h-4" />
             Communication
@@ -244,6 +283,10 @@ export default function AdminInfosPage() {
           <TabsTrigger value="apparence" className="flex items-center gap-2">
             <Palette className="w-4 h-4" />
             Apparence
+          </TabsTrigger>
+          <TabsTrigger value="promotions" className="flex items-center gap-2">
+            <Gift className="w-4 h-4" />
+            Promotions
           </TabsTrigger>
         </TabsList>
 
@@ -642,6 +685,114 @@ export default function AdminInfosPage() {
           </Card>
         </TabsContent>
 
+        {/* Onglet Commandes */}
+        <TabsContent value="commandes" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>{`Messages de confirmation de commande`}</CardTitle>
+              <CardDescription>{`Configurez les messages personnalisés après validation d'une commande`}</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div>
+                <Label htmlFor="orderSuccessMessage">{`Message de confirmation personnalisé`}</Label>
+                <Input
+                  id="orderSuccessMessage"
+                  value={settings.orderSuccessMessage}
+                  onChange={(e) => setSettings(prev => ({ ...prev, orderSuccessMessage: e.target.value }))}
+                  placeholder={`Merci pour votre commande !`}
+                />
+                <p className="text-sm text-gray-500 mt-1">{`Ce message s'affichera sur la page de confirmation après paiement`}</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>{`Temps d'attente pour la livraison`}</CardTitle>
+              <CardDescription>{`Configurez les temps d'attente estimés pour les livraisons`}</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="deliveryWaitTimeMin">{`Temps minimum (minutes)`}</Label>
+                  <Input
+                    id="deliveryWaitTimeMin"
+                    type="number"
+                    min="0"
+                    value={settings.deliveryWaitTimeMin}
+                    onChange={(e) => setSettings(prev => ({ ...prev, deliveryWaitTimeMin: parseInt(e.target.value) || 30 }))}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="deliveryWaitTimeMax">{`Temps maximum (minutes)`}</Label>
+                  <Input
+                    id="deliveryWaitTimeMax"
+                    type="number"
+                    min="0"
+                    value={settings.deliveryWaitTimeMax}
+                    onChange={(e) => setSettings(prev => ({ ...prev, deliveryWaitTimeMax: parseInt(e.target.value) || 45 }))}
+                  />
+                </div>
+              </div>
+              
+              <div className="text-sm text-gray-600 bg-blue-50 p-3 rounded border border-blue-200">
+                <div className="flex items-center gap-2 mb-1">
+                  <Truck className="w-4 h-4 text-blue-600" />
+                  <span className="font-medium">{`Aperçu pour la livraison :`}</span>
+                </div>
+                {settings.deliveryWaitTimeMin === settings.deliveryWaitTimeMax ? (
+                  <p>{`"Un temps d'attente de ${settings.deliveryWaitTimeMin} min est estimé pour la livraison"`}</p>
+                ) : (
+                  <p>{`"Un temps d'attente de ${settings.deliveryWaitTimeMin}-${settings.deliveryWaitTimeMax} min est estimé pour la livraison"`}</p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>{`Temps d'attente pour le click & collect`}</CardTitle>
+              <CardDescription>{`Configurez les temps d'attente estimés pour le retrait en magasin`}</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="pickupWaitTimeMin">{`Temps minimum (minutes)`}</Label>
+                  <Input
+                    id="pickupWaitTimeMin"
+                    type="number"
+                    min="0"
+                    value={settings.pickupWaitTimeMin}
+                    onChange={(e) => setSettings(prev => ({ ...prev, pickupWaitTimeMin: parseInt(e.target.value) || 15 }))}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="pickupWaitTimeMax">{`Temps maximum (minutes)`}</Label>
+                  <Input
+                    id="pickupWaitTimeMax"
+                    type="number"
+                    min="0"
+                    value={settings.pickupWaitTimeMax}
+                    onChange={(e) => setSettings(prev => ({ ...prev, pickupWaitTimeMax: parseInt(e.target.value) || 25 }))}
+                  />
+                </div>
+              </div>
+              
+              <div className="text-sm text-gray-600 bg-green-50 p-3 rounded border border-green-200">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-green-600">🏪</span>
+                  <span className="font-medium">{`Aperçu pour le click & collect :`}</span>
+                </div>
+                {settings.pickupWaitTimeMin === settings.pickupWaitTimeMax ? (
+                  <p>{`"Un temps d'attente de ${settings.pickupWaitTimeMin} min est estimé pour le click & collect"`}</p>
+                ) : (
+                  <p>{`"Un temps d'attente de ${settings.pickupWaitTimeMin}-${settings.pickupWaitTimeMax} min est estimé pour le click & collect"`}</p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         {/* Onglet Communication */}
         <TabsContent value="communication" className="space-y-6">
           <Card>
@@ -819,6 +970,155 @@ export default function AdminInfosPage() {
                   onChange={(e) => setSettings(prev => ({ ...prev, headerImage: e.target.value }))}
                   placeholder="https://example.com/header.jpg"
                 />
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Onglet Promotions */}
+        <TabsContent value="promotions" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>{`Promotions Pizzas`}</CardTitle>
+              <CardDescription>{`Configurez les promotions automatiques sur les pizzas`}</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Activation globale */}
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="promotionsEnabled"
+                  checked={settings.promotionsEnabled}
+                  onCheckedChange={(checked) => setSettings(prev => ({ ...prev, promotionsEnabled: checked }))}
+                />
+                <Label htmlFor="promotionsEnabled" className="font-medium">{`Activer les promotions`}</Label>
+              </div>
+
+              {/* Promotion Livraison */}
+              <Card className="border-blue-200">
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Truck className="h-5 w-5 text-blue-600" />
+                    {`Promotion Livraison`}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="deliveryPromotionEnabled"
+                      checked={settings.deliveryPromotionEnabled}
+                      onCheckedChange={(checked) => setSettings(prev => ({ ...prev, deliveryPromotionEnabled: checked }))}
+                    />
+                    <Label htmlFor="deliveryPromotionEnabled">{`Promotion livraison activée`}</Label>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="deliveryPromotionBuy">{`Pizzas à acheter`}</Label>
+                      <Input
+                        id="deliveryPromotionBuy"
+                        type="number"
+                        min="1"
+                        value={settings.deliveryPromotionBuy}
+                        onChange={(e) => setSettings(prev => ({ ...prev, deliveryPromotionBuy: parseInt(e.target.value) || 2 }))}
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="deliveryPromotionGet">{`Pizzas offertes`}</Label>
+                      <Input
+                        id="deliveryPromotionGet"
+                        type="number"
+                        min="1"
+                        value={settings.deliveryPromotionGet}
+                        onChange={(e) => setSettings(prev => ({ ...prev, deliveryPromotionGet: parseInt(e.target.value) || 1 }))}
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded">
+                    {`Règle actuelle : ${settings.deliveryPromotionBuy} pizzas achetées = ${settings.deliveryPromotionGet} pizza${settings.deliveryPromotionGet > 1 ? 's' : ''} offerte${settings.deliveryPromotionGet > 1 ? 's' : ''}`}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Promotion Retrait */}
+              <Card className="border-green-200">
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <span className="text-green-600">🏪</span>
+                    {`Promotion Retrait (Click & Collect)`}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="pickupPromotionEnabled"
+                      checked={settings.pickupPromotionEnabled}
+                      onCheckedChange={(checked) => setSettings(prev => ({ ...prev, pickupPromotionEnabled: checked }))}
+                    />
+                    <Label htmlFor="pickupPromotionEnabled">{`Promotion retrait activée`}</Label>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="pickupPromotionBuy">{`Pizzas à acheter`}</Label>
+                      <Input
+                        id="pickupPromotionBuy"
+                        type="number"
+                        min="1"
+                        value={settings.pickupPromotionBuy}
+                        onChange={(e) => setSettings(prev => ({ ...prev, pickupPromotionBuy: parseInt(e.target.value) || 1 }))}
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="pickupPromotionGet">{`Pizzas offertes`}</Label>
+                      <Input
+                        id="pickupPromotionGet"
+                        type="number"
+                        min="1"
+                        value={settings.pickupPromotionGet}
+                        onChange={(e) => setSettings(prev => ({ ...prev, pickupPromotionGet: parseInt(e.target.value) || 1 }))}
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded">
+                    {`Règle actuelle : ${settings.pickupPromotionBuy} pizza${settings.pickupPromotionBuy > 1 ? 's' : ''} achetée${settings.pickupPromotionBuy > 1 ? 's' : ''} = ${settings.pickupPromotionGet} pizza${settings.pickupPromotionGet > 1 ? 's' : ''} offerte${settings.pickupPromotionGet > 1 ? 's' : ''}`}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Description personnalisée */}
+              <div>
+                <Label htmlFor="promotionDescription">{`Description des promotions (affichée aux clients)`}</Label>
+                <Textarea
+                  id="promotionDescription"
+                  value={settings.promotionDescription}
+                  onChange={(e) => setSettings(prev => ({ ...prev, promotionDescription: e.target.value }))}
+                  placeholder={`Profitez de nos promotions sur les pizzas !`}
+                  rows={3}
+                />
+              </div>
+
+              {/* Résumé des promotions */}
+              <div className="mt-6 p-4 bg-orange-50 border border-orange-200 rounded-lg">
+                <h4 className="font-medium text-orange-900 mb-2">{`État des promotions :`}</h4>
+                <div className="space-y-2">
+                  {!settings.promotionsEnabled && (
+                    <Badge variant="secondary" className="bg-gray-100">{`Promotions désactivées`}</Badge>
+                  )}
+                  {settings.promotionsEnabled && settings.deliveryPromotionEnabled && (
+                    <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                      {`Livraison : ${settings.deliveryPromotionBuy} + ${settings.deliveryPromotionGet} gratuite${settings.deliveryPromotionGet > 1 ? 's' : ''}`}
+                    </Badge>
+                  )}
+                  {settings.promotionsEnabled && settings.pickupPromotionEnabled && (
+                    <Badge variant="secondary" className="bg-green-100 text-green-800">
+                      {`Retrait : ${settings.pickupPromotionBuy} + ${settings.pickupPromotionGet} gratuite${settings.pickupPromotionGet > 1 ? 's' : ''}`}
+                    </Badge>
+                  )}
+                </div>
               </div>
             </CardContent>
           </Card>

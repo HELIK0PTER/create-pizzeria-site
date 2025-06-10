@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { Trash2, Plus, Minus, ArrowRight } from "lucide-react";
-import { useCart } from "@/store/cart";
+import { Trash2, Plus, Minus, ArrowRight, Gift } from "lucide-react";
+import { useCart, usePromotionSettings } from "@/store/cart";
 import { formatPrice } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,18 +13,14 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import Image from "next/image";
-import { loadStripe } from "@stripe/stripe-js";
 import { useSearchParams } from "next/navigation";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { XCircle } from "lucide-react";
 import { Suspense } from "react";
-
-// Chargez votre clé publique Stripe
-const stripePromise = loadStripe(
-  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!
-);
+import { useRouter } from "next/navigation";
 
 export default function CartPage() {
+  const router = useRouter();
   const {
     items,
     removeItem,
@@ -34,7 +30,15 @@ export default function CartPage() {
     deliveryMethod,
     setDeliveryMethod,
     deliveryFee,
+    getPromotionApplied,
+    getPromotionDiscount,
   } = useCart();
+
+  // Charger les settings de promotion
+  usePromotionSettings();
+
+  const promotionApplied = getPromotionApplied();
+  const promotionDiscount = getPromotionDiscount();
 
   const handleQuantityChange = (
     productId: string,
@@ -49,55 +53,14 @@ export default function CartPage() {
     }
   };
 
-  const handleCheckout = async () => {
-    const stripe = await stripePromise;
-    if (!stripe) {
-      console.error("Erreur: Clé publique Stripe non chargée.");
-      return;
-    }
-
-    try {
-      const response = await fetch("/api/create-checkout-session", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ items, deliveryMethod, deliveryFee }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(
-          errorData.error ||
-            "Erreur lors de la création de la session de paiement"
-        );
-      }
-
-      const session = await response.json();
-
-      // Rediriger l'utilisateur vers la page de paiement Stripe
-      const result = await stripe.redirectToCheckout({ sessionId: session.id });
-
-      if (result.error) {
-        console.error(
-          "Erreur lors de la redirection vers Stripe:",
-          result.error.message
-        );
-        // Afficher un message d'erreur à l'utilisateur si nécessaire
-      }
-    } catch (error: unknown) {
-      if (error instanceof Error) {
-        console.error("Erreur de paiement:", error.message);
-      } else {
-        console.error("Erreur de paiement:", String(error));
-      }
-    }
+  const handleProceedToCheckout = () => {
+    router.push("/checkout");
   };
 
   return (
     <div className="py-8">
       <div className="container mx-auto px-4">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">Votre panier</h1>
+        <h1 className="text-3xl font-bold text-gray-900 mb-8">{`Votre panier`}</h1>
 
         {/* Message d'annulation de paiement */}
         <Suspense>
@@ -108,18 +71,37 @@ export default function CartPage() {
           {/* Liste des articles */}
           {items.length === 0 && (
             <div className="lg:col-span-2 space-y-4">
-              <p className="text-gray-600">Votre panier est vide.</p>
+              <p className="text-gray-600">{`Votre panier est vide.`}</p>
               <Link href="/menu" className="text-red-600 hover:underline">
-                Voir la carte ici
+                {`Voir la carte ici`}
               </Link>
             </div>
           )}
           {items.length > 0 && (
             <div className="lg:col-span-2 space-y-4">
+              {/* Affichage de la promotion si applicable */}
+              {promotionApplied && (
+                <Alert className="border-green-200 bg-green-50">
+                  <Gift className="h-4 w-4 text-green-600" />
+                  <AlertTitle className="text-green-800">
+                    {`🎉 Promotion appliquée !`}
+                  </AlertTitle>
+                  <AlertDescription className="text-green-700">
+                    {`${promotionApplied.description} -> ${promotionApplied.pizzasFree} pizza${promotionApplied.pizzasFree > 1 ? 's' : ''} gratuite${promotionApplied.pizzasFree > 1 ? 's' : ''} !`}
+                    <br />
+                    <span className="font-semibold">
+                      {`Économie : ${formatPrice(promotionDiscount)}`}
+                    </span>
+                  </AlertDescription>
+                </Alert>
+              )}
+
               {items.map((item) => {
                 const basePrice = item.product.price;
                 const variantPrice = item.variant?.price || 0;
                 const totalPrice = basePrice + variantPrice;
+                const isPizza = item.product.category?.slug === "pizzas" || item.product.baseType !== null;
+                
                 return (
                   <Card key={`${item.productId}-${item.variantId}`}>
                     <CardContent className="p-4">
@@ -141,9 +123,16 @@ export default function CartPage() {
                         </div>
 
                         <div className="flex-1">
-                          <h3 className="font-semibold text-lg">
-                            {item.product.name}
-                          </h3>
+                          <div className="flex items-start gap-2">
+                            <h3 className="font-semibold text-lg">
+                              {item.product.name}
+                            </h3>
+                            {isPizza && (
+                              <span className="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded-full">
+                                🍕 Pizza
+                              </span>
+                            )}
+                          </div>
                           {item.variant && (
                             <p className="text-sm text-gray-600">
                               {item.variant.name}
@@ -220,12 +209,12 @@ export default function CartPage() {
           <div>
             <Card>
               <CardHeader>
-                <CardTitle>Résumé de la commande</CardTitle>
+                <CardTitle>{`Résumé de la commande`}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 {/* Mode de livraison */}
                 <div>
-                  <p className="font-medium mb-2">Mode de livraison</p>
+                  <p className="font-medium mb-2">{`Mode de livraison`}</p>
                   <div className="space-y-2">
                     <label className="flex items-center gap-2 cursor-pointer">
                       <input
@@ -236,7 +225,7 @@ export default function CartPage() {
                         onChange={() => setDeliveryMethod("delivery")}
                         className="text-red-600"
                       />
-                      <span>Livraison à domicile</span>
+                      <span>{`Livraison à domicile`}</span>
                     </label>
                     <label className="flex items-center gap-2 cursor-pointer">
                       <input
@@ -247,24 +236,36 @@ export default function CartPage() {
                         onChange={() => setDeliveryMethod("pickup")}
                         className="text-red-600"
                       />
-                      <span>Retrait sur place</span>
+                      <span>{`Retrait sur place`}</span>
                     </label>
                   </div>
                 </div>
 
                 <div className="border-t pt-4 space-y-2">
                   <div className="flex justify-between">
-                    <span>Sous-total</span>
+                    <span>{`Sous-total`}</span>
                     <span>{formatPrice(getSubTotal())}</span>
                   </div>
+                  
+                  {/* Affichage de la promotion dans le résumé */}
+                  {promotionApplied && promotionDiscount > 0 && (
+                    <div className="flex justify-between text-green-600">
+                      <span className="flex items-center gap-1">
+                        <Gift className="h-4 w-4" />
+                        {`Promotion ${promotionApplied.type === 'delivery' ? 'livraison' : 'retrait'}`}
+                      </span>
+                      <span>{`-${formatPrice(promotionDiscount)}`}</span>
+                    </div>
+                  )}
+                  
                   {deliveryMethod === "delivery" && (
                     <div className="flex justify-between">
-                      <span>Frais de livraison</span>
+                      <span>{`Frais de livraison`}</span>
                       <span>{formatPrice(deliveryFee)}</span>
                     </div>
                   )}
                   <div className="flex justify-between font-semibold text-lg">
-                    <span>Total</span>
+                    <span>{`Total`}</span>
                     <span className="text-red-600">
                       {formatPrice(getTotal())}
                     </span>
@@ -275,10 +276,10 @@ export default function CartPage() {
                 <Button
                   className="w-full"
                   size="lg"
-                  onClick={handleCheckout}
+                  onClick={handleProceedToCheckout}
                   disabled={items.length === 0}
                 >
-                  Passer la commande
+                  {`Passer la commande`}
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </CardFooter>
@@ -286,7 +287,7 @@ export default function CartPage() {
 
             <div className="mt-4 text-center">
               <Link href="/menu" className="text-red-600 hover:underline">
-                Continuer vos achats
+                {`Continuer vos achats`}
               </Link>
             </div>
           </div>
@@ -306,10 +307,10 @@ const PaymentCanceled = () => {
         <div className="lg:col-span-3 mb-4">
           <Alert variant="destructive">
             <XCircle className="h-4 w-4" />
-            <AlertTitle>Paiement Annulé</AlertTitle>
+            <AlertTitle>{`Paiement Annulé`}</AlertTitle>
             <AlertDescription>
-              Votre paiement a été annulé. Vous pouvez modifier votre panier ou
-              réessayer.
+              {`Votre paiement a été annulé. Vous pouvez modifier votre panier ou
+              réessayer.`}
             </AlertDescription>
           </Alert>
         </div>

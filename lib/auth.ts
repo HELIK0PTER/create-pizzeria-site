@@ -38,6 +38,13 @@ export const auth = betterAuth({
       },
     },
   },
+  // Configuration pour la production
+  secret: process.env.BETTER_AUTH_SECRET || "fallback-secret-for-development-only",
+  baseURL: process.env.BETTER_AUTH_URL || "http://localhost:3000",
+  trustedOrigins: [
+    process.env.BETTER_AUTH_URL || "http://localhost:3000",
+    "http://localhost:3000"
+  ],
   plugins: [
     admin(), // Plugin admin pour la gestion avancée des utilisateurs et sessions
     nextCookies(), // Plugin pour la gestion des cookies Next.js

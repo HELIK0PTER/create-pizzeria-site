@@ -45,6 +45,54 @@ model Settings {
   headerImage              String?
   adminEmail               String   @default("admin@bellapizza.fr")
   orderNotificationEmail   Boolean  @default(true)
+  
+  // Champs de promotion pour les pizzas
+  promotionsEnabled        Boolean  @default(false)
+  deliveryPromotionEnabled Boolean  @default(false)
+  deliveryPromotionBuy     Int      @default(2)
+  deliveryPromotionGet     Int      @default(1)
+  pickupPromotionEnabled   Boolean  @default(false)
+  pickupPromotionBuy       Int      @default(1)
+  pickupPromotionGet       Int      @default(1)
+  promotionDescription     String?  @default("Promotions sur les pizzas !")
+  
+  // Champs de temps d'attente pour les messages personnalisés
+  deliveryWaitTimeMin      Int      @default(30)
+  deliveryWaitTimeMax      Int      @default(45)
+  pickupWaitTimeMin        Int      @default(15)
+  pickupWaitTimeMax        Int      @default(25)
+  orderSuccessMessage      String?  @default("Merci pour votre commande !")
+  
+  // =================== CONFIGURATION DES NOTIFICATIONS ===================
+  
+  // Notifications générales
+  notificationsEnabled     Boolean  @default(true)
+  
+  // Configuration Email (Nodemailer)
+  emailNotificationsEnabled Boolean @default(false)
+  smtpHost                 String?  @default("smtp.gmail.com")
+  smtpPort                 Int      @default(587)
+  smtpSecure               Boolean  @default(false) // true pour 465, false pour autres ports
+  smtpUser                 String?  // Email d'envoi
+  smtpPassword             String?  // Mot de passe ou app password
+  emailFromName            String?  @default("Bella Pizza")
+  emailFromAddress         String?  // Email expéditeur (doit correspondre au smtpUser)
+  
+  // Configuration SMS (Twilio)
+  smsNotificationsEnabled  Boolean  @default(false)
+  twilioAccountSid         String?  // Account SID Twilio
+  twilioAuthToken          String?  // Auth Token Twilio  
+  twilioPhoneNumber        String?  // Numéro Twilio d'envoi (format: +33123456789)
+  
+  // Paramètres avancés notifications
+  notifyOnConfirmed        Boolean  @default(true)
+  notifyOnPreparing        Boolean  @default(true)
+  notifyOnReady            Boolean  @default(true)
+  notifyOnDelivering       Boolean  @default(true)
+  notifyOnCompleted        Boolean  @default(true)
+  notifyOnCancelled        Boolean  @default(true)
+  notifyOnPaymentFailed    Boolean  @default(true)
+  
   createdAt                DateTime @default(now())
   updatedAt                DateTime @updatedAt
 
@@ -64,7 +112,9 @@ model User {
   banned        Boolean?
   banReason     String?
   banExpires    DateTime?
-  addresses     Address[]
+  favouriteAddressId String?
+  addresses     Address[] @relation("UserAddresses")
+  favouriteAddress Address? @relation("UserFavouriteAddress", fields: [favouriteAddressId], references: [id])
   orders        Order[]
   accounts      Account[]
   sessions      Session[]
@@ -127,7 +177,8 @@ model Address {
   isDefault  Boolean  @default(false)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user       User     @relation("UserAddresses", fields: [userId], references: [id], onDelete: Cascade)
+  userFavourite User[] @relation("UserFavouriteAddress")
 }
 
 model Category {
@@ -179,7 +230,7 @@ model Order {
   orderNumber     String      @unique
   userId          String?
   customerName    String
-  customerEmail   String
+  customerEmail   String?
   customerPhone   String
   deliveryAddress String?
   deliveryMethod  String

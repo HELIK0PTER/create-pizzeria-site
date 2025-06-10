@@ -4,6 +4,7 @@ import { auth } from '@/lib/auth';
 import { Stripe } from 'stripe';
 import { generateOrderNumber } from '@/lib/utils';
 import { User } from '@prisma/client';
+import { orderStatusManager } from '@/lib/order-status-manager';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2025-05-28.basil',
@@ -26,55 +27,71 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Payment not successful' }, { status: 400 });
     }
 
-    // 2. Récupérer l'utilisateur connecté
+    // 2. Récupérer l'utilisateur connecté (optionnel)
     const authSession = await auth.api.getSession({
       headers: req.headers,
     });
 
-    if (!authSession?.user) {
-      return NextResponse.json({ error: 'User not authenticated' }, { status: 401 });
+    const userId = authSession?.user?.id || null;
+
+    // Utiliser les informations de l'utilisateur connecté ou les métadonnées Stripe
+    const customerName = authSession?.user?.name || session.metadata?.customer_full_name || 'Client anonyme';
+    const customerEmail = authSession?.user?.email || session.metadata?.customer_email || '';
+    const customerPhone = (authSession?.user as User)?.phone || session.metadata?.customer_phone || '';
+    const deliveryAddress = session.metadata?.full_delivery_address || '';
+
+    // 3. Vérifier si une commande existe déjà pour cette session
+    const existingOrder = await prisma.order.findUnique({
+      where: { stripeSessionId: session.id },
+      include: {
+        items: {
+          include: {
+            product: true,
+            variant: true,
+          },
+        },
+      },
+    });
+
+    if (existingOrder) {
+      // Retourner la commande existante au lieu d'en créer une nouvelle
+      return NextResponse.json({ orderId: existingOrder.id, order: existingOrder });
     }
 
-    const userId = authSession.user.id;
-
-    // 3. Créer la commande dans la base de données
+    // 4. Créer la commande dans la base de données avec le statut correct
     const order = await prisma.order.create({
       data: {
         orderNumber: generateOrderNumber(),
-        userId: userId,
-        customerName: authSession.user.name,
-        customerEmail: authSession.user.email,
-        customerPhone: (authSession.user as User).phone ?? '',
+        userId: userId, // Peut être null pour les utilisateurs non connectés
+        customerName: customerName,
+        customerEmail: customerEmail,
+        customerPhone: customerPhone,
+        deliveryAddress: deliveryAddress,
         total: session.amount_total ? session.amount_total / 100 : 0, // Convertir en unité de devise
-        status: 'processing', // Ou un statut initial approprié
+        status: 'confirmed', // Statut confirmed car le paiement est validé
         stripeSessionId: session.id,
-        // Les champs suivants récupèrent les valeurs de la session Stripe ou les calculent
-        deliveryMethod: session.metadata?.deliveryMethod as string ?? '', // Lire le mode de livraison depuis les métadonnées Stripe et caster en string
-        paymentMethod: session.payment_method_types?.[0] as string ?? '', // Lire la méthode de paiement depuis la session Stripe et caster en string
-        // Calculer le subTotal en soustrayant les frais de livraison du total
+        deliveryMethod: session.metadata?.deliveryMethod as string ?? '', 
+        paymentMethod: session.payment_method_types?.[0] as string ?? '', 
         subTotal: (session.amount_total ? session.amount_total / 100 : 0) - (parseFloat(session.metadata?.deliveryFee as string ?? '0')),
-        deliveryFee: parseFloat(session.metadata?.deliveryFee as string ?? '0'), // Lire les frais de livraison depuis les métadonnées
-        // paymentStatus est géré par défaut comme 'pending' dans le schema, 'paid' peut être défini ici si le paiement Stripe est confirmé
-        paymentStatus: 'paid', // Mettre à jour le statut de paiement basé sur la session Stripe
+        deliveryFee: parseFloat(session.metadata?.deliveryFee as string ?? '0'), 
+        paymentStatus: 'paid', // Paiement confirmé
         items: {
           create: session.line_items?.data
-            // Filtrer les articles de ligne pour exclure les frais de livraison et s'assurer que le produit est bien un objet expandé
-            ?.filter((item) => (item.description !== 'Frais de livraison' && typeof item.price?.product === 'object' && item.price.product !== null)) // Vérifier que product est un objet non null
+            ?.filter((item) => (item.description !== 'Frais de livraison' && typeof item.price?.product === 'object' && item.price.product !== null)) 
             .map((item) => {
-            const product = item.price?.product as Stripe.Product; // Assertion de type
-            // Accéder aux métadonnées avec vérification optionnelle
+            const product = item.price?.product as Stripe.Product; 
             const productId = product?.metadata?.productId || '';
             const variantId = product?.metadata?.variantId || null;
 
             return {
-              productId: productId, // Utiliser l'ID produit vérifié
+              productId: productId, 
               quantity: item.quantity || 1,
               unitPrice: item.price?.unit_amount ? item.price.unit_amount / 100 : 0,
               totalPrice: (item.price?.unit_amount && item.quantity) ? (item.price.unit_amount / 100) * item.quantity : 0,
-              variantId: variantId, // Utiliser l'ID variante vérifié
-              notes: null, // Ou récupérer des notes si disponibles
+              variantId: variantId, 
+              notes: null, 
             };
-          }) || [], // S'assurer que items.create est un tableau vide si line_items.data est null/undefined
+          }) || [], 
         },
       },
       include: {
@@ -87,7 +104,16 @@ export async function POST(req: Request) {
       },
     });
 
-    // 4. Retourner la confirmation de commande
+    // 5. Déclencher les notifications pour la nouvelle commande confirmée
+    try {
+      await orderStatusManager.generateAndSendNotifications(order.id, 'confirmed');
+      console.log(`✅ Notifications envoyées pour commande ${order.orderNumber}`);
+    } catch (notificationError) {
+      console.error('❌ Erreur notifications:', notificationError);
+      // Ne pas faire échouer la création de commande si les notifications échouent
+    }
+
+    // 6. Retourner la confirmation de commande
     return NextResponse.json({ orderId: order.id });
 
   } catch (error: unknown) {
