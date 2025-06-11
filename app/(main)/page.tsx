@@ -17,6 +17,7 @@ import Image from "next/image";
 import { GOOGLEMAPS_SECRET } from "@/utils/environement";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { useSession } from '@/lib/auth-client';
 
 type ProductWithRelations = Prisma.ProductGetPayload<{
   include: {
@@ -34,17 +35,22 @@ const errors = [
 ];
 
 export default function HomePage() {
+  const { data: session } = useSession();
   const [featuredProducts, setFeaturedProducts] = useState<
     ProductWithRelations[]
   >([]);
   const [loading, setLoading] = useState(true);
   const [isMounted, setIsMounted] = useState(false);
   const [isCompactView, setIsCompactView] = useState(false);
+  const [activeOrders, setActiveOrders] = useState<any[]>([]);
 
   useEffect(() => {
     setIsMounted(true);
     fetchFeaturedProducts();
-  }, []);
+    if (session?.user) {
+      fetchActiveOrders();
+    }
+  }, [session]);
 
   const fetchFeaturedProducts = async () => {
     try {
@@ -59,6 +65,22 @@ export default function HomePage() {
     }
   };
 
+  const fetchActiveOrders = async () => {
+    try {
+      const response = await fetch('/api/orders');
+      if (response.ok) {
+        const data = await response.json();
+        // Filtrer les commandes actives (non terminées et non annulées)
+        const activeOrders = data.filter((order: any) => 
+          order.status !== 'completed' && order.status !== 'cancelled'
+        );
+        setActiveOrders(activeOrders);
+      }
+    } catch (error) {
+      console.error('Erreur lors du chargement des commandes actives:', error);
+    }
+  };
+
   if (!isMounted) return null;
 
   return (
@@ -67,6 +89,21 @@ export default function HomePage() {
       <Suspense>
         <ErrorMessage />
       </Suspense>
+
+      {/* Message pour les commandes en cours */}
+      {session?.user && activeOrders.length > 0 && (
+        <div className="container mx-auto px-4 pt-4">
+          <Alert className="bg-orange-50 border-orange-200">
+            <Clock className="h-4 w-4 text-orange-600" />
+            <AlertDescription className="text-orange-800">
+              Vous avez {activeOrders.length} commande{activeOrders.length > 1 ? 's' : ''} en cours. 
+              <Link href="/orders" className="ml-2 text-orange-600 hover:text-orange-700 font-medium underline">
+                Voir mes commandes
+              </Link>
+            </AlertDescription>
+          </Alert>
+        </div>
+      )}
 
       {/* Hero Section: Background Image Layout */}
       <section className="relative overflow-hidden h-[calc(100vh-100px)] flex items-center bg-gray-50">

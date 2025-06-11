@@ -11,7 +11,7 @@ export async function GET(request: Request) {
     const limitParam = searchParams.get('limit')
     const limit = limitParam ? parseInt(limitParam) : undefined
 
-    const where: Prisma.ProductWhereInput = { isAvailable: true }
+    const where: Prisma.ProductWhereInput = {}
 
     // Support pour categoryId (pour compatibilité avec page menu)
     if (categoryId) {

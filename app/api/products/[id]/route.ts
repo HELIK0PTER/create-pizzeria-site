@@ -132,8 +132,20 @@ export async function PUT(
       )
     }
 
-    // Vérifier l'unicité du slug (sauf pour le produit actuel)
-    if (slug !== existingProduct.slug) {
+    // Créer un objet de données à mettre à jour avec uniquement les champs fournis
+    const updateData: any = {}
+    if (name !== undefined) updateData.name = name
+    if (slug !== undefined) updateData.slug = slug
+    if (description !== undefined) updateData.description = description
+    if (image !== undefined) updateData.image = image
+    if (categoryId !== undefined) updateData.categoryId = categoryId
+    if (price !== undefined) updateData.price = price
+    if (ingredients !== undefined) updateData.ingredients = ingredients
+    if (allergens !== undefined) updateData.allergens = allergens
+    if (isAvailable !== undefined) updateData.isAvailable = isAvailable
+
+    // Vérifier l'unicité du slug seulement si le slug est modifié
+    if (slug !== undefined && slug !== existingProduct.slug) {
       const slugExists = await prisma.product.findFirst({
         where: {
           slug,
@@ -149,22 +161,12 @@ export async function PUT(
       }
     }
 
-    // Mettre à jour le produit
+    // Mettre à jour le produit avec uniquement les champs fournis
     const updatedProduct = await prisma.product.update({
       where: {
         id
       },
-      data: {
-        name,
-        slug,
-        description,
-        image,
-        categoryId,
-        price,
-        ingredients,
-        allergens,
-        isAvailable
-      },
+      data: updateData,
       include: {
         category: true,
         variants: {

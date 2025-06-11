@@ -211,18 +211,10 @@ export function ProductCard({ product, isCompact }: ProductCardProps) {
                 {extendedProduct.category.name}
               </Badge>
             )}
-            {!extendedProduct.isAvailable && (
-              <Badge
-                variant="destructive"
-                className="bg-red-500/90 text-white backdrop-blur-sm"
-              >
-                Indisponible
-              </Badge>
-            )}
           </div>
 
           {/* Note et Favoris (cachés en vue compacte) */}
-          <div className={`absolute top-2 right-2 flex flex-row gap-1 items-center ${isCompact ? "hidden" : ""}`}>
+          <div className={`absolute bottom-4 right-4 flex gap-2 ${isCompact ? "hidden" : ""}`}>
             {/* Note */}
             <div className="flex items-center gap-1 bg-white/90 backdrop-blur-sm rounded-full px-2 py-1">
               <Star className="h-3 w-3 text-yellow-500 fill-current" />
@@ -245,19 +237,11 @@ export function ProductCard({ product, isCompact }: ProductCardProps) {
               </Button>
             )}
           </div>
-
-          {!extendedProduct.isAvailable && (
-            <div className={`absolute inset-0 bg-black/60 flex items-center justify-center backdrop-blur-sm ${isCompact ? "hidden" : ""}`}>
-              <span className="text-white font-semibold text-sm">
-                Indisponible
-              </span>
-            </div>
-          )}
         </div>
       </CardHeader>
 
       {/* Contenu */}
-      <CardContent className={`p-0 ${isCompact ? "flex-1 flex justify-between items-stretch py-0" : "p-4 sm:p-6"}`}>
+      <CardContent className={`flex flex-col flex-grow ${isCompact ? "p-3" : "p-4"}`}>
         {isCompact ? (
           // Vue compacte: nom, prix, ingrédients, base, et boutons sur une ligne
           <div className="flex flex-row items-stretch flex-grow">
@@ -266,6 +250,9 @@ export function ProductCard({ product, isCompact }: ProductCardProps) {
               <h3 className="font-semibold text-sm leading-tight line-clamp-1 text-gray-900">
                 {extendedProduct.name}
               </h3>
+              {!extendedProduct.isAvailable && (
+                <Badge variant="destructive" className="text-xs px-2 py-1 w-fit">Indisponible</Badge>
+              )}
               <span className="text-xs font-semibold text-orange-600">
                 {formatPrice(price)}
               </span>
@@ -280,7 +267,7 @@ export function ProductCard({ product, isCompact }: ProductCardProps) {
             </div>
 
             {/* Boutons (Favori et Ajouter au panier) */}
-            <div className={`flex flex-shrink-0 ${isCompact ? "ml-0" : "ml-4"} space-x-2`}>
+            <div className="flex flex-col justify-between items-end pl-2">
               {session && (
                 <Button
                   variant="ghost"
