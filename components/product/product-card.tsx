@@ -193,11 +193,19 @@ export function ProductCard({ product, isCompact }: ProductCardProps) {
               alt={extendedProduct.name}
               fill
               sizes="500px"
-              className="object-cover transition-transform duration-300 group-hover:scale-105"
+              className={`object-cover transition-transform duration-300 group-hover:scale-105 ${!extendedProduct.isAvailable ? "filter blur-[2px]" : ""}`}
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center">
               <span className="text-8xl opacity-60">🍕</span>
+            </div>
+          )}
+
+          {!extendedProduct.isAvailable && (
+            <div className="absolute inset-0 flex items-center justify-center z-10">
+              <span className="bg-orange-500 text-white px-4 py-2 rounded-md text-3xl font-extrabold uppercase tracking-wider">
+                Indisponible
+              </span>
             </div>
           )}
 
