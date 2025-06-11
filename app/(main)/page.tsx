@@ -90,21 +90,6 @@ export default function HomePage() {
         <ErrorMessage />
       </Suspense>
 
-      {/* Message pour les commandes en cours */}
-      {session?.user && activeOrders.length > 0 && (
-        <div className="container mx-auto px-4 pt-4">
-          <Alert className="bg-orange-50 border-orange-200">
-            <Clock className="h-4 w-4 text-orange-600" />
-            <AlertDescription className="text-orange-800">
-              Vous avez {activeOrders.length} commande{activeOrders.length > 1 ? 's' : ''} en cours. 
-              <Link href="/orders" className="ml-2 text-orange-600 hover:text-orange-700 font-medium underline">
-                Voir mes commandes
-              </Link>
-            </AlertDescription>
-          </Alert>
-        </div>
-      )}
-
       {/* Hero Section: Background Image Layout */}
       <section className="relative overflow-hidden h-[calc(100vh-100px)] flex items-center bg-gray-50">
         {/* Background Image */}
@@ -151,6 +136,20 @@ export default function HomePage() {
               </Link>
             </Button>
           </div>
+          {/* Message pour les commandes en cours */}
+          {session?.user && activeOrders.length > 0 && (
+            <div className="mt-8">
+              <Alert className="bg-white border-gray-200 shadow-sm max-w-2xl mx-auto py-4">
+                <Clock className="h-5 w-5 text-orange-600" />
+                <AlertDescription className="text-base text-gray-800 flex items-center">
+                  Vous avez {activeOrders.length} commande{activeOrders.length > 1 ? 's' : ''} en cours.
+                  <Link href="/orders" className="ml-2 text-orange-600 hover:text-orange-700 font-medium underline">
+                    Voir mes commandes
+                  </Link>
+                </AlertDescription>
+              </Alert>
+            </div>
+          )}
         </div>
       </section>
       <DropdownInfo />

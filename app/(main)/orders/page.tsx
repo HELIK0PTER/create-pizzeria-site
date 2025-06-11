@@ -70,6 +70,7 @@ export default function OrdersPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [expandedOrders, setExpandedOrders] = useState<Set<string>>(new Set());
+  const [showAllHistoricalOrders, setShowAllHistoricalOrders] = useState(false);
 
   const toggleOrderExpansion = (orderId: string) => {
     setExpandedOrders(prev => {
@@ -269,6 +270,7 @@ export default function OrdersPage() {
                 <div className="space-y-6">
                   {orders
                     .filter(order => order.status === 'completed' || order.status === 'cancelled')
+                    .slice(0, showAllHistoricalOrders ? undefined : 2)
                     .map((order) => (
                       <Card key={order.id} className="opacity-75">
                         <CardHeader className="flex flex-row items-center justify-between">
@@ -348,6 +350,15 @@ export default function OrdersPage() {
                         </CardContent>
                       </Card>
                     ))}
+                  {orders.filter(order => order.status === 'completed' || order.status === 'cancelled').length > 2 && (
+                    <Button
+                      variant="outline"
+                      className="w-full text-orange-600 hover:text-orange-700 mt-4"
+                      onClick={() => setShowAllHistoricalOrders(!showAllHistoricalOrders)}
+                    >
+                      {showAllHistoricalOrders ? 'Voir moins' : 'Voir plus'}
+                    </Button>
+                  )}
                 </div>
               ) : (
                 <div className="text-center py-8">
