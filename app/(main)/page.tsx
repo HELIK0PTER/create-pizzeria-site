@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { ProductCard } from "@/components/product/product-card";
-import { Prisma } from "@prisma/client";
+import { Prisma, Order } from "@prisma/client";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import Image from "next/image";
@@ -42,7 +42,7 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [isMounted, setIsMounted] = useState(false);
   const [isCompactView, setIsCompactView] = useState(false);
-  const [activeOrders, setActiveOrders] = useState<any[]>([]);
+  const [activeOrders, setActiveOrders] = useState<Order[]>([]);
 
   useEffect(() => {
     setIsMounted(true);
@@ -71,7 +71,7 @@ export default function HomePage() {
       if (response.ok) {
         const data = await response.json();
         // Filtrer les commandes actives (non terminées et non annulées)
-        const activeOrders = data.filter((order: any) => 
+        const activeOrders = data.filter((order: Order) => 
           order.status !== 'completed' && order.status !== 'cancelled'
         );
         setActiveOrders(activeOrders);

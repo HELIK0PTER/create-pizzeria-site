@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { Prisma } from '@prisma/client';
+
+// Utilisez Partial<Prisma.ProductUpdateInput> pour updateData
+type UpdateProductData = Partial<Prisma.ProductUpdateInput>;
 
 // GET /api/products/[id] - Récupérer un produit par ID
 export async function GET(
@@ -133,12 +137,12 @@ export async function PUT(
     }
 
     // Créer un objet de données à mettre à jour avec uniquement les champs fournis
-    const updateData: any = {}
+    const updateData: UpdateProductData = {}
     if (name !== undefined) updateData.name = name
     if (slug !== undefined) updateData.slug = slug
     if (description !== undefined) updateData.description = description
     if (image !== undefined) updateData.image = image
-    if (categoryId !== undefined) updateData.categoryId = categoryId
+    if (categoryId !== undefined) updateData.category = { connect: { id: categoryId } }
     if (price !== undefined) updateData.price = price
     if (ingredients !== undefined) updateData.ingredients = ingredients
     if (allergens !== undefined) updateData.allergens = allergens

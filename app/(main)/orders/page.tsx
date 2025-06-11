@@ -5,8 +5,9 @@ import { useSession } from '@/lib/auth-client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { ShoppingBag, XCircle, RotateCcw, Truck, Store, Clock, CheckCircle, ChefHat, Package, X } from 'lucide-react';
+import { ShoppingBag, XCircle, Truck, Clock, CheckCircle, ChefHat, Package, X } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { formatPrice, ORDER_STATUS_CONFIG } from '@/lib/utils';
@@ -206,9 +207,11 @@ export default function OrdersPage() {
                               <div key={item.id} className="flex items-center justify-between bg-gray-50 p-3 rounded-lg">
                                 <div className="flex items-center gap-3">
                                   {item.product?.image && (
-                                    <img 
+                                    <Image 
                                       src={item.product.image} 
                                       alt={item.product.name}
+                                      width={48}
+                                      height={48}
                                       className="w-12 h-12 object-cover rounded-md"
                                     />
                                   )}
@@ -306,9 +309,11 @@ export default function OrdersPage() {
                               <div key={item.id} className="flex items-center justify-between text-sm bg-gray-50 p-3 rounded-lg">
                                 <div className="flex items-center gap-3">
                                   {item.product?.image && (
-                                    <img 
+                                    <Image 
                                       src={item.product.image} 
                                       alt={item.product.name}
+                                      width={48}
+                                      height={48}
                                       className="w-12 h-12 object-cover rounded-md"
                                     />
                                   )}
