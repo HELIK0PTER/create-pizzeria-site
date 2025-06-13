@@ -10,13 +10,14 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { ProductCard } from "@/components/product/product-card";
-import { Prisma } from "@prisma/client";
+import { Prisma, Order } from "@prisma/client";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import Image from "next/image";
 import { GOOGLEMAPS_SECRET } from "@/utils/environement";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { useSession } from '@/lib/auth-client';
 
 type ProductWithRelations = Prisma.ProductGetPayload<{
   include: {
@@ -34,17 +35,22 @@ const errors = [
 ];
 
 export default function HomePage() {
+  const { data: session } = useSession();
   const [featuredProducts, setFeaturedProducts] = useState<
     ProductWithRelations[]
   >([]);
   const [loading, setLoading] = useState(true);
   const [isMounted, setIsMounted] = useState(false);
   const [isCompactView, setIsCompactView] = useState(false);
+  const [activeOrders, setActiveOrders] = useState<Order[]>([]);
 
   useEffect(() => {
     setIsMounted(true);
     fetchFeaturedProducts();
-  }, []);
+    if (session?.user) {
+      fetchActiveOrders();
+    }
+  }, [session]);
 
   const fetchFeaturedProducts = async () => {
     try {
@@ -56,6 +62,22 @@ export default function HomePage() {
       console.error("Erreur lors du chargement des produits:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchActiveOrders = async () => {
+    try {
+      const response = await fetch('/api/orders');
+      if (response.ok) {
+        const data = await response.json();
+        // Filtrer les commandes actives (non terminées et non annulées)
+        const activeOrders = data.filter((order: Order) => 
+          order.status !== 'completed' && order.status !== 'cancelled'
+        );
+        setActiveOrders(activeOrders);
+      }
+    } catch (error) {
+      console.error('Erreur lors du chargement des commandes actives:', error);
     }
   };
 
@@ -114,6 +136,20 @@ export default function HomePage() {
               </Link>
             </Button>
           </div>
+          {/* Message pour les commandes en cours */}
+          {session?.user && activeOrders.length > 0 && (
+            <div className="mt-8">
+              <Alert className="bg-white border-gray-200 shadow-sm max-w-2xl mx-auto py-4">
+                <Clock className="h-5 w-5 text-orange-600" />
+                <AlertDescription className="text-base text-gray-800 flex items-center">
+                  Vous avez {activeOrders.length} commande{activeOrders.length > 1 ? 's' : ''} en cours.
+                  <Link href="/orders" className="ml-2 text-orange-600 hover:text-orange-700 font-medium underline">
+                    Voir mes commandes
+                  </Link>
+                </AlertDescription>
+              </Alert>
+            </div>
+          )}
         </div>
       </section>
       <DropdownInfo />

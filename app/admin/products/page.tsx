@@ -11,6 +11,8 @@ import {
   MoreHorizontal,
   Eye,
   Package,
+  X,
+  CheckCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -457,6 +459,24 @@ export default function AdminProductsPage() {
                                   <Pencil className="h-4 w-4 mr-2" />
                                   Modifier
                                 </Link>
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={(e) => {
+                                  stopRowClick(e);
+                                  handleToggleProduct(product.id, !product.isAvailable);
+                                }}
+                              >
+                                {product.isAvailable ? (
+                                  <>
+                                    <X className="h-4 w-4 mr-2" />
+                                    Marquer comme indisponible
+                                  </>
+                                ) : (
+                                  <>
+                                    <CheckCircle className="h-4 w-4 mr-2" />
+                                    Marquer comme disponible
+                                  </>
+                                )}
                               </DropdownMenuItem>
                               <DropdownMenuSeparator />
                               <DropdownMenuItem

@@ -329,7 +329,21 @@ export const getLastOrder = () => {
   try {
     if (typeof window !== "undefined") {
       const lastOrder = localStorage.getItem("lastOrder");
-      return lastOrder ? JSON.parse(lastOrder) : null;
+      if (lastOrder) {
+        const parsedOrder = JSON.parse(lastOrder);
+        // Vérifier si la commande a moins de 24h
+        const orderDate = new Date(parsedOrder.orderDate);
+        const now = new Date();
+        const hoursDiff = (now.getTime() - orderDate.getTime()) / (1000 * 60 * 60);
+        
+        if (hoursDiff <= 24) {
+          return parsedOrder;
+        } else {
+          // Supprimer la commande si elle a plus de 24h
+          localStorage.removeItem("lastOrder");
+          return null;
+        }
+      }
     }
     return null;
   } catch (error) {

@@ -13,9 +13,30 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { User, LogOut, Settings, ShoppingBag, Shield } from 'lucide-react'
 import Link from 'next/link'
+import { useEffect, useState } from 'react'
+import { Badge } from '@/components/ui/badge'
 
 export function UserMenu() {
   const { data: session, isPending } = useSession()
+  const [activeOrders, setActiveOrders] = useState(0)
+
+  useEffect(() => {
+    const fetchActiveOrders = async () => {
+      try {
+        const response = await fetch('/api/orders/active')
+        if (response.ok) {
+          const data = await response.json()
+          setActiveOrders(data.count)
+        }
+      } catch (error) {
+        console.error('Erreur lors de la récupération des commandes actives:', error)
+      }
+    }
+
+    if (session?.user) {
+      fetchActiveOrders()
+    }
+  }, [session])
 
   const handleSignOut = async () => {
     await signOut({
@@ -79,9 +100,14 @@ export function UserMenu() {
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
-          <Link href="/orders" className="cursor-pointer">
+          <Link href="/orders" className="cursor-pointer relative">
             <ShoppingBag className="mr-2 h-4 w-4" />
             <span>Mes commandes</span>
+            {activeOrders > 0 && (
+              <Badge variant="destructive" className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs">
+                {activeOrders}
+              </Badge>
+            )}
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>

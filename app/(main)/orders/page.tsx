@@ -5,12 +5,13 @@ import { useSession } from '@/lib/auth-client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { ShoppingBag, XCircle, RotateCcw, Truck, Store } from 'lucide-react';
+import { ShoppingBag, XCircle, Truck, Clock, CheckCircle, ChefHat, Package, X } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { getLastOrder } from '@/store/cart';
-import { formatPrice } from '@/lib/utils';
+import { formatPrice, ORDER_STATUS_CONFIG } from '@/lib/utils';
+import { Progress } from "@/components/ui/progress"
 
 // Type pour les commandes avec leurs articles et produits/variantes associés
 interface OrderItemWithProductAndVariant {
@@ -31,27 +32,37 @@ interface Order {
   status: string;
   total: number;
   createdAt: string;
-  orderItems: OrderItemWithProductAndVariant[];
+  items: OrderItemWithProductAndVariant[];
+  subTotal: number;
+  deliveryFee: number;
+  deliveryMethod: "delivery" | "pickup";
 }
 
-interface LastOrder {
-  items: Array<{
-    productId: string;
-    variantId?: string | null;
-    quantity: number;
-    notes?: string | null;
-    product: {
-      id: string;
-      name: string;
-      price: number;
-      category: { slug: string };
-    };
-    variant?: { name: string; price: number } | null;
-  }>;
-  deliveryMethod: "delivery" | "pickup";
-  total: number;
-  orderDate: string;
-  pizzaCount: number;
+const getOrderProgress = (status: string) => {
+  const statusOrder = ['pending', 'confirmed', 'preparing', 'ready', 'delivering', 'completed']
+  const currentIndex = statusOrder.indexOf(status)
+  return (currentIndex / (statusOrder.length - 1)) * 100
+}
+
+const getStatusIcon = (status: string) => {
+  switch (status) {
+    case 'pending':
+      return <Clock className="h-4 w-4" />
+    case 'confirmed':
+      return <CheckCircle className="h-4 w-4" />
+    case 'preparing':
+      return <ChefHat className="h-4 w-4" />
+    case 'ready':
+      return <Package className="h-4 w-4" />
+    case 'delivering':
+      return <Truck className="h-4 w-4" />
+    case 'completed':
+      return <CheckCircle className="h-4 w-4" />
+    case 'cancelled':
+      return <X className="h-4 w-4" />
+    default:
+      return <Clock className="h-4 w-4" />
+  }
 }
 
 export default function OrdersPage() {
@@ -59,20 +70,20 @@ export default function OrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [lastOrder, setLastOrder] = useState<LastOrder | null>(null);
-  const [showLastOrder, setShowLastOrder] = useState(false);
+  const [expandedOrders, setExpandedOrders] = useState<Set<string>>(new Set());
+  const [showAllHistoricalOrders, setShowAllHistoricalOrders] = useState(false);
 
-  // Charger la dernière commande depuis localStorage
-  useEffect(() => {
-    const loadLastOrder = () => {
-      const savedOrder = getLastOrder();
-      if (savedOrder) {
-        setLastOrder(savedOrder);
+  const toggleOrderExpansion = (orderId: string) => {
+    setExpandedOrders(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(orderId)) {
+        newSet.delete(orderId);
+      } else {
+        newSet.add(orderId);
       }
-    };
-
-    loadLastOrder();
-  }, []);
+      return newSet;
+    });
+  };
 
   useEffect(() => {
     if (isPending) return;
@@ -84,7 +95,7 @@ export default function OrdersPage() {
 
     const fetchOrders = async () => {
       try {
-        const response = await fetch('/api/orders');
+        const response = await fetch(`/api/orders?userId=${session.user.id}`);
         if (!response.ok) {
           throw new Error('Erreur lors du chargement des commandes');
         }
@@ -143,71 +154,6 @@ export default function OrdersPage() {
       <div className="container mx-auto px-4">
         <h1 className="text-3xl font-bold text-gray-900 mb-8">{`Mes commandes`}</h1>
 
-        {/* Dernière commande sauvegardée */}
-        {lastOrder && (
-          <Card className="mb-8 border-orange-200 bg-orange-50">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <RotateCcw className="w-5 h-5 text-orange-600" />
-                  {`Dernière commande (sauvegardée)`}
-                </CardTitle>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowLastOrder(!showLastOrder)}
-                >
-                  {showLastOrder ? "Masquer" : "Afficher"}
-                </Button>
-              </div>
-            </CardHeader>
-            {showLastOrder && (
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                  <div className="flex items-center gap-2">
-                    {lastOrder.deliveryMethod === "delivery" ? (
-                      <Truck className="w-4 h-4 text-blue-600" />
-                    ) : (
-                      <Store className="w-4 h-4 text-green-600" />
-                    )}
-                    <span className="text-sm font-medium">
-                      {lastOrder.deliveryMethod === "delivery" ? "Livraison" : "Click & Collect"}
-                    </span>
-                  </div>
-                  <div className="text-sm">
-                    <span className="font-medium">{`Total : `}</span>
-                    {formatPrice(lastOrder.total)}
-                  </div>
-                  <div className="text-sm">
-                    <span className="font-medium">{`Pizzas : `}</span>
-                    {lastOrder.pizzaCount}
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <h4 className="font-medium text-sm">{`Articles :`}</h4>
-                  {lastOrder.items.map((item, index) => (
-                    <div key={index} className="flex justify-between items-center text-sm bg-white p-2 rounded">
-                      <div>
-                        <span className="font-medium">{item.product.name}</span>
-                        {item.variant && <span className="text-gray-600"> ({item.variant.name})</span>}
-                        <span className="text-gray-500"> x{item.quantity}</span>
-                      </div>
-                      <span className="font-medium">
-                        {formatPrice((item.product.price + (item.variant?.price || 0)) * item.quantity)}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-                
-                <p className="text-xs text-gray-500 mt-3">
-                  {`Sauvegardée le : ${new Date(lastOrder.orderDate).toLocaleString()}`}
-                </p>
-              </CardContent>
-            )}
-          </Card>
-        )}
-
         {orders.length === 0 ? (
           <div className="flex flex-col items-center justify-center min-h-[50vh] text-center">
             <ShoppingBag className="w-16 h-16 text-gray-400 mb-6" />
@@ -217,33 +163,215 @@ export default function OrdersPage() {
             </Link>
           </div>
         ) : (
-          <div className="space-y-6">
-            {orders.map((order) => (
-              <Card key={order.id}>
-                <CardHeader className="flex flex-row items-center justify-between">
-                  <div>
-                    <CardTitle className="text-xl font-semibold">Commande #{order.orderNumber || order.id.substring(0, 8)}</CardTitle>
-                    <p className="text-sm text-gray-600">Passée le {new Date(order.createdAt).toLocaleDateString()}</p>
-                  </div>
-                  <Badge variant="secondary">{order.status}</Badge>
-                </CardHeader>
-                <Separator />
-                <CardContent className="pt-6">
-                  <div className="space-y-4">
-                    <p>--- Début Articles ---</p>
-                    {order.orderItems?.map((item) => (
-                      <div key={item.id} className="flex items-start justify-between gap-4">
-                        <p>Item:</p>
-                        <div className="flex-1">
-                          <p className="font-medium">{item.product?.name}{item.variant ? ` (${item.variant.name})` : ''}</p>
-                        </div>
-                      </div>
+          <>
+            {/* Commandes en cours */}
+            <h2 className="text-2xl font-bold text-gray-800 mb-6">{`Commandes en cours`}</h2>
+            {
+              orders.filter(order => order.status !== 'completed' && order.status !== 'cancelled').length > 0 ? (
+                <div className="space-y-6 mb-12">
+                  {orders
+                    .filter(order => order.status !== 'completed' && order.status !== 'cancelled')
+                    .map((order) => (
+                      <Card key={order.id}>
+                        <CardHeader className="flex flex-row items-center justify-between">
+                          <div>
+                            <CardTitle className="text-xl font-semibold">Commande #{order.orderNumber || order.id.substring(0, 8)}</CardTitle>
+                            <p className="text-sm text-gray-600">Passée le {new Date(order.createdAt).toLocaleDateString()}</p>
+                          </div>
+                          <Badge variant="secondary">{order.status}</Badge>
+                        </CardHeader>
+                        <Separator />
+                        <CardContent className="pt-6">
+                          {/* Barre de progression */}
+                          {order.status !== 'cancelled' && (
+                            <div className="space-y-4 mb-6">
+                              <div className="flex items-center justify-between text-sm text-gray-600">
+                                <span>Progression de la commande</span>
+                                <span>{Math.round(getOrderProgress(order.status))}%</span>
+                              </div>
+                              <Progress value={getOrderProgress(order.status)} className="h-2" />
+                              <div className="flex items-center justify-between text-sm">
+                                <div className="flex items-center gap-2">
+                                  {getStatusIcon(order.status)}
+                                  <span>{ORDER_STATUS_CONFIG[order.status as keyof typeof ORDER_STATUS_CONFIG]?.label || order.status}</span>
+                                </div>
+                                <p className="text-gray-600">{ORDER_STATUS_CONFIG[order.status as keyof typeof ORDER_STATUS_CONFIG]?.description}</p>
+                              </div>
+                            </div>
+                          )}
+                          
+                          {/* Articles de la commande */}
+                          <div className="space-y-3">
+                            <h4 className="font-medium text-sm text-gray-600">Articles commandés :</h4>
+                            {order.items?.slice(0, expandedOrders.has(order.id) ? undefined : 3).map((item) => (
+                              <div key={item.id} className="flex items-center justify-between bg-gray-50 p-3 rounded-lg">
+                                <div className="flex items-center gap-3">
+                                  {item.product?.image && (
+                                    <Image 
+                                      src={item.product.image} 
+                                      alt={item.product.name}
+                                      width={48}
+                                      height={48}
+                                      className="w-12 h-12 object-cover rounded-md"
+                                    />
+                                  )}
+                                  <div>
+                                    <p className="font-medium">{item.product?.name}</p>
+                                    {item.variant && (
+                                      <p className="text-sm text-gray-600">{item.variant.name}</p>
+                                    )}
+                                    <p className="text-sm text-gray-500">Quantité : {item.quantity}</p>
+                                  </div>
+                                </div>
+                                <span className="font-medium">{formatPrice(item.totalPrice)}</span>
+                              </div>
+                            ))}
+                            {order.items && order.items.length > 3 && (
+                              <Button
+                                variant="ghost"
+                                className="w-full text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+                                onClick={() => toggleOrderExpansion(order.id)}
+                              >
+                                {expandedOrders.has(order.id) ? 'Voir moins' : `Voir ${order.items.length - 3} article${order.items.length - 3 > 1 ? 's' : ''} de plus`}
+                              </Button>
+                            )}
+                            <div className="flex justify-between items-center pt-3 border-t">
+                              <span className="font-medium">Sous-total</span>
+                              <span className="font-bold text-lg">{formatPrice(order.subTotal)}</span>
+                            </div>
+                            {order.deliveryMethod === "delivery" && (
+                                <div className="flex justify-between items-center pt-2">
+                                    <span className="font-medium text-sm">Frais de livraison</span>
+                                    <span className="font-medium text-sm">{formatPrice(order.deliveryFee)}</span>
+                                </div>
+                            )}
+                            <div className="flex justify-between items-center pt-3 border-t">
+                              <span className="font-medium">Total</span>
+                              <span className="font-bold text-lg">
+                                {formatPrice(order.total)}
+                                {order.deliveryMethod === "delivery" && order.deliveryFee > 0 && (
+                                  <span className="text-sm font-normal text-gray-500">{`(dont ${formatPrice(order.deliveryFee)} de frais de livraison)`}</span>
+                                )}
+                              </span>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
                     ))}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                </div>
+              ) : (
+                <div className="text-center py-8 mb-12">
+                  <p className="text-gray-500 text-lg">{`Aucune commande en cours pour le moment.`}</p>
+                </div>
+              )
+            }
+
+            {/* Historique des commandes */}
+            <h2 className="text-2xl font-bold text-gray-800 mb-6">{`Historique des commandes`}</h2>
+            {
+              orders.filter(order => order.status === 'completed' || order.status === 'cancelled').length > 0 ? (
+                <div className="space-y-6">
+                  {orders
+                    .filter(order => order.status === 'completed' || order.status === 'cancelled')
+                    .slice(0, showAllHistoricalOrders ? undefined : 2)
+                    .map((order) => (
+                      <Card key={order.id} className="opacity-75">
+                        <CardHeader className="flex flex-row items-center justify-between">
+                          <div>
+                            <CardTitle className="text-xl font-semibold">Commande #{order.orderNumber || order.id.substring(0, 8)}</CardTitle>
+                            <p className="text-sm text-gray-600">Passée le {new Date(order.createdAt).toLocaleDateString()}</p>
+                          </div>
+                          <Badge variant="outline">{ORDER_STATUS_CONFIG[order.status as keyof typeof ORDER_STATUS_CONFIG]?.label || order.status}</Badge>
+                        </CardHeader>
+                        <Separator />
+                        <CardContent className="pt-6">
+                           {/* Barre de progression */}
+                          {order.status !== 'cancelled' && (
+                            <div className="space-y-4 mb-6">
+                              <div className="flex items-center justify-between text-sm text-gray-600">
+                                <span>Progression de la commande</span>
+                                <span>{Math.round(getOrderProgress(order.status))}%</span>
+                              </div>
+                              <Progress value={getOrderProgress(order.status)} className="h-2" />
+                              <div className="flex items-center justify-between text-sm">
+                                <div className="flex items-center gap-2">
+                                  {getStatusIcon(order.status)}
+                                  <span>{ORDER_STATUS_CONFIG[order.status as keyof typeof ORDER_STATUS_CONFIG]?.label || order.status}</span>
+                                </div>
+                                <p className="text-gray-600">{ORDER_STATUS_CONFIG[order.status as keyof typeof ORDER_STATUS_CONFIG]?.description}</p>
+                              </div>
+                            </div>
+                          )}
+                           {/* Articles de la commande */}
+                          <div className="space-y-3">
+                            <h4 className="font-medium text-sm text-gray-600">{`Articles :`}</h4>
+                            {order.items?.slice(0, expandedOrders.has(order.id) ? undefined : 3).map((item) => (
+                              <div key={item.id} className="flex items-center justify-between text-sm bg-gray-50 p-3 rounded-lg">
+                                <div className="flex items-center gap-3">
+                                  {item.product?.image && (
+                                    <Image 
+                                      src={item.product.image} 
+                                      alt={item.product.name}
+                                      width={48}
+                                      height={48}
+                                      className="w-12 h-12 object-cover rounded-md"
+                                    />
+                                  )}
+                                  <div>
+                                    <p className="font-medium">{item.product?.name}</p>
+                                    {item.variant && <p className="text-sm text-gray-600">{item.variant.name}</p>}
+                                    <p className="text-sm text-gray-500">Quantité : {item.quantity}</p>
+                                  </div>
+                                </div>
+                                <span className="font-medium">{formatPrice(item.totalPrice)}</span>
+                              </div>
+                            ))}
+                            {order.items && order.items.length > 3 && (
+                              <Button
+                                variant="ghost"
+                                className="w-full text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+                                onClick={() => toggleOrderExpansion(order.id)}
+                              >
+                                {expandedOrders.has(order.id) ? 'Voir moins' : `Voir ${order.items.length - 3} article${order.items.length - 3 > 1 ? 's' : ''} de plus`}
+                              </Button>
+                            )}
+                            <div className="flex justify-between items-center pt-3 border-t">
+                              <span className="font-medium">Sous-total</span>
+                              <span className="font-bold text-lg">{formatPrice(order.subTotal)}</span>
+                            </div>
+                            {order.deliveryMethod === "delivery" && (
+                                <div className="flex justify-between items-center pt-2">
+                                    <span className="font-medium text-sm">Frais de livraison</span>
+                                    <span className="font-medium text-sm">{formatPrice(order.deliveryFee)}</span>
+                                </div>
+                            )}
+                            <div className="flex justify-between items-center pt-3 border-t">
+                              <span className="font-medium">Total</span>
+                              <span className="font-bold text-lg">
+                                {formatPrice(order.total)}
+                              </span>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  {orders.filter(order => order.status === 'completed' || order.status === 'cancelled').length > 2 && (
+                    <Button
+                      variant="outline"
+                      className="w-full text-orange-600 hover:text-orange-700 mt-4"
+                      onClick={() => setShowAllHistoricalOrders(!showAllHistoricalOrders)}
+                    >
+                      {showAllHistoricalOrders ? 'Voir moins' : 'Voir plus'}
+                    </Button>
+                  )}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <p className="text-gray-500 text-lg">{`Aucune commande terminée ou annulée.`}</p>
+                </div>
+              )
+            }
+          </>
         )}
       </div>
     </div>

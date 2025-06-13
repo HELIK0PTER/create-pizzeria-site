@@ -450,7 +450,11 @@ export default function AdminOrdersPage() {
                         <TableCell>
                           <div>
                             <div className="font-medium">{order.customerName}</div>
-                            <div className="text-sm text-gray-500">{order.customerPhone}</div>
+                            <div className="text-sm text-gray-500">
+                              <a href={`tel:${order.customerPhone}`} className="text-blue-600 hover:underline">
+                                {order.customerPhone}
+                              </a>
+                            </div>
                           </div>
                         </TableCell>
                         <TableCell>
@@ -541,7 +545,11 @@ export default function AdminOrdersPage() {
                                       </div>
                                       <div>
                                         <p className="text-sm text-gray-600">{`Téléphone`}</p>
-                                        <p className="font-medium">{selectedOrder.customerPhone}</p>
+                                        <p className="font-medium">
+                                          <a href={`tel:${selectedOrder.customerPhone}`} className="text-blue-600 hover:underline">
+                                            {selectedOrder.customerPhone}
+                                          </a>
+                                        </p>
                                       </div>
                                       {selectedOrder.customerEmail && (
                                         <div>
