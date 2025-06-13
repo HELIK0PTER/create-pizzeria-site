@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   ShoppingCart,
   Package,
@@ -90,6 +90,8 @@ export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<ExtendedOrder[]>([]);
   const [filteredOrders, setFilteredOrders] = useState<ExtendedOrder[]>([]);
   const [loading, setLoading] = useState(true);
+  const lastOrderCountRef = useRef(0);
+  const isfirstload = useRef(true);
   const [selectedOrder, setSelectedOrder] = useState<ExtendedOrder | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -99,6 +101,19 @@ export default function AdminOrdersPage() {
 
   useEffect(() => {
     fetchOrders();
+    setLoading(false);
+
+  }, []);
+
+
+  
+  useEffect(() => {
+
+    const interval = setInterval(() => {
+      fetchOrders();
+    }, 5000); // Rafraîchissement toutes les 5 secondes
+
+    return () => clearInterval(interval);
   }, []);
 
   const filterOrders = useCallback(() => {
@@ -132,13 +147,33 @@ export default function AdminOrdersPage() {
     filterOrders();
   }, [filterOrders]);
 
+  const playNotificationSound = () => {
+    try {
+      const audio = new Audio('/notification.mp3'); // Assurez-vous que ce chemin est correct dans votre dossier /public
+      audio.play().catch(e => console.error("Erreur lors de la lecture du son de notification:", e));
+    } catch (e) {
+      console.error("Impossible de créer l'objet Audio pour la notification:", e);
+    }
+  };
+
   const fetchOrders = async () => {
     try {
-      setLoading(true);
       const response = await fetch("/api/orders?admin=true");
       if (response.ok) {
         const data = await response.json();
+
+        // Vérifier si de nouvelles commandes sont arrivées (uniquement après le chargement initial)
+        if (data.length > lastOrderCountRef.current && !isfirstload.current) {
+          for (let i = 0; i < 3; i++) {
+            setTimeout(() => {
+              playNotificationSound();
+            }, i * 300);
+          }
+        }
+
         setOrders(data);
+        lastOrderCountRef.current = data.length; // Mettre à jour le compte pour la prochaine vérification
+        isfirstload.current = false;
       } else {
         console.error("Erreur lors du chargement des commandes");
       }
