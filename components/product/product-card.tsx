@@ -185,7 +185,7 @@ export function ProductCard({ product, isCompact }: ProductCardProps) {
   return (
     <Card className={`h-full w-full sm:w-full flex ${isCompact ? "flex-row items-stretch p-0" : "flex-col flex-1 justify-between"} group overflow-hidden border-0 shadow-md ${isCompact ? "hover:shadow-md" : "hover:shadow-xl hover:-translate-y-1"} transition-all duration-300 py-0`}>
       {/* Image Header */}
-      <CardHeader className={`relative ${isCompact ? "w-24 h-24 p-0 flex-shrink-0" : "p-0 mr-4"}`}>
+      <CardHeader className={`relative ${isCompact ? "w-24 h-24 p-0 flex-shrink-0" : "p-0"}`}>
         <div className={`relative ${isCompact ? "w-full h-full rounded-lg" : "aspect-square"} bg-gradient-to-br from-orange-50 to-red-50 overflow-hidden `}>
           {extendedProduct.image ? (
             <Image
