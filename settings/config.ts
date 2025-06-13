@@ -74,7 +74,10 @@ export const variables = {
   slogan: "Les meilleures pizzas artisanales de la ville, préparées avec des ingrédients frais et de qualité. Livraison rapide et click & collect disponibles.",
 
   cta_text:
-    "Découvrez Bella Pizza, où l'authenticité italienne rencontre la rapidité. Savourez nos pizzas artisanales, faites maison avec des ingrédients frais et premium, cuites au feu de bois et livrées chez vous en 15 minutes.",
+    `Sur toutes les commandes à emporter 
+    1 pizza achetée = 1 pizza offerte.
+    Sur toutes les commandes en livraison
+    2 pizzas achetées = 1 pizza offerte.`,
 
   };
 

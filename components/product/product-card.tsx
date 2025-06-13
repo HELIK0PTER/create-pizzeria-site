@@ -308,7 +308,7 @@ export function ProductCard({ product, isCompact }: ProductCardProps) {
             </div>
 
             {/* Boutons (Favori et Ajouter au panier) */}
-            <div className="flex flex-col justify-between items-end pl-2">
+            <div className="grid grid-rows-3 justify-between items-end pl-2">
               {session && (
                 <Button
                   variant="ghost"
@@ -339,7 +339,7 @@ export function ProductCard({ product, isCompact }: ProductCardProps) {
                 }}
                 disabled={!extendedProduct.isAvailable}
                 size="icon"
-                className="bg-orange-600 hover:bg-orange-700 text-white font-semibold rounded-full shadow-md hover:shadow-lg h-8 w-8 p-0"
+                className="row-start-2 bg-orange-600 hover:bg-orange-700 text-white font-semibold rounded-full shadow-md hover:shadow-lg h-8 w-8 p-0"
               >
                 <Plus className="h-4 w-4" />
               </Button>
@@ -522,7 +522,7 @@ export function ProductCard({ product, isCompact }: ProductCardProps) {
                 `}
               >
                 <div className="text-center">
-                  <div className="font-semibold text-base">{variant.name}</div>
+                  <div className="font-semibold text-sm">{variant.name}</div>
                   {variant.price > 0 ? (
                     <div className="text-xs opacity-85">
                       {formatPrice(extendedProduct.price + variant.price)}
@@ -542,7 +542,7 @@ export function ProductCard({ product, isCompact }: ProductCardProps) {
               disabled={!selectedVariantInDialog}
               className="bg-orange-600 hover:bg-orange-700 text-white"
             >
-              Valider
+              Ajouter au panier
             </Button>
             <DialogClose asChild>
               <Button variant="outline">Annuler</Button>

@@ -19,6 +19,12 @@ export default function MenuPage() {
   const [isCompactView, setIsCompactView] = useState(false);
 
   useEffect(() => {
+    // Détecter si on est sur mobile et activer la vue compacte par défaut
+    const isMobile = window.innerWidth < 768; // breakpoint md de Tailwind
+    if (isMobile) {
+      setIsCompactView(true);
+    }
+
     // Charger les données une seule fois au début
     fetchInitialData();
   }, []);

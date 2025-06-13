@@ -17,7 +17,7 @@ import Image from "next/image";
 import { GOOGLEMAPS_SECRET } from "@/utils/environement";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { useSession } from '@/lib/auth-client';
+import { useSession } from "@/lib/auth-client";
 
 type ProductWithRelations = Prisma.ProductGetPayload<{
   include: {
@@ -46,6 +46,13 @@ export default function HomePage() {
 
   useEffect(() => {
     setIsMounted(true);
+
+    // Détecter si on est sur mobile et activer la vue compacte par défaut
+    const isMobile = window.innerWidth < 768; // breakpoint md de Tailwind
+    if (isMobile) {
+      setIsCompactView(true);
+    }
+
     fetchFeaturedProducts();
     if (session?.user) {
       fetchActiveOrders();
@@ -67,17 +74,18 @@ export default function HomePage() {
 
   const fetchActiveOrders = async () => {
     try {
-      const response = await fetch('/api/orders');
+      const response = await fetch("/api/orders");
       if (response.ok) {
         const data = await response.json();
         // Filtrer les commandes actives (non terminées et non annulées)
-        const activeOrders = data.filter((order: Order) => 
-          order.status !== 'completed' && order.status !== 'cancelled'
+        const activeOrders = data.filter(
+          (order: Order) =>
+            order.status !== "completed" && order.status !== "cancelled"
         );
         setActiveOrders(activeOrders);
       }
     } catch (error) {
-      console.error('Erreur lors du chargement des commandes actives:', error);
+      console.error("Erreur lors du chargement des commandes actives:", error);
     }
   };
 
@@ -142,8 +150,12 @@ export default function HomePage() {
               <Alert className="bg-white border-gray-200 shadow-sm max-w-2xl mx-auto py-4">
                 <Clock className="h-5 w-5 text-orange-600" />
                 <AlertDescription className="text-base text-gray-800 flex items-center">
-                  Vous avez {activeOrders.length} commande{activeOrders.length > 1 ? 's' : ''} en cours.
-                  <Link href="/orders" className="ml-2 text-orange-600 hover:text-orange-700 font-medium underline">
+                  Vous avez {activeOrders.length} commande
+                  {activeOrders.length > 1 ? "s" : ""} en cours.
+                  <Link
+                    href="/orders"
+                    className="ml-2 text-orange-600 hover:text-orange-700 font-medium underline"
+                  >
                     Voir mes commandes
                   </Link>
                 </AlertDescription>
@@ -183,7 +195,9 @@ export default function HomePage() {
           {/* TODO : Séparer les pizzas dans un composant coté client pour pouvoir gérer cette page coté serveur */}
 
           {loading ? (
-            <div className={`grid ${isCompactView ? "grid-cols-1" : "grid-cols-1 md:grid-cols-2 md:gap-8 lg:grid-cols-3"} mb-12 place-items-center gap-5 w-[90%] sm:w-full`}>
+            <div
+              className={`grid ${isCompactView ? "grid-cols-1" : "grid-cols-1 md:grid-cols-2 md:gap-8 lg:grid-cols-3"} mb-12 place-items-center gap-5 w-[90%] sm:w-full`}
+            >
               {[...Array(6)].map((_, i) => (
                 <div key={i} className="animate-pulse">
                   <div className="bg-gray-200 aspect-square rounded-lg mb-4"></div>
@@ -193,9 +207,15 @@ export default function HomePage() {
               ))}
             </div>
           ) : featuredProducts.length > 0 ? (
-            <div className={`grid ${isCompactView ? "grid-cols-1" : "grid-cols-1 md:grid-cols-2 md:gap-8 lg:grid-cols-3"} mb-12 place-items-center gap-5 w-[90%] sm:w-full`}>
+            <div
+              className={`grid ${isCompactView ? "grid-cols-1" : "grid-cols-1 md:grid-cols-2 md:gap-8 lg:grid-cols-3"} mb-12 place-items-center gap-5 w-[90%] sm:w-full`}
+            >
               {featuredProducts.map((product) => (
-                <ProductCard key={product.id} product={product} isCompact={isCompactView} />
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  isCompact={isCompactView}
+                />
               ))}
             </div>
           ) : (
