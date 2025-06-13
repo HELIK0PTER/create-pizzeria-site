@@ -144,7 +144,7 @@ export default function MenuPage() {
           selectedCategory={selectedCategory}
         />
 
-        <div className="mb-8 container mx-auto px-4">
+        <div className="mb-8 container mx-auto ">
           {/* Affichage des résultats de recherche */}
           {searchTerm && (
             <div className="mb-4 text-sm text-gray-600">

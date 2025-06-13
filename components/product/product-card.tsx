@@ -24,7 +24,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogClose
+  DialogClose,
 } from "@/components/ui/dialog";
 
 interface ProductCardProps {
@@ -47,7 +47,9 @@ export function ProductCard({ product, isCompact }: ProductCardProps) {
   const [showPopup, setShowPopup] = useState(false);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [showVariantDialog, setShowVariantDialog] = useState(false);
-  const [selectedVariantInDialog, setSelectedVariantInDialog] = useState<Variant | undefined>(undefined);
+  const [selectedVariantInDialog, setSelectedVariantInDialog] = useState<
+    Variant | undefined
+  >(undefined);
 
   const { data: session } = useSession();
   const userId = session?.user?.id;
@@ -60,11 +62,16 @@ export function ProductCard({ product, isCompact }: ProductCardProps) {
       if (!userId || !extendedProduct.id) return;
       setIsLoadingFavorite(true);
       try {
-        const response = await fetch(`/api/favorites?productId=${extendedProduct.id}&userId=${userId}`);
+        const response = await fetch(
+          `/api/favorites?productId=${extendedProduct.id}&userId=${userId}`
+        );
         const data = await response.json();
         setIsFavorite(data.isFavorite);
       } catch (error) {
-        console.error("Erreur lors de la récupération du statut favori:", error);
+        console.error(
+          "Erreur lors de la récupération du statut favori:",
+          error
+        );
       } finally {
         setIsLoadingFavorite(false);
       }
@@ -74,7 +81,9 @@ export function ProductCard({ product, isCompact }: ProductCardProps) {
 
   const handleToggleFavorite = async () => {
     if (!userId) {
-      console.warn("Utilisateur non connecté. Impossible de marquer le produit comme favori.");
+      console.warn(
+        "Utilisateur non connecté. Impossible de marquer le produit comme favori."
+      );
       // TODO: Afficher une notification ou rediriger vers la page de connexion
       return;
     }
@@ -93,10 +102,16 @@ export function ProductCard({ product, isCompact }: ProductCardProps) {
       if (response.ok) {
         setIsFavorite(!isFavorite); // Bascule l'état en cas de succès
       } else {
-        console.error("Échec de l'activation/désactivation du statut favori:", response.statusText);
+        console.error(
+          "Échec de l'activation/désactivation du statut favori:",
+          response.statusText
+        );
       }
     } catch (error) {
-      console.error("Erreur lors de l'activation/désactivation du statut favori:", error);
+      console.error(
+        "Erreur lors de l'activation/désactivation du statut favori:",
+        error
+      );
     } finally {
       setIsLoadingFavorite(false);
     }
@@ -107,27 +122,27 @@ export function ProductCard({ product, isCompact }: ProductCardProps) {
   const handleAddToCart = () => {
     // Vérifier que le produit a une catégorie avant d'ajouter au panier
     if (!extendedProduct.category) {
-      console.error('Le produit n\'a pas de catégorie associée');
+      console.error("Le produit n'a pas de catégorie associée");
       return;
     }
 
     // Ajouter l'item au panier avec le type correct
     const productWithCategory = {
       ...extendedProduct,
-      category: extendedProduct.category
+      category: extendedProduct.category,
     } as Product & { category: Category };
-    
+
     addItem(productWithCategory, selectedVariant);
-    
+
     // Augmenter le compteur
-    setClickCount(prev => prev + 1);
+    setClickCount((prev) => prev + 1);
     setShowPopup(true);
-    
+
     // Clear le timeout précédent s'il existe
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
     }
-    
+
     // Programmer le reset après 2000ms
     timeoutRef.current = setTimeout(() => {
       setShowPopup(false);
@@ -138,16 +153,16 @@ export function ProductCard({ product, isCompact }: ProductCardProps) {
 
   const handleAddVariantToCart = (variant: Variant) => {
     if (!extendedProduct.category) {
-      console.error('Le produit n\'a pas de catégorie associée');
+      console.error("Le produit n'a pas de catégorie associée");
       return;
     }
     const productWithCategory = {
       ...extendedProduct,
-      category: extendedProduct.category
+      category: extendedProduct.category,
     } as Product & { category: Category };
     addItem(productWithCategory, variant);
     setShowVariantDialog(false); // Fermer la modale après l'ajout
-    setClickCount(prev => prev + 1);
+    setClickCount((prev) => prev + 1);
     setShowPopup(true);
 
     if (timeoutRef.current) {
@@ -183,10 +198,16 @@ export function ProductCard({ product, isCompact }: ProductCardProps) {
   }, []);
 
   return (
-    <Card className={`h-full w-full sm:w-full flex ${isCompact ? "flex-row items-stretch p-0" : "flex-col flex-1 justify-between"} group overflow-hidden border-0 shadow-md ${isCompact ? "hover:shadow-md" : "hover:shadow-xl hover:-translate-y-1"} transition-all duration-300 py-0`}>
+    <Card
+      className={`h-full w-full sm:w-full flex ${isCompact ? "flex-row items-stretch p-0 gap-0" : "flex-col flex-1 justify-between"} group overflow-hidden border-0 shadow-md ${isCompact ? "hover:shadow-md" : "hover:shadow-xl hover:-translate-y-1"} transition-all duration-300 py-0`}
+    >
       {/* Image Header */}
-      <CardHeader className={`relative ${isCompact ? "w-24 h-24 p-0 flex-shrink-0" : "p-0"}`}>
-        <div className={`relative ${isCompact ? "w-full h-full rounded-lg" : "aspect-square"} bg-gradient-to-br from-orange-50 to-red-50 overflow-hidden `}>
+      <CardHeader
+        className={`relative p-0 ${isCompact ? "flex aspect-square h-32 flex-shrink-0 gap-0" : ""}`}
+      >
+        <div
+          className={`relative ${isCompact ? "w-full h-full" : "aspect-square"} bg-gradient-to-br from-orange-50 to-red-50 overflow-hidden `}
+        >
           {extendedProduct.image ? (
             <Image
               src={extendedProduct.image}
@@ -203,14 +224,18 @@ export function ProductCard({ product, isCompact }: ProductCardProps) {
 
           {!extendedProduct.isAvailable && (
             <div className="absolute inset-0 flex items-center justify-center z-10">
-              <span className="bg-orange-500 text-white px-4 py-2 rounded-md text-3xl font-extrabold uppercase tracking-wider">
+              <span
+                className={`bg-orange-500 text-white px-4 py-2 rounded-md ${isCompact ? "text-xs" : "text-3xl"} font-extrabold uppercase tracking-wider`}
+              >
                 Indisponible
               </span>
             </div>
           )}
 
           {/* Badges et status (cachés en vue compacte) */}
-          <div className={`absolute top-4 left-4 flex flex-col gap-2 ${isCompact ? "hidden" : ""}`}>
+          <div
+            className={`absolute top-4 left-4 flex-col gap-2 ${isCompact ? "hidden" : "flex"}`}
+          >
             {extendedProduct.category && (
               <Badge
                 variant="secondary"
@@ -222,7 +247,9 @@ export function ProductCard({ product, isCompact }: ProductCardProps) {
           </div>
 
           {/* Note et Favoris (cachés en vue compacte) */}
-          <div className={`absolute bottom-4 right-4 flex gap-2 ${isCompact ? "hidden" : ""}`}>
+          <div
+            className={`absolute bottom-4 right-4 flex gap-2 ${isCompact ? "hidden" : ""}`}
+          >
             {/* Note */}
             <div className="flex items-center gap-1 bg-white/90 backdrop-blur-sm rounded-full px-2 py-1">
               <Star className="h-3 w-3 text-yellow-500 fill-current" />
@@ -241,7 +268,9 @@ export function ProductCard({ product, isCompact }: ProductCardProps) {
                 `}
                 disabled={isLoadingFavorite}
               >
-                <Heart className={`h-3 w-3 ${isFavorite ? "fill-current" : ""}`} />
+                <Heart
+                  className={`h-3 w-3 ${isFavorite ? "fill-current" : ""}`}
+                />
               </Button>
             )}
           </div>
@@ -249,18 +278,25 @@ export function ProductCard({ product, isCompact }: ProductCardProps) {
       </CardHeader>
 
       {/* Contenu */}
-      <CardContent className={`flex flex-col flex-grow ${isCompact ? "p-3" : "p-4"}`}>
+      <CardContent
+        className={`flex flex-col flex-grow ${isCompact ? "p-1" : "p-4"}`}
+      >
         {isCompact ? (
           // Vue compacte: nom, prix, ingrédients, base, et boutons sur une ligne
           <div className="flex flex-row items-stretch flex-grow">
             {/* Informations textuelles (nom, prix, ingrédients, base) */}
             <div className="flex flex-col flex-grow min-w-0 pr-2">
-              <h3 className="font-semibold text-sm leading-tight line-clamp-1 text-gray-900">
-                {extendedProduct.name}
-              </h3>
-              {!extendedProduct.isAvailable && (
-                <Badge variant="destructive" className="text-xs px-2 py-1 w-fit">Indisponible</Badge>
-              )}
+              <div className="flex flex-row items-center justify-between">
+                <h3 className="font-semibold text-sm leading-tight line-clamp-1 text-gray-900">
+                  {extendedProduct.name}
+                </h3>
+                {extendedProduct.baseType && (
+                  <BaseBadge
+                    baseType={extendedProduct.baseType}
+                    isCompact={isCompact}
+                  />
+                )}
+              </div>
               <span className="text-xs font-semibold text-orange-600">
                 {formatPrice(price)}
               </span>
@@ -268,9 +304,6 @@ export function ProductCard({ product, isCompact }: ProductCardProps) {
                 <p className="text-xs text-gray-600">
                   {extendedProduct.ingredients}
                 </p>
-              )}
-              {extendedProduct.baseType && (
-                <BaseBadge baseType={extendedProduct.baseType} />
               )}
             </div>
 
@@ -288,12 +321,17 @@ export function ProductCard({ product, isCompact }: ProductCardProps) {
                   `}
                   disabled={isLoadingFavorite}
                 >
-                  <Heart className={`h-4 w-4 ${isFavorite ? "fill-current" : ""}`} />
+                  <Heart
+                    className={`h-4 w-4 ${isFavorite ? "fill-current" : ""}`}
+                  />
                 </Button>
               )}
               <Button
                 onClick={() => {
-                  if (extendedProduct.variants && extendedProduct.variants.length > 1) {
+                  if (
+                    extendedProduct.variants &&
+                    extendedProduct.variants.length > 1
+                  ) {
                     setShowVariantDialog(true);
                   } else {
                     handleAddToCart(); // Appel direct si pas de variantes
@@ -313,14 +351,17 @@ export function ProductCard({ product, isCompact }: ProductCardProps) {
             {/* Titre et prix */}
             <div className="space-y-2 flex justify-between">
               <div>
-                <h3 className={`font-semibold text-xl text-gray-900 leading-tight`}>
+                <h3
+                  className={`font-semibold text-xl text-gray-900 leading-tight`}
+                >
                   {extendedProduct.name}
                 </h3>
                 <div className="flex items-center justify-between">
                   <span className={`text-2xl font-bold text-orange-600`}>
                     {formatPrice(price)}
                   </span>
-                  {(extendedProduct.ingredients || extendedProduct.allergens) && (
+                  {(extendedProduct.ingredients ||
+                    extendedProduct.allergens) && (
                     <Button
                       variant="ghost"
                       size="sm"
@@ -345,15 +386,17 @@ export function ProductCard({ product, isCompact }: ProductCardProps) {
                   Ingrédients :
                 </h4>
                 <div className="flex flex-wrap gap-2">
-                  {extendedProduct.ingredients.split(',').map((ingredient, index) => (
-                    <Badge
-                      key={index}
-                      variant="secondary"
-                      className="bg-orange-50 text-orange-700 border border-orange-200"
-                    >
-                      {ingredient.trim()}
-                    </Badge>
-                  ))}
+                  {extendedProduct.ingredients
+                    .split(",")
+                    .map((ingredient, index) => (
+                      <Badge
+                        key={index}
+                        variant="secondary"
+                        className="bg-orange-50 text-orange-700 border border-orange-200"
+                      >
+                        {ingredient.trim()}
+                      </Badge>
+                    ))}
                 </div>
               </div>
             )}
@@ -371,17 +414,18 @@ export function ProductCard({ product, isCompact }: ProductCardProps) {
             )}
 
             {/* Variants/Tailles */}
-            {extendedProduct.variants && extendedProduct.variants.length > 1 && (
-              <div className={`space-y-3 ${isCompact ? "hidden" : "mb-4"}`}>
-                <p className={`text-sm font-medium text-gray-900`}>
-                  Choisir la taille :
-                </p>
-                <div className="grid grid-cols-3 gap-2">
-                  {extendedProduct.variants.map((variant) => (
-                    <button
-                      key={variant.id}
-                      onClick={() => setSelectedVariant(variant)}
-                      className={`
+            {extendedProduct.variants &&
+              extendedProduct.variants.length > 1 && (
+                <div className={`space-y-3 ${isCompact ? "hidden" : "mb-4"}`}>
+                  <p className={`text-sm font-medium text-gray-900`}>
+                    Choisir la taille :
+                  </p>
+                  <div className="grid grid-cols-3 gap-2">
+                    {extendedProduct.variants.map((variant) => (
+                      <button
+                        key={variant.id}
+                        onClick={() => setSelectedVariant(variant)}
+                        className={`
                         relative px-3 py-2 text-xs font-medium rounded-lg border-2 transition-all duration-200
                         ${
                           selectedVariant?.id === variant.id
@@ -389,29 +433,33 @@ export function ProductCard({ product, isCompact }: ProductCardProps) {
                             : "bg-white text-gray-600 border-gray-200 hover:border-orange-300 hover:bg-orange-50"
                         }
                       `}
-                    >
-                      <div className="text-center">
-                        <div className={`font-semibold`}>{variant.name}</div>
-                        {variant.price > 0 ? (
-                          <div className={`text-xs opacity-75`}>
-                            {formatPrice(extendedProduct.price + variant.price)}
-                          </div>
-                        ) : (
-                          <div className={`text-xs opacity-75`}>
-                            {formatPrice(extendedProduct.price)}
-                          </div>
-                        )}
-                      </div>
-                    </button>
-                  ))}
+                      >
+                        <div className="text-center">
+                          <div className={`font-semibold`}>{variant.name}</div>
+                          {variant.price > 0 ? (
+                            <div className={`text-xs opacity-75`}>
+                              {formatPrice(
+                                extendedProduct.price + variant.price
+                              )}
+                            </div>
+                          ) : (
+                            <div className={`text-xs opacity-75`}>
+                              {formatPrice(extendedProduct.price)}
+                            </div>
+                          )}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
           </div>
         )}
 
         {/* Footer original (caché en vue compacte) */}
-        <CardFooter className={`w-full relative ${isCompact ? "hidden" : "p-4 pt-6 sm:p-6"}`}>
+        <CardFooter
+          className={`w-full relative ${isCompact ? "hidden" : "p-4 pt-6 sm:p-6"}`}
+        >
           <div className="w-full relative">
             {/* Ce bouton est pour la vue non compacte, il doit gérer la sélection de variantes aussi */}
             <Button
@@ -421,9 +469,11 @@ export function ProductCard({ product, isCompact }: ProductCardProps) {
               className={`w-full bg-orange-600 hover:bg-orange-700 text-white font-semibold rounded-xl transition-all duration-200 shadow-md hover:shadow-lg ${isCompact ? "text-sm h-9" : ""}`}
             >
               <Plus className={`h-5 w-5 mr-2 ${isCompact ? "h-4 w-4" : ""}`} />
-              {extendedProduct.isAvailable ? "Ajouter au panier" : "Indisponible"}
+              {extendedProduct.isAvailable
+                ? "Ajouter au panier"
+                : "Indisponible"}
             </Button>
-            
+
             {/* Popup de compteur */}
             <AnimatePresence>
               {showPopup && clickCount > 0 && (
@@ -449,9 +499,12 @@ export function ProductCard({ product, isCompact }: ProductCardProps) {
       <Dialog open={showVariantDialog} onOpenChange={setShowVariantDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Choisir une taille pour {extendedProduct.name}</DialogTitle>
+            <DialogTitle>
+              Choisir une taille pour {extendedProduct.name}
+            </DialogTitle>
             <DialogDescription>
-              Sélectionnez la taille de votre pizza avant de l&apos;ajouter au panier.
+              Sélectionnez la taille de votre pizza avant de l&apos;ajouter au
+              panier.
             </DialogDescription>
           </DialogHeader>
           <div className="grid grid-cols-2 gap-3 py-4">

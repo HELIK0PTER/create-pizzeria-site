@@ -2,7 +2,7 @@ import React from 'react'
 import { Badge } from '../ui/badge';
 import { PizzaBaseType } from '@prisma/client';
 
-const BaseBadge = ({ baseType }: { baseType: PizzaBaseType }) => {
+const BaseBadge = ({ baseType, isCompact }: { baseType: PizzaBaseType, isCompact?: boolean }) => {
 
   const baseTypeLabel = {
     [PizzaBaseType.Tomate]: 'Tomate',
@@ -18,7 +18,7 @@ const BaseBadge = ({ baseType }: { baseType: PizzaBaseType }) => {
 
   return (
     <div>
-      <Badge variant="secondary" className={baseTypeColor[baseType]}>
+      <Badge variant="secondary" className={`${isCompact ? "text-xs px-1 py-0.5" : ""} ${baseTypeColor[baseType]}`}>
         {baseTypeLabel[baseType]}
       </Badge>
     </div>
