@@ -76,12 +76,12 @@ async function main() {
 
   // 2. Créer l'utilisateur admin
   console.log("👤 Création de l'utilisateur admin...");
-  const hashedPassword = await bcrypt.hash("1234admin", 12);
-  
+  const hashedPassword = await bcrypt.hash(process.env.ADMIN_PASSWORD!, 12);
+
   const adminUser = await prisma.user.create({
     data: {
       name: "Admin",
-      email: "admin@admin.com",
+      email: process.env.ADMIN_EMAIL!,
       emailVerified: true,
       role: "admin",
     },
@@ -96,10 +96,6 @@ async function main() {
       password: hashedPassword,
     },
   });
-
-  console.log("✅ Utilisateur admin créé avec succès !");
-  console.log("   📧 Email: admin@admin.com");
-  console.log("   🔑 Mot de passe: 1234admin");
 
   // 3. Créer les utilisateurs clients
   console.log("👥 Création des utilisateurs clients...");
