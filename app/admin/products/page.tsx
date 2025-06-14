@@ -219,12 +219,6 @@ export default function AdminProductsPage() {
             Gérez votre catalogue de produits et leurs informations
           </p>
         </div>
-        <Button asChild className="bg-orange-600 hover:bg-orange-700">
-          <Link href="/admin/products/add">
-            <Plus className="h-4 w-4 mr-2" />
-            Ajouter un produit
-          </Link>
-        </Button>
       </div>
 
       {/* Stats rapides */}
