@@ -50,6 +50,9 @@ export function ProductCard({ product, isCompact }: ProductCardProps) {
   const [selectedVariantInDialog, setSelectedVariantInDialog] = useState<
     Variant | undefined
   >(undefined);
+  const [showInfoDialog, setShowInfoDialog] = useState(false);
+  const [selectedVariantInInfoDialog, setSelectedVariantInInfoDialog] =
+    useState<Variant | undefined>(undefined);
 
   const { data: session } = useSession();
   const userId = session?.user?.id;
@@ -181,11 +184,46 @@ export function ProductCard({ product, isCompact }: ProductCardProps) {
     }
   }, [showVariantDialog, selectedVariant]);
 
+  // Gérer l'ouverture de la modale d'infos pour initialiser selectedVariantInInfoDialog
+  useEffect(() => {
+    if (showInfoDialog) {
+      setSelectedVariantInInfoDialog(selectedVariant);
+    }
+  }, [showInfoDialog, selectedVariant]);
+
   // Fonction pour valider le choix de variante dans la modale
   const handleConfirmVariantSelection = () => {
     if (selectedVariantInDialog) {
       handleAddVariantToCart(selectedVariantInDialog);
     }
+  };
+
+  // Fonction pour ajouter au panier depuis le dialog d'informations
+  const handleAddFromInfoDialog = () => {
+    if (!extendedProduct.category) {
+      console.error("Le produit n'a pas de catégorie associée");
+      return;
+    }
+    const productWithCategory = {
+      ...extendedProduct,
+      category: extendedProduct.category,
+    } as Product & { category: Category };
+
+    // Utiliser la variante sélectionnée dans le dialog d'info ou la variante par défaut
+    const variantToAdd = selectedVariantInInfoDialog || selectedVariant;
+    addItem(productWithCategory, variantToAdd);
+
+    setShowInfoDialog(false); // Fermer la modale après l'ajout
+    setClickCount((prev) => prev + 1);
+    setShowPopup(true);
+
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+    timeoutRef.current = setTimeout(() => {
+      setShowPopup(false);
+      setTimeout(() => setClickCount(0), 300);
+    }, 2000);
   };
 
   // Cleanup du timeout au démontage du composant
@@ -199,7 +237,7 @@ export function ProductCard({ product, isCompact }: ProductCardProps) {
 
   return (
     <Card
-      className={`h-full w-full sm:w-full flex ${isCompact ? "flex-row items-stretch p-0 gap-0" : "flex-col flex-1 justify-between"} group overflow-hidden border-0 shadow-md ${isCompact ? "hover:shadow-md" : "hover:shadow-xl hover:-translate-y-1"} transition-all duration-300 py-0`}
+      className={`h-full w-full sm:w-full flex gap-0 ${isCompact ? "flex-row items-stretch p-0" : "flex-col flex-1 justify-between"} group overflow-hidden border-0 shadow-md ${isCompact ? "hover:shadow-md" : "hover:shadow-xl hover:-translate-y-1"} transition-all duration-300 py-0`}
     >
       {/* Image Header */}
       <CardHeader
@@ -212,6 +250,7 @@ export function ProductCard({ product, isCompact }: ProductCardProps) {
             <Image
               src={extendedProduct.image}
               alt={extendedProduct.name}
+              priority
               fill
               sizes="500px"
               className={`object-cover transition-transform duration-300 group-hover:scale-105 ${!extendedProduct.isAvailable ? "filter blur-[2px]" : ""}`}
@@ -300,11 +339,19 @@ export function ProductCard({ product, isCompact }: ProductCardProps) {
               <span className="text-xs font-semibold text-orange-600">
                 {formatPrice(price)}
               </span>
-              {extendedProduct.ingredients && (
-                <p className="text-xs text-gray-600">
-                  {extendedProduct.ingredients}
+              <div className="flex flex-row items-center gap-2 mt-3 ">
+                <p className="text-xs font-semibold max-w-20">
+                  Ingrédients, description et allergènes
                 </p>
-              )}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setShowInfoDialog(true)}
+                  className="h-6 w-6"
+                >
+                  <Info className="h-8 w-8" />
+                </Button>
+              </div>
             </div>
 
             {/* Boutons (Favori et Ajouter au panier) */}
@@ -347,30 +394,20 @@ export function ProductCard({ product, isCompact }: ProductCardProps) {
           </div>
         ) : (
           // Vue standard: contenu original
-          <div className="space-y-4">
+          <>
             {/* Titre et prix */}
             <div className="space-y-2 flex justify-between">
               <div>
-                <h3
-                  className={`font-semibold text-xl text-gray-900 leading-tight`}
-                >
-                  {extendedProduct.name}
-                </h3>
-                <div className="flex items-center justify-between">
-                  <span className={`text-2xl font-bold text-orange-600`}>
-                    {formatPrice(price)}
-                  </span>
-                  {(extendedProduct.ingredients ||
-                    extendedProduct.allergens) && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="text-gray-500 hover:text-orange-600"
-                    >
-                      <Info className="h-4 w-4" />
-                    </Button>
-                  )}
+                <div className="flex items-center gap-2">
+                  <h3
+                    className={`font-semibold text-xl text-gray-900 leading-tight`}
+                  >
+                    {extendedProduct.name}
+                  </h3>
                 </div>
+                <span className={`text-2xl font-bold text-orange-600`}>
+                  {formatPrice(price)}
+                </span>
               </div>
               <div>
                 {/* Base */}
@@ -379,53 +416,46 @@ export function ProductCard({ product, isCompact }: ProductCardProps) {
                 )}
               </div>
             </div>
-            {/* Ingrédients */}
-            {extendedProduct.ingredients && (
-              <div className="space-y-2">
-                <h4 className={`text-sm font-medium text-gray-900`}>
-                  Ingrédients :
-                </h4>
-                <div className="flex flex-wrap gap-2">
-                  {extendedProduct.ingredients
-                    .split(",")
-                    .map((ingredient, index) => (
-                      <Badge
-                        key={index}
-                        variant="secondary"
-                        className="bg-orange-50 text-orange-700 border border-orange-200"
-                      >
-                        {ingredient.trim()}
-                      </Badge>
-                    ))}
-                </div>
-              </div>
-            )}
 
-            {/* Description */}
-            {extendedProduct.description && (
-              <div className="space-y-2">
-                <h4 className={`text-sm font-medium text-gray-900`}>
-                  Description :
-                </h4>
-                <p className={`text-sm text-gray-600 leading-relaxed`}>
-                  {extendedProduct.description}
-                </p>
-              </div>
-            )}
+            {/* Ingrédients, description et allergènes au clic du bouton infos */}
+            <div className="flex flex-row items-center gap-2">
+              <span className="text-sm font-medium text-gray-900">
+                {`Ingrédients, description et allergènes`}
+              </span>
+              {(extendedProduct.ingredients ||
+                extendedProduct.description ||
+                extendedProduct.allergens) && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowInfoDialog(true)}
+                  className="text-gray-500 hover:text-orange-600"
+                >
+                  <Info className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+          </>
+        )}
 
-            {/* Variants/Tailles */}
-            {extendedProduct.variants &&
-              extendedProduct.variants.length > 1 && (
-                <div className={`space-y-3 ${isCompact ? "hidden" : "mb-4"}`}>
-                  <p className={`text-sm font-medium text-gray-900`}>
-                    Choisir la taille :
-                  </p>
-                  <div className="grid grid-cols-3 gap-2">
-                    {extendedProduct.variants.map((variant) => (
-                      <button
-                        key={variant.id}
-                        onClick={() => setSelectedVariant(variant)}
-                        className={`
+        {/* Footer original (caché en vue compacte) */}
+        <CardFooter
+          className={`w-full relative ${isCompact ? "hidden" : "pt-6 px-0 mt-auto flex flex-col"}`}
+        >
+          {/* Variants/Tailles */}
+          {extendedProduct.variants && extendedProduct.variants.length > 0 && (
+            <div className={`space-y-3 ${isCompact ? "hidden" : "mb-4 w-full"}`}>
+              <p className="text-sm font-medium underline text-gray-900">
+                {extendedProduct.variants.length > 1
+                  ? `Choisir la taille :`
+                  : `Taille :`}
+              </p>
+              <div className="grid grid-cols-3 gap-2">
+                {extendedProduct.variants.map((variant) => (
+                  <button
+                    key={variant.id}
+                    onClick={() => setSelectedVariant(variant)}
+                    className={`
                         relative px-3 py-2 text-xs font-medium rounded-lg border-2 transition-all duration-200
                         ${
                           selectedVariant?.id === variant.id
@@ -433,37 +463,38 @@ export function ProductCard({ product, isCompact }: ProductCardProps) {
                             : "bg-white text-gray-600 border-gray-200 hover:border-orange-300 hover:bg-orange-50"
                         }
                       `}
-                      >
-                        <div className="text-center">
-                          <div className={`font-semibold`}>{variant.name}</div>
-                          {variant.price > 0 ? (
-                            <div className={`text-xs opacity-75`}>
-                              {formatPrice(
-                                extendedProduct.price + variant.price
-                              )}
-                            </div>
-                          ) : (
-                            <div className={`text-xs opacity-75`}>
-                              {formatPrice(extendedProduct.price)}
-                            </div>
-                          )}
+                  >
+                    <div className="text-center">
+                      <div className={`font-semibold`}>{variant.name}</div>
+                      {variant.price > 0 ? (
+                        <div className={`text-xs opacity-75`}>
+                          {formatPrice(extendedProduct.price + variant.price)}
                         </div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-          </div>
-        )}
+                      ) : (
+                        <div className={`text-xs opacity-75`}>
+                          {formatPrice(extendedProduct.price)}
+                        </div>
+                      )}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
-        {/* Footer original (caché en vue compacte) */}
-        <CardFooter
-          className={`w-full relative ${isCompact ? "hidden" : "p-4 pt-6 sm:p-6"}`}
-        >
           <div className="w-full relative">
             {/* Ce bouton est pour la vue non compacte, il doit gérer la sélection de variantes aussi */}
             <Button
-              onClick={handleAddToCart}
+              onClick={() => {
+                if (
+                  extendedProduct.variants &&
+                  extendedProduct.variants.length > 1
+                ) {
+                  setShowVariantDialog(true);
+                } else {
+                  handleAddToCart(); // Appel direct si pas de variantes multiples
+                }
+              }}
               disabled={!extendedProduct.isAvailable}
               size="lg"
               className={`w-full bg-orange-600 hover:bg-orange-700 text-white font-semibold rounded-xl transition-all duration-200 shadow-md hover:shadow-lg ${isCompact ? "text-sm h-9" : ""}`}
@@ -500,11 +531,10 @@ export function ProductCard({ product, isCompact }: ProductCardProps) {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              Choisir une taille pour {extendedProduct.name}
+              {`Choisir une taille pour ${extendedProduct.name}`}
             </DialogTitle>
             <DialogDescription>
-              Sélectionnez la taille de votre pizza avant de l&apos;ajouter au
-              panier.
+              {`Sélectionnez la taille de votre pizza avant de l'ajouter au panier.`}
             </DialogDescription>
           </DialogHeader>
           <div className="grid grid-cols-2 gap-3 py-4">
@@ -547,6 +577,159 @@ export function ProductCard({ product, isCompact }: ProductCardProps) {
             <DialogClose asChild>
               <Button variant="outline">Annuler</Button>
             </DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modale d'informations détaillées */}
+      <Dialog open={showInfoDialog} onOpenChange={setShowInfoDialog}>
+        <DialogContent className="overflow-y-auto max-h-[90vh]">
+          <DialogHeader>
+            <DialogTitle>
+              {`Informations détaillées - ${extendedProduct.name}`}
+            </DialogTitle>
+            <DialogDescription>
+              {`Découvrez les ingrédients, la description et les allergènes de ce produit.`}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-6 py-4">
+            {/* Ingrédients */}
+            {extendedProduct.ingredients && (
+              <div className="space-y-3">
+                <h4 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                  <span>🥗</span>
+                  {`Ingrédients`}
+                </h4>
+                <div className="flex flex-wrap gap-2">
+                  {extendedProduct.ingredients
+                    .split(",")
+                    .map((ingredient, index) => (
+                      <Badge
+                        key={index}
+                        variant="secondary"
+                        className="bg-orange-50 text-orange-700 border border-orange-200 px-3 py-1"
+                      >
+                        {ingredient.trim()}
+                      </Badge>
+                    ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Description */}
+          {extendedProduct.description && (
+            <div className="space-y-3">
+              <h4 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                <span>📝</span>
+                {`Description`}
+              </h4>
+              <p className="text-sm text-gray-600 leading-relaxed bg-gray-50 p-4 rounded-lg">
+                {extendedProduct.description}
+              </p>
+            </div>
+          )}
+
+          {/* Allergènes */}
+          {extendedProduct.allergens && (
+            <div className="space-y-3">
+              <h4 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                <span>⚠️</span>
+                {`Allergènes`}
+              </h4>
+              <div className="flex flex-wrap gap-2">
+                {extendedProduct.allergens.split(",").map((allergen, index) => (
+                  <Badge
+                    key={index}
+                    variant="destructive"
+                    className="bg-red-50 text-red-700 border border-red-200 px-3 py-1"
+                  >
+                    {allergen.trim()}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Message si aucune information disponible */}
+          {!extendedProduct.ingredients &&
+            !extendedProduct.description &&
+            !extendedProduct.allergens && (
+              <div className="text-center py-8">
+                <p className="text-gray-500">
+                  {`Aucune information détaillée disponible pour ce produit.`}
+                </p>
+              </div>
+            )}
+
+          {/* Sélection de variantes si disponibles */}
+          {extendedProduct.variants && extendedProduct.variants.length > 0 && (
+            <div className="space-y-3 pt-4 border-t">
+              <h4 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                <span>📏</span>
+                {extendedProduct.variants.length > 1
+                  ? `Choisir la taille :`
+                  : `Taille :`}
+              </h4>
+              <div className="grid grid-cols-3 gap-2">
+                {extendedProduct.variants.map((variant) => (
+                  <button
+                    key={variant.id}
+                    onClick={() => setSelectedVariantInInfoDialog(variant)}
+                    className={`
+                        relative px-2 py-1 text-sm font-medium rounded-lg border-2 transition-all duration-200
+                        ${
+                          selectedVariantInInfoDialog?.id === variant.id
+                            ? "bg-orange-600 text-white border-orange-600 shadow-md"
+                            : "bg-white text-gray-700 border-gray-200 hover:border-orange-300 hover:bg-orange-50"
+                        }
+                      `}
+                  >
+                    <div className="text-center">
+                      <div className="font-semibold">{variant.name}</div>
+                      {variant.price > 0 ? (
+                        <div className="text-xs opacity-85">
+                          {formatPrice(extendedProduct.price + variant.price)}
+                        </div>
+                      ) : (
+                        <div className="text-xs opacity-85">
+                          {formatPrice(extendedProduct.price)}
+                        </div>
+                      )}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <DialogFooter className="flex gap-2 pt-4 border-t sm:justify-between flex-col sm:flex-row pl-0">
+            {/* Prix final */}
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-lg font-semibold text-gray-900">
+                {`Prix :`}
+              </span>
+              <span className="text-2xl font-bold text-orange-600">
+                {formatPrice(
+                  extendedProduct.price +
+                    (selectedVariantInInfoDialog?.price || 0)
+                )}
+              </span>
+            </div>
+            <div className="flex gap-2 flex-col-reverse sm:flex-row">
+              <DialogClose asChild>
+                <Button variant="outline">Fermer</Button>
+              </DialogClose>
+              {extendedProduct.isAvailable && (
+                <Button
+                  onClick={handleAddFromInfoDialog}
+                  className="bg-orange-600 hover:bg-orange-700 text-white"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  {`Ajouter au panier`}
+                </Button>
+              )}
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>
