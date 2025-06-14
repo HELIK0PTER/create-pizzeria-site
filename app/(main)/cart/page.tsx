@@ -42,7 +42,7 @@ export default function CartPage() {
 
   const handleQuantityChange = (
     productId: string,
-    variantId: string | undefined,
+    variantId: string | null | undefined,
     delta: number
   ) => {
     const item = items.find(
@@ -152,7 +152,7 @@ export default function CartPage() {
                                 onClick={() =>
                                   handleQuantityChange(
                                     item.productId,
-                                    item.variantId || undefined,
+                                    item.variantId,
                                     -1
                                   )
                                 }
@@ -169,7 +169,7 @@ export default function CartPage() {
                                 onClick={() =>
                                   handleQuantityChange(
                                     item.productId,
-                                    item.variantId || undefined,
+                                    item.variantId,
                                     1
                                   )
                                 }
@@ -188,7 +188,7 @@ export default function CartPage() {
                                 onClick={() =>
                                   removeItem(
                                     item.productId,
-                                    item.variantId || undefined
+                                    item.variantId
                                   )
                                 }
                               >

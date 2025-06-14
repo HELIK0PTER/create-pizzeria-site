@@ -45,15 +45,15 @@ interface CartStore {
     quantity?: number,
     notes?: string
   ) => void;
-  removeItem: (productId: string, variantId?: string) => void;
+  removeItem: (productId: string, variantId?: string | null) => void;
   updateQuantity: (
     productId: string,
-    variantId: string | undefined,
+    variantId: string | null | undefined,
     quantity: number
   ) => void;
   updateNotes: (
     productId: string,
-    variantId: string | undefined,
+    variantId: string | null | undefined,
     notes: string
   ) => void;
   clearCart: () => void;
