@@ -55,8 +55,22 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { formatPrice, formatDate, ORDER_STATUS_CONFIG, getNextValidStates, OrderStatus, DeliveryMethod } from "@/lib/utils";
-import { Order, OrderItem, Product, Variant, Category, User } from "@prisma/client";
+import {
+  formatPrice,
+  formatDate,
+  ORDER_STATUS_CONFIG,
+  getNextValidStates,
+  OrderStatus,
+  DeliveryMethod,
+} from "@/lib/utils";
+import {
+  Order,
+  OrderItem,
+  Product,
+  Variant,
+  Category,
+  User,
+} from "@prisma/client";
 
 // Types étendus pour inclure les relations
 interface ExtendedOrderItem extends OrderItem {
@@ -66,7 +80,7 @@ interface ExtendedOrderItem extends OrderItem {
 
 interface ExtendedOrder extends Order {
   items: ExtendedOrderItem[];
-  user?: Pick<User, 'id' | 'name' | 'email'> | null;
+  user?: Pick<User, "id" | "name" | "email"> | null;
 }
 
 // Composant pour l'icône du statut
@@ -81,7 +95,7 @@ const StatusIcon = ({ status }: { status: OrderStatus }) => {
     completed: CheckCircle2,
     cancelled: X,
   };
-  
+
   const IconComponent = iconMap[status] || Clock;
   return <IconComponent className="h-4 w-4" />;
 };
@@ -92,30 +106,21 @@ export default function AdminOrdersPage() {
   const [loading, setLoading] = useState(true);
   const lastOrderCountRef = useRef(0);
   const isfirstload = useRef(true);
-  const [selectedOrder, setSelectedOrder] = useState<ExtendedOrder | null>(null);
+  const [selectedOrder, setSelectedOrder] = useState<ExtendedOrder | null>(
+    null
+  );
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [deliveryMethodFilter, setDeliveryMethodFilter] = useState<string>("all");
+  const [deliveryMethodFilter, setDeliveryMethodFilter] =
+    useState<string>("all");
   const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
-  const [statusUpdateError, setStatusUpdateError] = useState<string | null>(null);
+  const [statusUpdateError, setStatusUpdateError] = useState<string | null>(
+    null
+  );
 
-  useEffect(() => {
-    fetchOrders();
-    setLoading(false);
-
-  }, []);
-
-
-  
-  useEffect(() => {
-
-    const interval = setInterval(() => {
-      fetchOrders();
-    }, 5000); // Rafraîchissement toutes les 5 secondes
-
-    return () => clearInterval(interval);
-  }, []);
-
+  {
+    /* Filtrer les commandes */
+  }
   const filterOrders = useCallback(() => {
     let filtered = orders;
 
@@ -125,7 +130,9 @@ export default function AdminOrdersPage() {
         (order) =>
           order.orderNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
           order.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          order.customerEmail?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          order.customerEmail
+            ?.toLowerCase()
+            .includes(searchTerm.toLowerCase()) ||
           order.customerPhone.includes(searchTerm)
       );
     }
@@ -137,7 +144,9 @@ export default function AdminOrdersPage() {
 
     // Filtre par méthode de livraison
     if (deliveryMethodFilter !== "all") {
-      filtered = filtered.filter((order) => order.deliveryMethod === deliveryMethodFilter);
+      filtered = filtered.filter(
+        (order) => order.deliveryMethod === deliveryMethodFilter
+      );
     }
 
     setFilteredOrders(filtered);
@@ -147,16 +156,29 @@ export default function AdminOrdersPage() {
     filterOrders();
   }, [filterOrders]);
 
-  const playNotificationSound = () => {
+  {
+    /* Jouer le son de notification */
+  }
+  const playNotificationSound = useCallback(() => {
     try {
-      const audio = new Audio('/notification.mp3'); // Assurez-vous que ce chemin est correct dans votre dossier /public
-      audio.play().catch(e => console.error("Erreur lors de la lecture du son de notification:", e));
+      const audio = new Audio("/notification.mp3"); // Assurez-vous que ce chemin est correct dans votre dossier /public
+      audio
+        .play()
+        .catch((e) =>
+          console.error("Erreur lors de la lecture du son de notification:", e)
+        );
     } catch (e) {
-      console.error("Impossible de créer l'objet Audio pour la notification:", e);
+      console.error(
+        "Impossible de créer l'objet Audio pour la notification:",
+        e
+      );
     }
-  };
+  }, []);
 
-  const fetchOrders = async () => {
+  {
+    /* Récupérer les commandes */
+  }
+  const fetchOrders = useCallback(async () => {
     try {
       const response = await fetch("/api/orders?admin=true");
       if (response.ok) {
@@ -182,13 +204,35 @@ export default function AdminOrdersPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [playNotificationSound]);
 
+  {
+    /* Actualiser les commandes au chargement de la page */
+  }
+  useEffect(() => {
+    fetchOrders();
+    setLoading(false);
+  }, [fetchOrders]);
+
+  {
+    /* Rafraîchir les commandes toutes les 5 secondes */
+  }
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchOrders();
+    }, 5000); // Rafraîchissement toutes les 5 secondes
+
+    return () => clearInterval(interval);
+  }, [fetchOrders]);
+
+  {
+    /* Mettre à jour le statut d'une commande */
+  }
   const updateOrderStatus = async (orderId: string, newStatus: OrderStatus) => {
     try {
       setUpdatingStatus(orderId);
       setStatusUpdateError(null);
-      
+
       const response = await fetch("/api/orders", {
         method: "PATCH",
         headers: {
@@ -211,13 +255,15 @@ export default function AdminOrdersPage() {
         if (selectedOrder && selectedOrder.id === orderId) {
           setSelectedOrder({ ...selectedOrder, status: newStatus });
         }
-        
+
         // Afficher un message de succès si une notification a été envoyée
         if (responseData.notificationSent) {
           console.log("✅ Notification envoyée au client");
         }
       } else {
-        setStatusUpdateError(responseData.reason || "Erreur lors de la mise à jour du statut");
+        setStatusUpdateError(
+          responseData.reason || "Erreur lors de la mise à jour du statut"
+        );
       }
     } catch (error) {
       console.error("Erreur:", error);
@@ -227,11 +273,14 @@ export default function AdminOrdersPage() {
     }
   };
 
+  {
+    /* Afficher le badge du statut */
+  }
   const getStatusBadge = (status: OrderStatus) => {
     const statusInfo = ORDER_STATUS_CONFIG[status];
     if (!statusInfo) {
-      console.warn('getStatusBadge: statut invalide:', status)
-      return <Badge variant="secondary">{status || 'Inconnu'}</Badge>;
+      console.warn("getStatusBadge: statut invalide:", status);
+      return <Badge variant="secondary">{status || "Inconnu"}</Badge>;
     }
 
     return (
@@ -242,6 +291,9 @@ export default function AdminOrdersPage() {
     );
   };
 
+  {
+    /* Afficher l'icône de la méthode de livraison */
+  }
   const getDeliveryIcon = (method: string) => {
     return method === "delivery" ? (
       <Truck className="h-4 w-4 text-blue-600" />
@@ -250,37 +302,56 @@ export default function AdminOrdersPage() {
     );
   };
 
+  {
+    /* Calculer les statistiques */
+  }
   const getOrderStats = () => {
     const totalOrders = orders.length;
     const totalRevenue = orders.reduce((sum, order) => sum + order.total, 0);
-    const pendingOrders = orders.filter((order) => order.status === "pending").length;
+    const pendingOrders = orders.filter(
+      (order) => order.status === "pending"
+    ).length;
     const todayOrders = orders.filter(
-      (order) => new Date(order.createdAt).toDateString() === new Date().toDateString()
+      (order) =>
+        new Date(order.createdAt).toDateString() === new Date().toDateString()
     ).length;
 
     return { totalOrders, totalRevenue, pendingOrders, todayOrders };
   };
 
-  const getValidStatusOptions = (currentStatus: OrderStatus, deliveryMethod: DeliveryMethod) => {
+  const getValidStatusOptions = (
+    currentStatus: OrderStatus,
+    deliveryMethod: DeliveryMethod
+  ) => {
     // Validation des paramètres
     if (!currentStatus || !deliveryMethod) {
-      console.warn('getValidStatusOptions: paramètres invalides', { currentStatus, deliveryMethod })
-      return []
+      console.warn("getValidStatusOptions: paramètres invalides", {
+        currentStatus,
+        deliveryMethod,
+      });
+      return [];
     }
-    
+
     try {
       const validStates = getNextValidStates(currentStatus, deliveryMethod);
-      return validStates.map(status => ({
+      return validStates.map((status) => ({
         value: status,
         label: ORDER_STATUS_CONFIG[status]?.label || status,
-        color: ORDER_STATUS_CONFIG[status]?.color || 'bg-gray-100 text-gray-800'
+        color:
+          ORDER_STATUS_CONFIG[status]?.color || "bg-gray-100 text-gray-800",
       }));
     } catch (error) {
-      console.error('Erreur dans getValidStatusOptions:', error, { currentStatus, deliveryMethod })
-      return []
+      console.error("Erreur dans getValidStatusOptions:", error, {
+        currentStatus,
+        deliveryMethod,
+      });
+      return [];
     }
   };
 
+  {
+    /* Afficher les statistiques */
+  }
   const stats = getOrderStats();
 
   if (loading) {
@@ -304,7 +375,11 @@ export default function AdminOrdersPage() {
             {`Gérez toutes les commandes de votre pizzeria avec suivi des statuts`}
           </p>
         </div>
-        <Button onClick={fetchOrders} variant="outline" className="flex items-center gap-2">
+        <Button
+          onClick={fetchOrders}
+          variant="outline"
+          className="flex items-center gap-2"
+        >
           <RefreshCw className="h-4 w-4" />
           {`Actualiser`}
         </Button>
@@ -317,9 +392,9 @@ export default function AdminOrdersPage() {
           <AlertDescription className="text-red-800">
             {statusUpdateError}
           </AlertDescription>
-          <Button 
-            variant="ghost" 
-            size="sm" 
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={() => setStatusUpdateError(null)}
             className="ml-auto text-red-600 hover:text-red-800"
           >
@@ -369,7 +444,9 @@ export default function AdminOrdersPage() {
             <Euro className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatPrice(stats.totalRevenue)}</div>
+            <div className="text-2xl font-bold">
+              {formatPrice(stats.totalRevenue)}
+            </div>
             <p className="text-xs text-muted-foreground">{`Total des ventes`}</p>
           </CardContent>
         </Card>
@@ -417,7 +494,10 @@ export default function AdminOrdersPage() {
 
             <div className="space-y-2">
               <label className="text-sm font-medium">{`Mode de livraison`}</label>
-              <Select value={deliveryMethodFilter} onValueChange={setDeliveryMethodFilter}>
+              <Select
+                value={deliveryMethodFilter}
+                onValueChange={setDeliveryMethodFilter}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder={`Tous les modes`} />
                 </SelectTrigger>
@@ -457,36 +537,56 @@ export default function AdminOrdersPage() {
               <TableBody>
                 {filteredOrders.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8 text-gray-500">
+                    <TableCell
+                      colSpan={7}
+                      className="text-center py-8 text-gray-500"
+                    >
                       {`Aucune commande trouvée`}
                     </TableCell>
                   </TableRow>
                 ) : (
                   filteredOrders.map((order) => {
                     // Validation et normalisation des types
-                    const orderStatus = order.status as OrderStatus
-                    const orderDeliveryMethod = order.deliveryMethod as DeliveryMethod
-                    
+                    const orderStatus = order.status as OrderStatus;
+                    const orderDeliveryMethod =
+                      order.deliveryMethod as DeliveryMethod;
+
                     // S'assurer que les valeurs sont valides avant d'appeler getValidStatusOptions
-                    const validStatusOptions = (orderStatus && orderDeliveryMethod) 
-                      ? getValidStatusOptions(orderStatus, orderDeliveryMethod)
-                      : []
-                    
+                    const validStatusOptions =
+                      orderStatus && orderDeliveryMethod
+                        ? getValidStatusOptions(
+                            orderStatus,
+                            orderDeliveryMethod
+                          )
+                        : [];
+
                     return (
-                      <TableRow key={order.id} className="cursor-pointer hover:bg-gray-50">
+                      <TableRow
+                        key={order.id}
+                        className="cursor-pointer hover:bg-gray-50"
+                      >
                         <TableCell className="font-medium">
                           <div>
                             <div className="font-bold">{order.orderNumber}</div>
                             <div className="text-sm text-gray-500">
-                              {order.items.reduce((total, item) => total + item.quantity, 0)} {`articles`}
+                              {order.items.reduce(
+                                (total, item) => total + item.quantity,
+                                0
+                              )}{" "}
+                              {`articles`}
                             </div>
                           </div>
                         </TableCell>
                         <TableCell>
                           <div>
-                            <div className="font-medium">{order.customerName}</div>
+                            <div className="font-medium">
+                              {order.customerName}
+                            </div>
                             <div className="text-sm text-gray-500">
-                              <a href={`tel:${order.customerPhone}`} className="text-blue-600 hover:underline">
+                              <a
+                                href={`tel:${order.customerPhone}`}
+                                className="text-blue-600 hover:underline"
+                              >
                                 {order.customerPhone}
                               </a>
                             </div>
@@ -496,7 +596,9 @@ export default function AdminOrdersPage() {
                           <div className="flex items-center gap-2">
                             {getDeliveryIcon(order.deliveryMethod)}
                             <span className="text-sm">
-                              {order.deliveryMethod === "delivery" ? "Livraison" : "Click & Collect"}
+                              {order.deliveryMethod === "delivery"
+                                ? "Livraison"
+                                : "Click & Collect"}
                             </span>
                           </div>
                         </TableCell>
@@ -506,7 +608,12 @@ export default function AdminOrdersPage() {
                             {validStatusOptions.length > 0 && (
                               <Select
                                 value=""
-                                onValueChange={(newStatus) => updateOrderStatus(order.id, newStatus as OrderStatus)}
+                                onValueChange={(newStatus) =>
+                                  updateOrderStatus(
+                                    order.id,
+                                    newStatus as OrderStatus
+                                  )
+                                }
                                 disabled={updatingStatus === order.id}
                               >
                                 <SelectTrigger className="w-40 h-8 text-xs">
@@ -514,9 +621,14 @@ export default function AdminOrdersPage() {
                                 </SelectTrigger>
                                 <SelectContent>
                                   {validStatusOptions.map((option) => (
-                                    <SelectItem key={option.value} value={option.value}>
+                                    <SelectItem
+                                      key={option.value}
+                                      value={option.value}
+                                    >
                                       <div className="flex items-center gap-2">
-                                        <StatusIcon status={option.value as OrderStatus} />
+                                        <StatusIcon
+                                          status={option.value as OrderStatus}
+                                        />
                                         {option.label}
                                       </div>
                                     </SelectItem>
@@ -553,16 +665,22 @@ export default function AdminOrdersPage() {
                                   {`Détails complets de la commande`}
                                 </DialogDescription>
                               </DialogHeader>
-                              
+
                               {selectedOrder && (
                                 <div className="space-y-6">
                                   {/* Statut et progression */}
                                   <div className="bg-blue-50 p-4 rounded-lg">
                                     <h3 className="font-semibold mb-3">{`Statut actuel`}</h3>
                                     <div className="flex items-center justify-between">
-                                      {getStatusBadge(selectedOrder.status as OrderStatus)}
+                                      {getStatusBadge(
+                                        selectedOrder.status as OrderStatus
+                                      )}
                                       <div className="text-sm text-gray-600">
-                                        {ORDER_STATUS_CONFIG[selectedOrder.status as OrderStatus]?.description}
+                                        {
+                                          ORDER_STATUS_CONFIG[
+                                            selectedOrder.status as OrderStatus
+                                          ]?.description
+                                        }
                                       </div>
                                     </div>
                                   </div>
@@ -576,12 +694,17 @@ export default function AdminOrdersPage() {
                                     <div className="grid grid-cols-2 gap-4">
                                       <div>
                                         <p className="text-sm text-gray-600">{`Nom`}</p>
-                                        <p className="font-medium">{selectedOrder.customerName}</p>
+                                        <p className="font-medium">
+                                          {selectedOrder.customerName}
+                                        </p>
                                       </div>
                                       <div>
                                         <p className="text-sm text-gray-600">{`Téléphone`}</p>
                                         <p className="font-medium">
-                                          <a href={`tel:${selectedOrder.customerPhone}`} className="text-blue-600 hover:underline">
+                                          <a
+                                            href={`tel:${selectedOrder.customerPhone}`}
+                                            className="text-blue-600 hover:underline"
+                                          >
                                             {selectedOrder.customerPhone}
                                           </a>
                                         </p>
@@ -589,13 +712,17 @@ export default function AdminOrdersPage() {
                                       {selectedOrder.customerEmail && (
                                         <div>
                                           <p className="text-sm text-gray-600">{`Email`}</p>
-                                          <p className="font-medium">{selectedOrder.customerEmail}</p>
+                                          <p className="font-medium">
+                                            {selectedOrder.customerEmail}
+                                          </p>
                                         </div>
                                       )}
                                       {selectedOrder.deliveryAddress && (
                                         <div className="col-span-2">
                                           <p className="text-sm text-gray-600">{`Adresse de livraison`}</p>
-                                          <p className="font-medium">{selectedOrder.deliveryAddress}</p>
+                                          <p className="font-medium">
+                                            {selectedOrder.deliveryAddress}
+                                          </p>
                                         </div>
                                       )}
                                     </div>
@@ -605,27 +732,37 @@ export default function AdminOrdersPage() {
                                   <div>
                                     <h3 className="font-semibold mb-3">{`Articles commandés`}</h3>
                                     <div className="space-y-2">
-                                      {selectedOrder.items.map((item, index) => (
-                                        <div key={index} className="flex justify-between items-center p-3 bg-gray-50 rounded">
-                                          <div>
-                                            <p className="font-medium">{item.product.name}</p>
-                                            {item.variant && (
-                                              <p className="text-sm text-gray-600">{item.variant.name}</p>
-                                            )}
-                                            {item.notes && (
-                                              <p className="text-sm text-orange-600">{`Note: ${item.notes}`}</p>
-                                            )}
+                                      {selectedOrder.items.map(
+                                        (item, index) => (
+                                          <div
+                                            key={index}
+                                            className="flex justify-between items-center p-3 bg-gray-50 rounded"
+                                          >
+                                            <div>
+                                              <p className="font-medium">
+                                                {item.product.name}
+                                              </p>
+                                              {item.variant && (
+                                                <p className="text-sm text-gray-600">
+                                                  {item.variant.name}
+                                                </p>
+                                              )}
+                                              {item.notes && (
+                                                <p className="text-sm text-orange-600">{`Note: ${item.notes}`}</p>
+                                              )}
+                                            </div>
+                                            <div className="text-right">
+                                              <p className="font-medium">
+                                                {item.quantity} x{" "}
+                                                {formatPrice(item.unitPrice)}
+                                              </p>
+                                              <p className="text-sm text-gray-600">
+                                                {formatPrice(item.totalPrice)}
+                                              </p>
+                                            </div>
                                           </div>
-                                          <div className="text-right">
-                                            <p className="font-medium">
-                                              {item.quantity} x {formatPrice(item.unitPrice)}
-                                            </p>
-                                            <p className="text-sm text-gray-600">
-                                              {formatPrice(item.totalPrice)}
-                                            </p>
-                                          </div>
-                                        </div>
-                                      ))}
+                                        )
+                                      )}
                                     </div>
                                   </div>
 
@@ -634,17 +771,25 @@ export default function AdminOrdersPage() {
                                     <div className="space-y-2">
                                       <div className="flex justify-between">
                                         <span>{`Sous-total`}</span>
-                                        <span>{formatPrice(selectedOrder.subTotal)}</span>
+                                        <span>
+                                          {formatPrice(selectedOrder.subTotal)}
+                                        </span>
                                       </div>
                                       {selectedOrder.deliveryFee > 0 && (
                                         <div className="flex justify-between">
                                           <span>{`Frais de livraison`}</span>
-                                          <span>{formatPrice(selectedOrder.deliveryFee)}</span>
+                                          <span>
+                                            {formatPrice(
+                                              selectedOrder.deliveryFee
+                                            )}
+                                          </span>
                                         </div>
                                       )}
                                       <div className="flex justify-between font-bold text-lg border-t pt-2">
                                         <span>{`Total`}</span>
-                                        <span>{formatPrice(selectedOrder.total)}</span>
+                                        <span>
+                                          {formatPrice(selectedOrder.total)}
+                                        </span>
                                       </div>
                                     </div>
                                   </div>
@@ -653,7 +798,9 @@ export default function AdminOrdersPage() {
                                   {selectedOrder.notes && (
                                     <div className="bg-blue-50 p-4 rounded-lg">
                                       <h3 className="font-semibold mb-2">{`Notes de la commande`}</h3>
-                                      <p className="text-gray-700">{selectedOrder.notes}</p>
+                                      <p className="text-gray-700">
+                                        {selectedOrder.notes}
+                                      </p>
                                     </div>
                                   )}
                                 </div>
@@ -672,4 +819,4 @@ export default function AdminOrdersPage() {
       </Card>
     </div>
   );
-} 
+}
