@@ -98,7 +98,8 @@ export default function MenuPage() {
       searchTerm === "" ||
       product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       product.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.ingredients?.toLowerCase().includes(searchTerm.toLowerCase());
+      product.ingredients?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product.baseType?.toLowerCase().includes(searchTerm.toLowerCase());
 
     return matchesCategory && matchesSearch;
   });
@@ -107,7 +108,7 @@ export default function MenuPage() {
     <div className="py-8">
       <div className="mx-auto px-4">
         <h1 className="text-center md:text-left md:ml-[10%] text-4xl font-bold text-gray-900 mb-8">
-          Notre Menu
+          Notre Carte
         </h1>
 
         {/* Barre de recherche */}
@@ -116,7 +117,7 @@ export default function MenuPage() {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <Input
               type="text"
-              placeholder="Rechercher une pizza, boisson..."
+              placeholder={`Nom, ingrédient, type de base...`}
               value={searchTerm}
               onChange={handleSearchChange}
               className="pl-10 pr-10 rounded-full border-gray-300 focus:border-orange-500 focus:ring-orange-500"

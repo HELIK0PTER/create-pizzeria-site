@@ -10,7 +10,7 @@ export default function Footer() {
 
   const navigation = [
     { name: "Accueil", href: "/" },
-    { name: "Notre Menu", href: "/menu" },
+    { name: "Notre Carte", href: "/menu" },
     { name: "À propos", href: "/about" },
     { name: "Contact", href: "/contact" },
   ];

@@ -159,7 +159,7 @@ export default function OrdersPage() {
             <ShoppingBag className="w-16 h-16 text-gray-400 mb-6" />
             <p className="text-lg text-gray-600 mb-8">{`Vous n'avez pas encore passé de commande.`}</p>
             <Link href="/menu" className="text-red-600 hover:underline font-medium">
-              {`Découvrir notre menu`}
+              {`Découvrir notre carte`}
             </Link>
           </div>
         ) : (

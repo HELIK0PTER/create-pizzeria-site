@@ -29,7 +29,7 @@ function BaseHeader() {
 
   const navigation = [
     { name: "Accueil", href: "/", active: isActive("/") },
-    { name: "Notre Menu", href: "/menu", active: isActive("/menu") },
+    { name: "Notre Carte", href: "/menu", active: isActive("/menu") },
     { name: "À propos", href: "/about", active: isActive("/about") },
     { name: "Contact", href: "/contact", active: isActive("/contact") },
   ]
