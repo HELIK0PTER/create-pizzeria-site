@@ -444,7 +444,9 @@ export function ProductCard({ product, isCompact }: ProductCardProps) {
         >
           {/* Variants/Tailles */}
           {extendedProduct.variants && extendedProduct.variants.length > 0 && (
-            <div className={`space-y-3 ${isCompact ? "hidden" : "mb-4 w-full"}`}>
+            <div
+              className={`space-y-3 ${isCompact ? "hidden" : "mb-4 w-full"}`}
+            >
               <p className="text-sm font-medium underline text-gray-900">
                 {extendedProduct.variants.length > 1
                   ? `Choisir la taille :`
@@ -486,14 +488,7 @@ export function ProductCard({ product, isCompact }: ProductCardProps) {
             {/* Ce bouton est pour la vue non compacte, il doit gérer la sélection de variantes aussi */}
             <Button
               onClick={() => {
-                if (
-                  extendedProduct.variants &&
-                  extendedProduct.variants.length > 1
-                ) {
-                  setShowVariantDialog(true);
-                } else {
-                  handleAddToCart(); // Appel direct si pas de variantes multiples
-                }
+                handleAddToCart();
               }}
               disabled={!extendedProduct.isAvailable}
               size="lg"
@@ -583,7 +578,7 @@ export function ProductCard({ product, isCompact }: ProductCardProps) {
 
       {/* Modale d'informations détaillées */}
       <Dialog open={showInfoDialog} onOpenChange={setShowInfoDialog}>
-        <DialogContent className="overflow-y-auto max-h-[90vh]">
+        <DialogContent className="overflow-y-auto max-h-[80vh]">
           <DialogHeader>
             <DialogTitle>
               {`Informations détaillées - ${extendedProduct.name}`}
