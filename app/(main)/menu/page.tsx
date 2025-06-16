@@ -162,7 +162,7 @@ export default function MenuPage() {
 
           {/* Grille de produits */}
           {loading ? (
-            <div className={`grid ${isCompactView ? "grid-cols-1" : "md:grid-cols-2 lg:grid-cols-3"} gap-6`}>
+            <div className={`grid ${isCompactView ? "grid-cols-1" : "md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"} gap-12`}>
               {[...Array(6)].map((_, i) => (
                 <div key={i} className="animate-pulse">
                   <div className="bg-gray-200 aspect-square rounded-lg mb-4"></div>
@@ -172,7 +172,7 @@ export default function MenuPage() {
               ))}
             </div>
           ) : filteredProducts.length > 0 ? (
-            <div className={`grid ${isCompactView ? "grid-cols-1" : "md:grid-cols-2 lg:grid-cols-3"} gap-6`}>
+            <div className={`grid ${isCompactView ? "grid-cols-1" : "md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"} gap-12`}>
               {filteredProducts.map((product: Product) => (
                 <ProductCard key={product.id} product={product} isCompact={isCompactView} />
               ))}
