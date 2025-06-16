@@ -1,7 +1,8 @@
-"use client";
+'use client';
+import React from 'react';
 
 import Link from "next/link";
-import { ShoppingCart, Menu, X, Pizza, Heart } from "lucide-react";
+import { ShoppingCart, Menu, X, Pizza, Heart, LayoutDashboard, ChevronDown } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useCart, usePromotionSettings } from "@/store/cart";
 import { Button } from "@/components/ui/button";
@@ -12,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { usePathname } from "next/navigation";
 import ScrollingBanner from "@/components/layout/ScrollingBanner"
 import { variables } from "@/settings/config";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 function BaseHeader() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -54,7 +56,7 @@ function BaseHeader() {
         </Link>
 
         {/* Navigation desktop avec indicateurs actifs */}
-        <nav className="col-span-3 w-full hidden lg:flex items-center justify-center space-x-1">
+        <nav className="col-span-3 w-full hidden lg:flex items-center justify-center flex-grow space-x-1">
           {navigation.map((item) => (
             <Link
               key={item.name}
@@ -265,129 +267,172 @@ function Header() {
 
 // Composant AdminHeader pour l'administration
 export function AdminHeader() {
-  const pathname = usePathname();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const currentPath = usePathname();
+  const isActive = (path: string) => currentPath === path;
 
-  const adminNavigation = [
-    { name: "Dashboard", href: "/admin", active: pathname === "/admin" },
-    { name: "Produits", href: "/admin/products", active: pathname.startsWith("/admin/products") },
-    { name: "Commandes", href: "/admin/orders", active: pathname.startsWith("/admin/orders") },
-    { name: "Utilisateurs", href: "/admin/users", active: pathname.startsWith("/admin/users") },
-    { name: "Notifications", href: "/admin/notifications", active: pathname.startsWith("/admin/notifications") },
-    { name: "Paramètres", href: "/admin/infos", active: pathname.startsWith("/admin/infos") },
+  const navigation = [
+    { name: "Tableau de Bord", href: "/admin", active: isActive("/admin") },
+    {
+      name: "Commandes",
+      href: "/admin/orders",
+      active: currentPath.startsWith("/admin/orders"),
+    },
+    {
+      name: "Produits",
+      href: "/admin/products",
+      active: currentPath.startsWith("/admin/products"),
+      children: [
+        { name: "Gérer les produits", href: "/admin/products", active: isActive("/admin/products") },
+        { name: "Ajouter un produit", href: "/admin/products/add", active: isActive("/admin/products/add") },
+        { name: "Ajouter un menu", href: "/admin/menus/add", active: isActive("/admin/menus/add") },
+      ]
+    },
+    {
+      name: "Utilisateurs",
+      href: "/admin/users",
+      active: currentPath.startsWith("/admin/users"),
+    },
+    {
+      name: "Notifications",
+      href: "/admin/notifications",
+      active: currentPath.startsWith("/admin/notifications"),
+    },
+    {
+      name: "Infos",
+      href: "/admin/infos",
+      active: currentPath.startsWith("/admin/infos"),
+    },
   ];
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-white shadow-sm">
-      <div className="max-w-7xl mx-auto px-4 md:px-6 py-4">
-        <div className="flex items-center justify-between">
-          {/* Logo Admin */}
-          <div className="flex items-center gap-2 md:gap-4">
-            <Link href="/admin" className="flex items-center gap-2">
-              <div className="relative">
-                <Pizza className="h-6 w-6 md:h-8 md:w-8 text-orange-600" />
-                <div className="absolute -top-1 -right-1 h-2 w-2 md:h-3 md:w-3 bg-red-500 rounded-full" />
-              </div>
-              <div className="hidden sm:block">
-                <h1 className="text-lg md:text-xl font-bold text-gray-900">{variables.title}</h1>
-                <p className="text-xs text-gray-500">Administration</p>
-              </div>
-            </Link>
-          </div>
+    <header className="border-b bg-background backdrop-blur-md shadow-lg sticky top-0 z-50">
+      <div className="h-16 w-full px-4 md:px-8 flex items-center">
+        {/* Logo */}
+        <Link href="/admin" className="group flex items-center space-x-2">
+          <LayoutDashboard className="h-6 w-6 text-orange-600 transition-transform group-hover:scale-110" />
+          <span className="text-xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
+            Admin Panel
+          </span>
+        </Link>
 
-          {/* Navigation Admin Desktop */}
-          <nav className="hidden lg:flex items-center space-x-1">
-            {adminNavigation.map((item) => (
-              <Link
-                key={item.name}
-                href={item.href}
-                className={cn(
-                  "px-3 py-2 text-sm font-medium rounded-lg transition-colors",
-                  item.active
-                    ? "bg-orange-100 text-orange-600"
-                    : "text-gray-600 hover:text-orange-600 hover:bg-orange-50"
-                )}
-              >
-                {item.name}
-              </Link>
-            ))}
-          </nav>
-
-          {/* Actions */}
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" asChild className="hidden sm:flex">
-              <Link href="/menu">
-                <Pizza className="h-4 w-4 mr-2" />
-                {`Voir le site`}
-              </Link>
-            </Button>
-
-            {/* Menu mobile toggle */}
-            <Button
-              variant="ghost"
-              size="sm"
-              className="lg:hidden relative p-2"
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-            >
-              <div className="relative flex items-center justify-center w-5 h-10">
-                <Menu
+        {/* Navigation Desktop */}
+        <nav className="hidden lg:flex items-center ml-auto mr-auto space-x-1">
+          {navigation.map((item) => (
+            <React.Fragment key={item.name}>
+              {item.children ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      className={cn(
+                        "px-4 py-2 text-sm font-medium transition-colors hover:text-orange-600",
+                        item.active && "bg-orange-50 text-orange-600"
+                      )}
+                    >
+                      {item.name} <ChevronDown className="ml-2 h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-56">
+                    {item.children.map((child) => (
+                      <DropdownMenuItem key={child.name} asChild>
+                        <Link href={child.href} className={cn(
+                          "block w-full text-left px-2 py-1.5 text-sm rounded-sm transition-colors duration-200 cursor-pointer",
+                          "hover:bg-orange-50 hover:text-orange-600",
+                          child.active && child.href === '/admin/products' ? "bg-orange-50 font-medium" : "",
+                          child.active && child.href !== '/admin/products' && "font-medium"
+                        )}>
+                          {child.name}
+                        </Link>
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <Link
+                  href={item.href}
                   className={cn(
-                    "h-5 w-5 absolute transition-all duration-300",
-                    isMenuOpen ? "rotate-180 opacity-0" : "rotate-0 opacity-100"
+                    "group relative px-4 py-2 text-sm font-medium transition-colors hover:text-orange-600",
+                    item.active && "bg-orange-50 text-orange-600"
                   )}
-                />
-                <X
-                  className={cn(
-                    "h-5 w-5 absolute transition-all duration-300",
-                    isMenuOpen
-                      ? "rotate-0 opacity-100"
-                      : "-rotate-180 opacity-0"
+                >
+                  {item.name}
+                  {item.active && (
+                    <div className="absolute bottom-0 left-1/2 h-0.5 w-6 -translate-x-1/2 bg-orange-600 rounded-full" />
                   )}
-                />
-              </div>
-            </Button>
-          </div>
-        </div>
+                </Link>
+              )}
+            </React.Fragment>
+          ))}
+        </nav>
 
-        {/* Navigation mobile */}
-        <div
-          className={cn(
-            "lg:hidden overflow-hidden transition-all duration-300 ease-out",
-            isMenuOpen ? "max-h-96 opacity-100 mt-4" : "max-h-0 opacity-0"
-          )}
+        {/* Mobile Menu Toggle */}
+        <Button
+          variant="ghost"
+          size="sm"
+          className="lg:hidden"
+          onClick={() => setIsMenuOpen(!isMenuOpen)}
         >
-          <nav className="py-2 space-y-1">
-            {adminNavigation.map((item, index) => (
-              <Link
-                key={item.name}
-                href={item.href}
-                className={cn(
-                  "block px-3 py-2 text-sm font-medium rounded-lg transition-colors",
-                  item.active
-                    ? "bg-orange-100 text-orange-600"
-                    : "text-gray-600 hover:text-orange-600 hover:bg-orange-50"
-                )}
-                onClick={() => setIsMenuOpen(false)}
-                style={{
-                  animationDelay: `${index * 50}ms`,
-                }}
-              >
-                {item.name}
-              </Link>
-            ))}
-            
-            <div className="pt-2 mt-2 border-t">
-              <Link
-                href="/menu"
-                className="flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                <Pizza className="h-4 w-4 mr-2" />
-                {`Voir le site`}
-              </Link>
-            </div>
-          </nav>
-        </div>
+          {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+        </Button>
+      </div>
+
+      {/* Mobile Navigation */}
+      <div
+        className={cn(
+          "lg:hidden overflow-hidden transition-all duration-300 ease-out",
+          isMenuOpen ? "max-h-screen opacity-100" : "max-h-0 opacity-0"
+        )}
+      >
+        <nav className="py-4 space-y-1">
+          {navigation.map((item) => (
+            <React.Fragment key={item.name}>
+              {item.children ? (
+                <>
+                  <Button
+                    variant="ghost"
+                    className={cn(
+                      "w-full justify-between text-left px-4 py-3 text-sm font-medium transition-colors hover:text-orange-600",
+                      item.active && "bg-orange-50 text-orange-600"
+                    )}
+                    onClick={() => setIsMenuOpen(false)} // Close menu on click
+                  >
+                    {item.name} <ChevronDown className="ml-2 h-4 w-4" />
+                  </Button>
+                  <div className="ml-4 border-l pl-4 space-y-1">
+                    {item.children.map((child) => (
+                      <Link
+                        key={child.name}
+                        href={child.href}
+                        className={cn(
+                          "block px-4 py-2 text-sm font-medium transition-colors hover:text-orange-600",
+                          child.active && "text-orange-600 font-medium"
+                        )}
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        {child.name}
+                      </Link>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <Link
+                  href={item.href}
+                  className={cn(
+                    "block px-4 py-3 text-sm font-medium rounded-lg transition-colors duration-200",
+                    "hover:bg-orange-50 hover:text-orange-600",
+                    item.active && "bg-orange-50 text-orange-600"
+                  )}
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  {item.name}
+                </Link>
+              )}
+            </React.Fragment>
+          ))}
+        </nav>
+        <Separator className="my-4" />
+        <UserMenu />
       </div>
     </header>
   );
