@@ -8,7 +8,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 export async function POST(req: Request) {
   try {
     // Récupérer les articles du panier, le mode de livraison et les informations client depuis le corps de la requête
-    const { items, deliveryMethod, deliveryFee, customerInfo } =
+    const { items, deliveryMethod, deliveryFee, customerInfo, promotionData } =
       await req.json();
 
     // Vérifier si le panier est vide
@@ -148,6 +148,14 @@ export async function POST(req: Request) {
       if (customerInfo.notes) {
         sessionOptions.metadata.customer_notes = customerInfo.notes;
       }
+    }
+
+    // Ajouter les données de promotion dans les métadonnées
+    if (promotionData && sessionOptions.metadata) {
+      sessionOptions.metadata.promotion_applied = promotionData.applied ? "true" : "false";
+      sessionOptions.metadata.promotion_discount = String(promotionData.discount || 0);
+      sessionOptions.metadata.original_subtotal = String(promotionData.originalSubTotal || 0);
+      sessionOptions.metadata.promotion_type = promotionData.type || "";
     }
 
     // Créer la session de paiement Stripe

@@ -162,16 +162,15 @@ export default function AdminOrdersPage() {
   const playNotificationSound = useCallback(() => {
     try {
       const audio = new Audio("/notification.mp3"); // Assurez-vous que ce chemin est correct dans votre dossier /public
-      audio
-        .play()
-        .catch((e) =>
-          console.error("Erreur lors de la lecture du son de notification:", e)
-        );
+      // jouer 3 fois le son de notification
+      for (let i = 0; i < 3; i++) {
+        audio.play();
+        setTimeout(() => {
+          audio.pause();
+        }, 1000);
+      }
     } catch (e) {
-      console.error(
-        "Impossible de créer l'objet Audio pour la notification:",
-        e
-      );
+      console.error("Erreur lors de la lecture du son de notification:", e);
     }
   }, []);
 

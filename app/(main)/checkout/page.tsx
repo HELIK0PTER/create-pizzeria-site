@@ -261,6 +261,12 @@ export default function CheckoutPage() {
           deliveryMethod,
           deliveryFee,
           customerInfo: addressForm,
+          promotionData: {
+            applied: getPromotionApplied() !== null,
+            discount: getPromotionDiscount(),
+            originalSubTotal: getSubTotal(),
+            type: getPromotionApplied()?.type || null,
+          },
         }),
       });
 

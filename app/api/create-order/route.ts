@@ -23,6 +23,14 @@ export async function POST(req: Request) {
       expand: ['line_items.data.price.product'], // Inclure les détails du produit
     });
 
+    // Log pour debug des promotions
+    console.log('📋 Métadonnées de promotion:', {
+      promotion_applied: session.metadata?.promotion_applied,
+      promotion_discount: session.metadata?.promotion_discount,
+      original_subtotal: session.metadata?.original_subtotal,
+      promotion_type: session.metadata?.promotion_type,
+    });
+
     if (session.payment_status !== 'paid') {
       return NextResponse.json({ error: 'Payment not successful' }, { status: 400 });
     }
@@ -69,7 +77,9 @@ export async function POST(req: Request) {
         status: 'confirmed', // Statut confirmed car le paiement est validé
         deliveryMethod: session.metadata?.deliveryMethod as string ?? '', 
         paymentMethod: session.payment_method_types?.[0] as string ?? '', 
-        subTotal: (session.amount_total ? session.amount_total / 100 : 0) - (parseFloat(session.metadata?.deliveryFee as string ?? '0')),
+        subTotal: session.metadata?.promotion_applied === "true" 
+          ? parseFloat(session.metadata?.original_subtotal || '0')
+          : (session.amount_total ? session.amount_total / 100 : 0) - (parseFloat(session.metadata?.deliveryFee as string ?? '0')),
         deliveryFee: parseFloat(session.metadata?.deliveryFee as string ?? '0'), 
         paymentStatus: 'paid', // Paiement confirmé
         orderItems: {
