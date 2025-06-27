@@ -79,7 +79,7 @@ interface ExtendedOrderItem extends OrderItem {
 }
 
 interface ExtendedOrder extends Order {
-  items: ExtendedOrderItem[];
+  orderItems?: ExtendedOrderItem[];
   user?: Pick<User, "id" | "name" | "email"> | null;
 }
 
@@ -569,8 +569,8 @@ export default function AdminOrdersPage() {
                           <div>
                             <div className="font-bold">{order.orderNumber}</div>
                             <div className="text-sm text-gray-500">
-                              {order.items.reduce(
-                                (total, item) => total + item.quantity,
+                              {(order.orderItems || []).reduce(
+                                (total: number, item: ExtendedOrderItem) => total + item.quantity,
                                 0
                               )}{" "}
                               {`articles`}
@@ -732,8 +732,8 @@ export default function AdminOrdersPage() {
                                   <div>
                                     <h3 className="font-semibold mb-3">{`Articles commandés`}</h3>
                                     <div className="space-y-2">
-                                      {selectedOrder.items.map(
-                                        (item, index) => (
+                                      {(selectedOrder.orderItems || []).map(
+                                        (item: ExtendedOrderItem, index: number) => (
                                           <div
                                             key={index}
                                             className="flex justify-between items-center p-3 bg-gray-50 rounded"
