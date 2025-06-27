@@ -40,8 +40,21 @@ export async function POST(req: Request) {
     const customerPhone = (authSession?.user as User)?.phone || session.metadata?.customer_phone || '';
     const deliveryAddress = session.metadata?.full_delivery_address || '';
 
-    // 3. Éviter les doublons en vérifiant un autre critère unique
-    // (par exemple, commande récente avec même montant et client)
+    // 3. Éviter les doublons en vérifiant les commandes récentes
+    const recentOrder = await prisma.order.findFirst({
+      where: {
+        customerPhone: customerPhone,
+        total: session.amount_total ? session.amount_total / 100 : 0,
+        createdAt: {
+          gte: new Date(Date.now() - 5 * 60 * 1000), // 5 minutes
+        },
+      },
+    });
+
+    if (recentOrder) {
+      console.log(`🔄 Commande existante trouvée: ${recentOrder.orderNumber}`);
+      return NextResponse.json({ orderId: recentOrder.id, order: recentOrder });
+    }
 
     // 4. Créer la commande dans la base de données avec le statut correct
     const order = await prisma.order.create({
@@ -61,22 +74,30 @@ export async function POST(req: Request) {
         paymentStatus: 'paid', // Paiement confirmé
         orderItems: {
           create: session.line_items?.data
-            ?.filter((item) => (item.description !== 'Frais de livraison' && typeof item.price?.product === 'object' && item.price.product !== null)) 
+            ?.filter((item) => {
+              // Filtrer les frais de livraison et vérifier la validité du produit
+              if (item.description === 'Frais de livraison') return false;
+              if (typeof item.price?.product !== 'object' || item.price.product === null) return false;
+              
+              const product = item.price?.product as Stripe.Product;
+              const productId = product?.metadata?.productId;
+              return productId && productId.trim() !== '';
+            })
             .map((item) => {
-            const product = item.price?.product as Stripe.Product; 
-            const productId = product?.metadata?.productId || '';
-            const variantId = product?.metadata?.variantId || null;
+              const product = item.price?.product as Stripe.Product; 
+              const productId = product.metadata?.productId || ''; // Sûr car filtré au-dessus
+              const variantId = product.metadata?.variantId || undefined;
 
-            return {
-              productId: productId, 
-              quantity: item.quantity || 1,
-              unitPrice: item.price?.unit_amount ? item.price.unit_amount / 100 : 0,
-              totalPrice: (item.price?.unit_amount && item.quantity) ? (item.price.unit_amount / 100) * item.quantity : 0,
-              variantId: variantId, 
-              notes: null, 
-            };
-          }) || [], 
+              return {
+                productId, 
+                quantity: item.quantity || 1,
+                unitPrice: item.price?.unit_amount ? item.price.unit_amount / 100 : 0,
+                totalPrice: (item.price?.unit_amount && item.quantity) ? (item.price.unit_amount / 100) * item.quantity : 0,
+                variantId,
+              };
+            }) || [], 
         },
+        notes: session.metadata?.notes || null,
       },
       include: {
         orderItems: {

@@ -102,6 +102,9 @@ function OrderSuccessContent() {
     if (sessionId) {
       const createOrder = async () => {
         try {
+
+          // Récupérer les données du panier et les envoyer à la route create-order
+          
           const response = await fetch("/api/create-order", {
             method: "POST",
             headers: {
