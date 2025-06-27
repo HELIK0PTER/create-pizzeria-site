@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
-  Plus,
   Pencil,
   Trash2,
   Search,
@@ -18,14 +17,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -328,169 +319,177 @@ export default function AdminProductsPage() {
             </div>
           ) : (
             <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Produit</TableHead>
-                    <TableHead>Catégorie</TableHead>
-                    <TableHead>Prix</TableHead>
-                    <TableHead>Statut</TableHead>
-                    <TableHead>Variantes</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredProducts.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={6} className="text-center py-12">
-                        <div className="text-gray-500">
-                          <Package className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                          <p className="text-lg font-medium">
-                            Aucun produit trouvé
-                          </p>
-                          <p className="text-sm">
-                            {searchTerm || selectedCategory !== "all"
-                              ? "Essayez de modifier vos filtres"
-                              : "Commencez par ajouter votre premier produit"}
-                          </p>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    filteredProducts.map((product) => (
-                      <TableRow
-                        key={product.id}
-                        className="hover:bg-gray-50 cursor-pointer group"
-                        tabIndex={0}
-                        onClick={() => {
-                          window.location.href = `/admin/products/${product.id}`;
-                        }}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" || e.key === " ") {
-                            window.location.href = `/admin/products/${product.id}`;
-                          }
-                        }}
-                      >
-                        <TableCell>
-                          <div className="flex items-center space-x-3">
-                            <div className="flex-shrink-0">
-                              {product.image ? (
-                                <Image
-                                  src={product.image}
-                                  alt={product.name}
-                                  width={100}
-                                  height={100}
-                                  className="h-12 w-12 rounded-lg object-cover"
-                                />
-                              ) : (
-                                <div className="h-12 w-12 rounded-lg bg-gray-200 flex items-center justify-center">
-                                  <Package className="h-6 w-6 text-gray-500" />
-                                </div>
-                              )}
-                            </div>
-                            <div>
-                              <p className="font-medium text-gray-900">
-                                {product.name}
+              <div className="h-[500px] overflow-hidden">
+                <div className="sticky top-0 bg-white z-50">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b">
+                        <th className="h-12 px-4 text-left align-middle w-[300px]">Produit</th>
+                        <th className="hidden md:table-cell h-12 px-4 text-left align-middle w-[150px]">Catégorie</th>
+                        <th className="hidden md:table-cell h-12 px-4 text-left align-middle w-[100px]">Prix</th>
+                        <th className="h-12 px-4 text-left align-middle w-[120px]">Statut</th>
+                        <th className="hidden md:table-cell h-12 px-4 text-left align-middle w-[100px]">Variantes</th>
+                        <th className="h-12 px-4 text-right align-middle w-[100px]">Actions</th>
+                      </tr>
+                    </thead>
+                  </table>
+                </div>
+                <div className="overflow-y-auto h-[calc(500px-48px)]">
+                  <table className="w-full text-sm">
+                    <tbody>
+                      {filteredProducts.length === 0 ? (
+                        <tr>
+                          <td colSpan={6} className="text-center py-12">
+                            <div className="text-gray-500">
+                              <Package className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                              <p className="text-lg font-medium">
+                                Aucun produit trouvé
                               </p>
-                              <p className="text-sm text-gray-600 line-clamp-1">
-                                {product.description || "Aucune description"}
+                              <p className="text-sm">
+                                {searchTerm || selectedCategory !== "all"
+                                  ? "Essayez de modifier vos filtres"
+                                  : "Commencez par ajouter votre premier produit"}
                               </p>
                             </div>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="secondary">
-                            {product.category?.name || "Sans catégorie"}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="font-medium">
-                          {getVariantRange(product)}
-                        </TableCell>
-                        <TableCell>
-                          <Badge
-                            variant={
-                              product.isAvailable ? "default" : "secondary"
-                            }
-                            className={
-                              product.isAvailable
-                                ? "bg-green-100 text-green-800"
-                                : ""
-                            }
+                          </td>
+                        </tr>
+                      ) : (
+                        filteredProducts.map((product) => (
+                          <tr
+                            key={product.id}
+                            className="hover:bg-gray-50 cursor-pointer group border-b"
+                            tabIndex={0}
+                            onClick={() => {
+                              window.location.href = `/admin/products/${product.id}`;
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter" || e.key === " ") {
+                                window.location.href = `/admin/products/${product.id}`;
+                              }
+                            }}
                           >
-                            {product.isAvailable
-                              ? "Disponible"
-                              : "Indisponible"}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <span className="text-sm text-gray-600">
-                            {product.variants?.length || 0} variant(s)
-                          </span>
-                        </TableCell>
-                        <TableCell
-                          className="text-right"
-                          onClick={stopRowClick}
-                          onKeyDown={stopRowClick}
-                        >
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" className="h-8 w-8 p-0">
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                              <DropdownMenuItem asChild>
-                                <Link href={`/admin/products/${product.id}`}>
-                                  <Eye className="h-4 w-4 mr-2" />
-                                  Voir les détails
-                                </Link>
-                              </DropdownMenuItem>
-                              <DropdownMenuItem asChild>
-                                <Link
-                                  href={`/admin/products/${product.id}/edit`}
-                                >
-                                  <Pencil className="h-4 w-4 mr-2" />
-                                  Modifier
-                                </Link>
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={(e) => {
-                                  stopRowClick(e);
-                                  handleToggleProduct(product.id, !product.isAvailable);
-                                }}
+                            <td className="p-4 align-middle w-[300px]">
+                              <div className="flex items-center space-x-3">
+                                <div className="flex-shrink-0">
+                                  {product.image ? (
+                                    <Image
+                                      src={product.image}
+                                      alt={product.name}
+                                      width={100}
+                                      height={100}
+                                      className="h-12 w-12 rounded-lg object-cover"
+                                    />
+                                  ) : (
+                                    <div className="h-12 w-12 rounded-lg bg-gray-200 flex items-center justify-center">
+                                      <Package className="h-6 w-6 text-gray-500" />
+                                    </div>
+                                  )}
+                                </div>
+                                <div>
+                                  <p className="font-medium text-gray-900">
+                                    {product.name}
+                                  </p>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="hidden md:table-cell p-4 align-middle w-[150px]">
+                              <Badge variant="secondary">
+                                {product.category?.name || "Sans catégorie"}
+                              </Badge>
+                            </td>
+                            <td className="hidden md:table-cell p-4 align-middle w-[100px] font-medium text-xs">
+                              {getVariantRange(product)}
+                            </td>
+                            <td className="p-4 align-middle w-[120px]">
+                              <Badge
+                                variant={
+                                  product.isAvailable ? "default" : "secondary"
+                                }
+                                className={
+                                  product.isAvailable
+                                    ? "bg-green-100 text-green-800"
+                                    : ""
+                                }
                               >
-                                {product.isAvailable ? (
-                                  <>
-                                    <X className="h-4 w-4 mr-2" />
-                                    Marquer comme indisponible
-                                  </>
-                                ) : (
-                                  <>
-                                    <CheckCircle className="h-4 w-4 mr-2" />
-                                    Marquer comme disponible
-                                  </>
-                                )}
-                              </DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem
-                                className="text-red-600"
-                                onClick={(e) => {
-                                  stopRowClick(e);
-                                  handleDeleteProduct(product.id);
-                                }}
-                              >
-                                <Trash2 className="h-4 w-4 mr-2" />
-                                Supprimer
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
+                                {product.isAvailable
+                                  ? "Disponible"
+                                  : "Indisponible"}
+                              </Badge>
+                            </td>
+                            <td className="hidden md:table-cell p-4 align-middle w-[100px] text-center">
+                              <span className="text-sm text-gray-600">
+                                {product.variants?.length || 0}
+                              </span>
+                            </td>
+                            <td
+                              className="p-4 align-middle w-[100px] text-right"
+                              onClick={stopRowClick}
+                              onKeyDown={stopRowClick}
+                            >
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" className="h-8 w-8 p-0">
+                                    <MoreHorizontal className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                  <DropdownMenuItem asChild>
+                                    <Link href={`/admin/products/${product.id}`}>
+                                      <Eye className="h-4 w-4 mr-2" />
+                                      Voir les détails
+                                    </Link>
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem asChild>
+                                    <Link
+                                      href={`/admin/products/${product.id}/edit`}
+                                    >
+                                      <Pencil className="h-4 w-4 mr-2" />
+                                      Modifier
+                                    </Link>
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    onClick={(e) => {
+                                      stopRowClick(e);
+                                      handleToggleProduct(
+                                        product.id,
+                                        !product.isAvailable
+                                      );
+                                    }}
+                                  >
+                                    {product.isAvailable ? (
+                                      <>
+                                        <X className="h-4 w-4 mr-2" />
+                                        Marquer comme indisponible
+                                      </>
+                                    ) : (
+                                      <>
+                                        <CheckCircle className="h-4 w-4 mr-2" />
+                                        Marquer comme disponible
+                                      </>
+                                    )}
+                                  </DropdownMenuItem>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem
+                                    className="text-red-600"
+                                    onClick={(e) => {
+                                      stopRowClick(e);
+                                      handleDeleteProduct(product.id);
+                                    }}
+                                  >
+                                    <Trash2 className="h-4 w-4 mr-2" />
+                                    Supprimer
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </div>
           )}
         </CardContent>

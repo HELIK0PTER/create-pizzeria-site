@@ -35,13 +35,15 @@ export function CheckSession() {
           | { id?: string; role?: string }
           | undefined;
 
+        // Être plus permissif : seulement déconnecter si vraiment pas de session serveur
+        // ou si l'ID utilisateur est différent (pas seulement le rôle qui peut changer)
         if (
           !serverSession ||
-          !serverSession.user ||
-          serverSession.user.id !== sessionUser?.id ||
-          serverSession.user.role !== sessionUser?.role
+          !serverSession.session ||
+          !serverSession.session.user ||
+          serverSession.session.user.id !== sessionUser?.id
         ) {
-          // Sessions différentes -> déconnexion
+          console.warn(`Session serveur/client désynchronisée, déconnexion...`);
           await signOut();
         }
       } catch (error) {

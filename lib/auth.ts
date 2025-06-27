@@ -48,9 +48,11 @@ export const auth = betterAuth({
   ],
   // Configuration des cookies pour résoudre les problèmes CORS
   cookies: {
-    domain: process.env.NODE_ENV === 'production' ? '.vercel.app' : 'localhost',
+    domain: process.env.NODE_ENV === 'production' 
+      ? (process.env.NEXT_PUBLIC_BETTER_AUTH_URL?.includes('.vercel.app') ? '.vercel.app' : undefined)
+      : 'localhost',
     secure: process.env.NODE_ENV === 'production',
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
+    sameSite: process.env.NODE_ENV === 'production' ? 'lax' : 'lax'
   },
   // Configuration CORS explicite
   cors: {

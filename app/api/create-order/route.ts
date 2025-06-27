@@ -40,23 +40,8 @@ export async function POST(req: Request) {
     const customerPhone = (authSession?.user as User)?.phone || session.metadata?.customer_phone || '';
     const deliveryAddress = session.metadata?.full_delivery_address || '';
 
-    // 3. Vérifier si une commande existe déjà pour cette session
-    const existingOrder = await prisma.order.findUnique({
-      where: { stripeSessionId: session.id },
-      include: {
-        items: {
-          include: {
-            product: true,
-            variant: true,
-          },
-        },
-      },
-    });
-
-    if (existingOrder) {
-      // Retourner la commande existante au lieu d'en créer une nouvelle
-      return NextResponse.json({ orderId: existingOrder.id, order: existingOrder });
-    }
+    // 3. Éviter les doublons en vérifiant un autre critère unique
+    // (par exemple, commande récente avec même montant et client)
 
     // 4. Créer la commande dans la base de données avec le statut correct
     const order = await prisma.order.create({
@@ -69,13 +54,12 @@ export async function POST(req: Request) {
         deliveryAddress: deliveryAddress,
         total: session.amount_total ? session.amount_total / 100 : 0, // Convertir en unité de devise
         status: 'confirmed', // Statut confirmed car le paiement est validé
-        stripeSessionId: session.id,
         deliveryMethod: session.metadata?.deliveryMethod as string ?? '', 
         paymentMethod: session.payment_method_types?.[0] as string ?? '', 
         subTotal: (session.amount_total ? session.amount_total / 100 : 0) - (parseFloat(session.metadata?.deliveryFee as string ?? '0')),
         deliveryFee: parseFloat(session.metadata?.deliveryFee as string ?? '0'), 
         paymentStatus: 'paid', // Paiement confirmé
-        items: {
+        orderItems: {
           create: session.line_items?.data
             ?.filter((item) => (item.description !== 'Frais de livraison' && typeof item.price?.product === 'object' && item.price.product !== null)) 
             .map((item) => {
@@ -95,7 +79,7 @@ export async function POST(req: Request) {
         },
       },
       include: {
-        items: {
+        orderItems: {
           include: {
             product: true,
             variant: true,

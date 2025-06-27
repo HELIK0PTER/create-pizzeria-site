@@ -1,4 +1,4 @@
-import Image from "next/image";
+import { OptimizedImage } from "@/components/ui/optimized-image";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Star, ArrowRight } from "lucide-react";
 import { about_us } from "@/settings/config";
@@ -30,9 +30,9 @@ export default function AboutPage() {
             </div>
             <div className="order-1 md:order-2">
               <div className="relative aspect-video rounded-lg overflow-hidden shadow-lg">
-                <Image
+                <OptimizedImage
                   src="https://images.unsplash.com/photo-1513104890138-7c749659a591"
-                  alt="Notre pizzeria"
+                  alt={`Notre pizzeria`}
                   width={1000}
                   height={1000}
                   className="object-fill"
@@ -45,9 +45,9 @@ export default function AboutPage() {
           <section className="grid md:grid-cols-2 gap-8 items-center">
             <div className="order-2">
               <div className="relative aspect-video rounded-lg overflow-hidden shadow-lg">
-                <Image
+                <OptimizedImage
                   src="https://images.unsplash.com/photo-1604382354936-07c5d9983bd3"
-                  alt="Nos ingrédients frais"
+                  alt={`Nos ingrédients frais`}
                   width={1000}
                   height={1000}
                   className="object-cover"

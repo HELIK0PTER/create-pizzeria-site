@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { headers } from 'next/headers'
 import Stripe from 'stripe'
-import { prisma } from '@/lib/prisma'
-import { orderStatusManager } from '@/lib/order-status-manager'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2025-05-28.basil',
@@ -67,36 +65,10 @@ export async function POST(req: NextRequest) {
 
 async function handlePaymentSuccess(session: Stripe.Checkout.Session) {
   try {
-    // Chercher la commande par session ID
-    const order = await prisma.order.findUnique({
-      where: { stripeSessionId: session.id },
-    })
-
-    if (!order) {
-      console.log(`⚠️ Aucune commande trouvée pour session ${session.id}`)
-      return
-    }
-
-    // Mettre à jour le statut si nécessaire
-    if (order.status === 'pending') {
-      await prisma.order.update({
-        where: { id: order.id },
-        data: {
-          status: 'confirmed',
-          paymentStatus: 'paid',
-        },
-      })
-
-      // Envoyer les notifications
-      try {
-        await orderStatusManager.generateAndSendNotifications(order.id, 'confirmed')
-        console.log(`✅ Statut mis à jour et notifications envoyées pour commande ${order.orderNumber}`)
-      } catch (notificationError) {
-        console.error('❌ Erreur notifications:', notificationError)
-      }
-    } else {
-      console.log(`ℹ️ Commande ${order.orderNumber} déjà au statut ${order.status}`)
-    }
+    // Note: Pas de champ stripeSessionId dans le modèle Order
+    // Cette fonctionnalité nécessiterait d'ajouter ce champ au schéma Prisma
+    console.log(`⚠️ Impossible de trouver la commande pour session ${session.id} - champ stripeSessionId manquant`)
+    return
   } catch (error) {
     console.error('❌ Erreur handlePaymentSuccess:', error)
   }
@@ -104,36 +76,9 @@ async function handlePaymentSuccess(session: Stripe.Checkout.Session) {
 
 async function handlePaymentIntentSuccess(paymentIntent: Stripe.PaymentIntent) {
   try {
-    // Chercher la commande par payment intent ID
-    const order = await prisma.order.findFirst({
-      where: { stripePaymentId: paymentIntent.id },
-    })
-
-    if (!order) {
-      console.log(`⚠️ Aucune commande trouvée pour payment intent ${paymentIntent.id}`)
-      return
-    }
-
-    // Mettre à jour le statut si nécessaire
-    if (order.paymentStatus !== 'paid') {
-      await prisma.order.update({
-        where: { id: order.id },
-        data: {
-          paymentStatus: 'paid',
-          status: order.status === 'pending' ? 'confirmed' : order.status,
-        },
-      })
-
-      if (order.status === 'pending') {
-        // Envoyer les notifications uniquement si on passe de pending à confirmed
-        try {
-          await orderStatusManager.generateAndSendNotifications(order.id, 'confirmed')
-          console.log(`✅ Paiement confirmé et notifications envoyées pour commande ${order.orderNumber}`)
-        } catch (notificationError) {
-          console.error('❌ Erreur notifications:', notificationError)
-        }
-      }
-    }
+    // Note: Pas de champ stripePaymentId dans le modèle Order
+    console.log(`⚠️ Impossible de trouver la commande pour payment intent ${paymentIntent.id} - champ stripePaymentId manquant`)
+    return
   } catch (error) {
     console.error('❌ Erreur handlePaymentIntentSuccess:', error)
   }
@@ -141,32 +86,9 @@ async function handlePaymentIntentSuccess(paymentIntent: Stripe.PaymentIntent) {
 
 async function handlePaymentFailed(paymentIntent: Stripe.PaymentIntent) {
   try {
-    // Chercher la commande par payment intent ID
-    const order = await prisma.order.findFirst({
-      where: { stripePaymentId: paymentIntent.id },
-    })
-
-    if (!order) {
-      console.log(`⚠️ Aucune commande trouvée pour payment intent ${paymentIntent.id}`)
-      return
-    }
-
-    // Mettre à jour le statut vers payment_failed
-    await prisma.order.update({
-      where: { id: order.id },
-      data: {
-        status: 'payment_failed',
-        paymentStatus: 'failed',
-      },
-    })
-
-    // Envoyer les notifications d'échec
-    try {
-      await orderStatusManager.generateAndSendNotifications(order.id, 'payment_failed')
-      console.log(`⚠️ Paiement échoué et notifications envoyées pour commande ${order.orderNumber}`)
-    } catch (notificationError) {
-      console.error('❌ Erreur notifications:', notificationError)
-    }
+    // Note: Pas de champ stripePaymentId dans le modèle Order
+    console.log(`⚠️ Impossible de trouver la commande pour payment intent ${paymentIntent.id} - champ stripePaymentId manquant`)
+    return
   } catch (error) {
     console.error('❌ Erreur handlePaymentFailed:', error)
   }

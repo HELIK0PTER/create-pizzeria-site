@@ -9,6 +9,10 @@ export const authClient = createAuthClient({
       : "http://localhost:3000"
   ),
   plugins: [adminClient()],
+  // Configuration explicite pour production
+  fetchOptions: {
+    credentials: 'include',
+  },
 });
 
 export const { signIn, signUp, signOut, useSession, getSession } = authClient;

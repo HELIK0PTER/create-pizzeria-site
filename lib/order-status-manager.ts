@@ -35,7 +35,7 @@ interface OrderWithDetails {
     name: string
     email: string
   } | null
-  items: Array<{
+  orderItems: Array<{
     id: string
     quantity: number
     product: {
@@ -125,7 +125,7 @@ export class OrderStatusManager {
         where: { id: orderId },
         include: {
           user: true,
-          items: {
+          orderItems: {
             include: {
               product: true,
               variant: true,
@@ -303,7 +303,7 @@ export class OrderStatusManager {
   getAutomaticTransitions(
     currentStatus: OrderStatus,
     orderData: {
-      items: Array<{ product: { baseType?: string | null }, quantity: number }>
+      orderItems: Array<{ product: { baseType?: string | null }, quantity: number }>
       paymentStatus?: string
       createdAt: Date
     }
@@ -332,7 +332,7 @@ export class OrderStatusManager {
 
       case 'preparing':
         // Transition automatique vers ready après le temps de préparation estimé
-        const prepTime = estimatePreparationTime(orderData.items)
+        const prepTime = estimatePreparationTime(orderData.orderItems)
         if (orderAge > prepTime) {
           return { nextStatus: 'ready', delay: 0 }
         }
@@ -346,7 +346,7 @@ export class OrderStatusManager {
   getEstimatedRemainingTime(
     currentStatus: OrderStatus,
     orderData: {
-      items: Array<{ product: { baseType?: string | null }, quantity: number }>
+      orderItems: Array<{ product: { baseType?: string | null }, quantity: number }>
       deliveryMethod: DeliveryMethod
       createdAt: Date
     }
@@ -361,7 +361,7 @@ export class OrderStatusManager {
         return Math.max(5 - orderAge, 0) // 5 min pour démarrer
 
       case 'preparing':
-        const prepTime = estimatePreparationTime(orderData.items)
+        const prepTime = estimatePreparationTime(orderData.orderItems)
         return Math.max(prepTime - orderAge, 0)
 
       case 'ready':
@@ -448,7 +448,7 @@ export class OrderStatusManager {
     status: string
     createdAt: string
     deliveryMethod: string
-    items: Array<{ product: { baseType?: string | null }, quantity: number }>
+    orderItems: Array<{ product: { baseType?: string | null }, quantity: number }>
   }>): Array<{
     type: 'warning' | 'error' | 'info'
     message: string
@@ -474,7 +474,7 @@ export class OrderStatusManager {
 
       // Commandes en préparation trop longtemps
       if (status === 'preparing') {
-        const expectedPrepTime = estimatePreparationTime(order.items)
+        const expectedPrepTime = estimatePreparationTime(order.orderItems)
         if (orderAge > expectedPrepTime + 10) {
           alerts.push({
             type: 'error' as const,

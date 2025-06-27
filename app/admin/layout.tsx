@@ -11,8 +11,10 @@ export default function AdminLayout({
   return (
     <div className="min-h-screen bg-gray-50">
       <AdminHeader />
-      <DefaultAdminCheck />
-      <main>{children}</main>
+      <div className="mt-16">
+        <DefaultAdminCheck />
+        <main>{children}</main>
+      </div>
     </div>
   );
 }

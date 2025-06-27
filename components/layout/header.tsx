@@ -268,8 +268,17 @@ function Header() {
 // Composant AdminHeader pour l'administration
 export function AdminHeader() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [openDropdowns, setOpenDropdowns] = useState<{[key: string]: boolean}>({});
+
   const currentPath = usePathname();
   const isActive = (path: string) => currentPath === path;
+
+  const toggleDropdown = (itemName: string) => {
+    setOpenDropdowns(prev => ({
+      ...prev,
+      [itemName]: !prev[itemName]
+    }));
+  };
 
   const navigation = [
     { name: "Tableau de Bord", href: "/admin", active: isActive("/admin") },
@@ -306,10 +315,10 @@ export function AdminHeader() {
   ];
 
   return (
-    <header className="border-b bg-background backdrop-blur-md shadow-lg sticky top-0 z-50">
-      <div className="h-16 w-full px-4 md:px-8 flex items-center">
+    <header className="border-b bg-background backdrop-blur-md shadow-lg absolute top-0 w-full z-50">
+      <div className="h-16 w-full px-4 md:px-8 flex items-center justify-between">
         {/* Logo */}
-        <Link href="/admin" className="group flex items-center space-x-2">
+        <Link href="/admin" className="lg:absolute group flex items-center space-x-2">
           <LayoutDashboard className="h-6 w-6 text-orange-600 transition-transform group-hover:scale-110" />
           <span className="text-xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
             Admin Panel
@@ -317,11 +326,11 @@ export function AdminHeader() {
         </Link>
 
         {/* Navigation Desktop */}
-        <nav className="hidden lg:flex items-center ml-auto mr-auto space-x-1">
+        <nav className="hidden lg:flex justify-end xl:justify-center space-x-1 flex-1">
           {navigation.map((item) => (
             <React.Fragment key={item.name}>
               {item.children ? (
-                <DropdownMenu>
+                <DropdownMenu modal={false}>
                   <DropdownMenuTrigger asChild>
                     <Button
                       variant="ghost"
@@ -395,11 +404,18 @@ export function AdminHeader() {
                       "w-full justify-between text-left px-4 py-3 text-sm font-medium transition-colors hover:text-orange-600",
                       item.active && "bg-orange-50 text-orange-600"
                     )}
-                    onClick={() => setIsMenuOpen(false)} // Close menu on click
+                    onClick={() => toggleDropdown(item.name)}
                   >
-                    {item.name} <ChevronDown className="ml-2 h-4 w-4" />
+                    {item.name} 
+                    <ChevronDown className={cn(
+                      "ml-2 h-4 w-4 transition-transform duration-200",
+                      openDropdowns[item.name] ? "rotate-180" : "rotate-0"
+                    )} />
                   </Button>
-                  <div className="ml-4 border-l pl-4 space-y-1">
+                  <div className={cn(
+                    "ml-4 border-l pl-4 space-y-1 overflow-hidden transition-all duration-300",
+                    openDropdowns[item.name] ? "max-h-48 opacity-100 py-2" : "max-h-0 opacity-0 py-0"
+                  )}>
                     {item.children.map((child) => (
                       <Link
                         key={child.name}

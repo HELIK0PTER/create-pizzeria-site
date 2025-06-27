@@ -43,11 +43,13 @@ export async function POST(request: Request) {
         deliveryMethod,
         pickupTime: pickupTime ? new Date(pickupTime) : null,
         paymentMethod,
+        status: 'pending',
+        paymentStatus: 'pending',
         subTotal,
         deliveryFee,
         total,
         notes,
-        items: {
+        orderItems: {
           create: items.map((item: OrderItem) => ({
             productId: item.productId,
             variantId: item.variantId,
@@ -59,7 +61,7 @@ export async function POST(request: Request) {
         }
       },
       include: {
-        items: {
+        orderItems: {
           include: {
             product: true,
             variant: true
@@ -112,7 +114,7 @@ export async function GET(req: Request) {
       // 2. Récupérer toutes les commandes pour les admins
       const orders = await prisma.order.findMany({
         include: {
-          items: {
+          orderItems: {
             include: {
               product: {
                 include: {
@@ -143,7 +145,7 @@ export async function GET(req: Request) {
           userId: userId,
         },
         include: {
-          items: {
+          orderItems: {
             include: {
               product: true,
               variant: true,
@@ -232,7 +234,7 @@ export async function PATCH(req: Request) {
         updatedAt: new Date()
       },
       include: {
-        items: {
+        orderItems: {
           include: {
             product: {
               include: {

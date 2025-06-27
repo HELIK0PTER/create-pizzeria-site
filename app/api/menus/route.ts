@@ -28,29 +28,25 @@ export async function POST(request: NextRequest) {
         name,
         image,
         price: parsedPrice,
-        menuPizzas: {
-          create: pizzaIds.map((id: string) => ({
-            productId: id,
-            type: 'pizza',
-          })),
-        },
-        menuDrinks: {
-          create: drinkIds.map((id: string) => ({
-            productId: id,
-            type: 'drink',
-          })),
-        },
-        menuDesserts: {
-          create: dessertIds.map((id: string) => ({
-            productId: id,
-            type: 'dessert',
-          })),
+        menuProducts: {
+          create: [
+            ...pizzaIds.map((id: string) => ({
+              productId: id,
+              type: 'pizza',
+            })),
+            ...drinkIds.map((id: string) => ({
+              productId: id,
+              type: 'drink',
+            })),
+            ...dessertIds.map((id: string) => ({
+              productId: id,
+              type: 'dessert',
+            })),
+          ],
         },
       },
       include: {
-        menuPizzas: true,
-        menuDrinks: true,
-        menuDesserts: true,
+        menuProducts: true,
       },
     })
 

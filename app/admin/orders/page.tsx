@@ -747,9 +747,6 @@ export default function AdminOrdersPage() {
                                                   {item.variant.name}
                                                 </p>
                                               )}
-                                              {item.notes && (
-                                                <p className="text-sm text-orange-600">{`Note: ${item.notes}`}</p>
-                                              )}
                                             </div>
                                             <div className="text-right">
                                               <p className="font-medium">
