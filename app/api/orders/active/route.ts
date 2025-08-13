@@ -1,10 +1,64 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { auth } from '@/lib/auth'
+import { requireDeliveryOrAdminAPI } from '@/lib/auth-helpers'
 
-// GET /api/orders/active - Compter les commandes actives de l'utilisateur
+// GET /api/orders/active
+// Par défaut: renvoie { count } des commandes actives de l'utilisateur courant
+// Avec ?list=true: renvoie la liste des commandes actives (pour livreur/admin)
 export async function GET(request: Request) {
   try {
+    const url = new URL(request.url)
+    const list = url.searchParams.get('list') === 'true'
+
+    if (list) {
+      // Vérifier permissions livreur/admin
+      const { error, status, session } = await requireDeliveryOrAdminAPI(request)
+      if (error) {
+        return NextResponse.json({ error }, { status: status || 403 })
+      }
+
+      const currentUserId = session!.user.id
+
+      const orders = await prisma.order.findMany({
+        where: {
+          AND: [
+            {
+              OR: [
+                { deliveryMethod: { equals: 'delivery', mode: 'insensitive' } },
+                { deliveryMethod: { equals: 'livraison', mode: 'insensitive' } }
+              ]
+            },
+            {
+              OR: [
+                { status: 'ready' },
+                { AND: [{ status: 'delivering' }, { delivererId: currentUserId }] }
+              ]
+            }
+          ]
+        },
+        select: {
+          id: true,
+          orderNumber: true,
+          customerName: true,
+          customerPhone: true,
+          deliveryAddress: true,
+          deliveryMethod: true,
+          status: true,
+          total: true,
+          createdAt: true,
+          pickupTime: true,
+          delivererId: true,
+        },
+        orderBy: {
+          createdAt: 'asc'
+        }
+      })
+
+      return NextResponse.json(orders)
+    }
+
+    // Comportement historique: compteur pour l'utilisateur courant
     const session = await auth.api.getSession({
       headers: request.headers,
     });
@@ -27,7 +81,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json({ count: activeOrdersCount })
   } catch (error) {
-    console.error('Error counting active orders:', error)
+    console.error('Error handling active orders endpoint:', error)
     return NextResponse.json(
       { error: 'Une erreur est survenue' },
       { status: 500 }

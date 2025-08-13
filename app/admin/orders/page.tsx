@@ -332,6 +332,16 @@ export default function AdminOrdersPage() {
     }
 
     try {
+      // Règle spéciale: commandes en mode livraison prêtes ou en cours
+      // - Admin peut uniquement annuler
+      if (deliveryMethod === 'delivery' && (currentStatus === 'ready' || currentStatus === 'delivering')) {
+        return [{
+          value: 'cancelled' as unknown as OrderStatus,
+          label: ORDER_STATUS_CONFIG['cancelled']?.label || 'Annulée',
+          color: ORDER_STATUS_CONFIG['cancelled']?.color || 'bg-gray-100 text-gray-800'
+        }]
+      }
+
       const validStates = getNextValidStates(currentStatus, deliveryMethod);
       return validStates.map((status) => ({
         value: status,
@@ -604,7 +614,7 @@ export default function AdminOrdersPage() {
                         <TableCell>
                           <div className="space-y-2">
                             {getStatusBadge(order.status as OrderStatus)}
-                            {validStatusOptions.length > 0 && (
+                            {order.status !== 'delivering' && validStatusOptions.length > 0 && (
                               <Select
                                 value=""
                                 onValueChange={(newStatus) =>
@@ -616,7 +626,7 @@ export default function AdminOrdersPage() {
                                 disabled={updatingStatus === order.id}
                               >
                                 <SelectTrigger className="w-40 h-8 text-xs">
-                                  <SelectValue placeholder={`Changer...`} />
+                                  <SelectValue placeholder={order.deliveryMethod === 'delivery' && (order.status === 'ready' || order.status === 'delivering') ? 'Annuler...' : 'Changer...'} />
                                 </SelectTrigger>
                                 <SelectContent>
                                   {validStatusOptions.map((option) => (

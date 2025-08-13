@@ -55,6 +55,7 @@ export default function UsersPage() {
   const [actionType, setActionType] = useState<"promote" | "demote" | null>(
     null
   );
+  const [targetRole, setTargetRole] = useState<"admin" | "delivery" | null>(null);
   const [showDialog, setShowDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
@@ -107,6 +108,7 @@ export default function UsersPage() {
         setShowDialog(false);
         setSelectedUser(null);
         setActionType(null);
+        setTargetRole(null); // Reset target role on successful change
         
         // Afficher un message si les sessions ont été révoquées
         if (updatedUser.sessionRevoked) {
@@ -121,15 +123,32 @@ export default function UsersPage() {
     }
   };
 
-  const openRoleDialog = (user: User, action: "promote" | "demote") => {
+  const openRoleDialog = (user: User, action: "promote" | "demote", role?: "admin" | "delivery") => {
     setSelectedUser(user);
     setActionType(action);
+    setTargetRole(role ?? null);
     setShowDialog(true);
   };
 
   const confirmRoleChange = () => {
     if (selectedUser && actionType) {
-      const newRole = actionType === "promote" ? "admin" : "customer";
+      let newRole: string;
+
+      if (actionType === "promote") {
+        // Promotion avec rôle cible explicite
+        if (!targetRole) return; // Sécurité: ne rien faire si pas de rôle cible
+        newRole = targetRole;
+      } else {
+        // Logique de rétrogradation : admin -> delivery -> customer
+        if (selectedUser.role === "admin") {
+          newRole = "delivery";
+        } else if (selectedUser.role === "delivery") {
+          newRole = "customer";
+        } else {
+          newRole = "customer"; // Déjà customer
+        }
+      }
+
       handleRoleChange(selectedUser, newRole);
     }
   };
@@ -173,6 +192,14 @@ export default function UsersPage() {
         </Badge>
       );
     }
+    if (role === "delivery") {
+      return (
+        <Badge variant="default" className="bg-blue-100 text-blue-700">
+          <Shield className="h-3 w-3 mr-1" />
+          Livreur
+        </Badge>
+      );
+    }
     return (
       <Badge variant="secondary">
         <Users className="h-3 w-3 mr-1" />
@@ -184,8 +211,9 @@ export default function UsersPage() {
   const getStats = () => {
     const totalUsers = users.length;
     const adminUsers = users.filter((user) => user.role === "admin").length;
-    const customerUsers = totalUsers - adminUsers;
-    return { totalUsers, adminUsers, customerUsers };
+    const deliveryUsers = users.filter((user) => user.role === "delivery").length;
+    const customerUsers = totalUsers - adminUsers - deliveryUsers;
+    return { totalUsers, adminUsers, deliveryUsers, customerUsers };
   };
 
   const stats = getStats();
@@ -197,6 +225,32 @@ export default function UsersPage() {
       </div>
     );
   }
+
+  const getPromoteTitle = (role: "admin" | "delivery" | null) => {
+    if (role === "admin") return "Promouvoir en administrateur";
+    if (role === "delivery") return "Promouvoir en livreur";
+    return "Promouvoir l'utilisateur";
+  };
+
+  const getDemoteTitle = (user: User | null) => {
+    if (!user) return "Rétrograder l'utilisateur";
+    if (user.role === "admin") return "Rétrograder en livreur";
+    if (user.role === "delivery") return "Rétrograder en client";
+    return "Rétrograder l'utilisateur";
+  };
+
+  const getNextRole = (user: User | null, action: "promote" | "demote") => {
+    if (!user) return "admin";
+    if (action === "promote") {
+      if (user.role === "customer") return "delivery";
+      if (user.role === "delivery") return "admin";
+      return "admin";
+    } else {
+      if (user.role === "admin") return "delivery";
+      if (user.role === "delivery") return "customer";
+      return "customer";
+    }
+  };
 
   return (
     <div className="p-6">
@@ -213,7 +267,7 @@ export default function UsersPage() {
         </div>
 
         {/* Statistiques */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
@@ -240,6 +294,21 @@ export default function UsersPage() {
               <div className="text-2xl font-bold">{stats.adminUsers}</div>
               <p className="text-xs text-muted-foreground">
                 Avec permissions admin
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+                Livreurs
+              </CardTitle>
+              <Shield className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.deliveryUsers}</div>
+              <p className="text-xs text-muted-foreground">
+                Avec permissions livreur
               </p>
             </CardContent>
           </Card>
@@ -317,19 +386,44 @@ export default function UsersPage() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          {user.role !== "admin" ? (
-                            <DropdownMenuItem
-                              onClick={() => openRoleDialog(user, "promote")}
-                            >
-                              <ShieldCheck className="h-4 w-4 mr-2" />
-                              Promouvoir admin
-                            </DropdownMenuItem>
-                          ) : (
+                          {user.role === "customer" && (
+                            <>
+                              <DropdownMenuItem
+                                onClick={() => openRoleDialog(user, "promote", "delivery")}
+                              >
+                                <ShieldCheck className="h-4 w-4 mr-2" />
+                                Promouvoir livreur
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => openRoleDialog(user, "promote", "admin")}
+                              >
+                                <ShieldCheck className="h-4 w-4 mr-2" />
+                                Promouvoir admin
+                              </DropdownMenuItem>
+                            </>
+                          )}
+                          {user.role === "delivery" && (
+                            <>
+                              <DropdownMenuItem
+                                onClick={() => openRoleDialog(user, "promote", "admin")}
+                              >
+                                <ShieldCheck className="h-4 w-4 mr-2" />
+                                Promouvoir admin
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => openRoleDialog(user, "demote")}
+                              >
+                                <Users className="h-4 w-4 mr-2" />
+                                Rétrograder client
+                              </DropdownMenuItem>
+                            </>
+                          )}
+                          {user.role === "admin" && (
                             <DropdownMenuItem
                               onClick={() => openRoleDialog(user, "demote")}
                             >
                               <Users className="h-4 w-4 mr-2" />
-                              Rétrograder client
+                              Rétrograder livreur
                             </DropdownMenuItem>
                           )}
                           <DropdownMenuItem
@@ -357,29 +451,32 @@ export default function UsersPage() {
         </Card>
 
         {/* Dialog de confirmation */}
-        <AlertDialog open={showDialog} onOpenChange={setShowDialog}>
+        <AlertDialog open={showDialog} onOpenChange={(open) => { setShowDialog(open); if (!open) { setSelectedUser(null); setActionType(null); setTargetRole(null); } }}>
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>
                 {actionType === "promote"
-                  ? "Promouvoir en administrateur"
-                  : "Rétrograder en client"}
+                  ? getPromoteTitle(targetRole)
+                  : getDemoteTitle(selectedUser)}
               </AlertDialogTitle>
               <AlertDialogDescription>
                 {actionType === "promote" ? (
                   <>
-                    Voulez-vous vraiment donner les permissions
-                    d&apos;administrateur à{" "}
-                    <strong>{selectedUser?.name}</strong> ? Cette personne aura
-                    accès à toutes les fonctionnalités d&apos;administration.
+                    Confirmez-vous la promotion de {" "}
+                    <strong>{selectedUser?.name}</strong> en {" "}
+                    <strong>{targetRole === "admin" ? "administrateur" : "livreur"}</strong> ?
+                    {targetRole === "admin" 
+                      ? " Cette personne aura accès à toutes les fonctionnalités d'administration."
+                      : " Cette personne aura accès aux fonctionnalités de livraison."}
                   </>
                 ) : (
                   <>
-                    Voulez-vous vraiment retirer les permissions
-                    d&apos;administrateur à{" "}
-                    <strong>{selectedUser?.name}</strong> ? Cette personne
-                    n&apos;aura plus accès aux fonctionnalités
-                    d&apos;administration.
+                    Confirmez-vous la rétrogradation de {" "}
+                    <strong>{selectedUser?.name}</strong> vers le rôle de {" "}
+                    <strong>{getNextRole(selectedUser, "demote") === "delivery" ? "livreur" : "client"}</strong> ?
+                    {getNextRole(selectedUser, "demote") === "customer"
+                      ? " Cette personne n'aura plus accès aux fonctionnalités spéciales."
+                      : " Cette personne n'aura plus accès aux fonctionnalités d'administration."}
                   </>
                 )}
               </AlertDialogDescription>

@@ -212,6 +212,14 @@ export async function PATCH(req: Request) {
       return NextResponse.json({ error: 'Order not found' }, { status: 404 });
     }
 
+    // Blocage: si la commande a été prise par un livreur (delivering),
+    // on interdit tout changement depuis l'administration, sauf annuler
+    if (currentOrder.status === 'delivering' && status !== 'cancelled') {
+      return NextResponse.json({ 
+        error: "Cette commande est en cours de livraison. Seule l'annulation est possible depuis l'administration.",
+      }, { status: 400 });
+    }
+
     // Valider la transition de statut
     const validation = validateStatusTransition(
       currentOrder.status as OrderStatus,

@@ -32,6 +32,34 @@ export async function requireAdmin() {
 }
 
 /**
+ * Vérifie si l'utilisateur actuel est un livreur
+ * Pour utilisation dans les Server Components et Server Actions
+ */
+export async function requireDelivery() {
+  const session = await requireAuth();
+
+  if (session.user.role !== "delivery") {
+    throw new Error("Accès refusé : permissions livreur requises");
+  }
+
+  return session;
+}
+
+/**
+ * Vérifie si l'utilisateur actuel est un livreur ou un administrateur
+ * Pour utilisation dans les Server Components et Server Actions
+ */
+export async function requireDeliveryOrAdmin() {
+  const session = await requireAuth();
+
+  if (session.user.role !== "delivery" && session.user.role !== "admin") {
+    throw new Error("Accès refusé : permissions livreur ou administrateur requises");
+  }
+
+  return session;
+}
+
+/**
  * Vérifie l'authentification pour les routes API
  * Pour utilisation dans les API Routes
  */
@@ -61,6 +89,27 @@ export async function requireAdminAPI(request: Request) {
   if (session!.user.role !== "admin") {
     return { 
       error: "Accès refusé : permissions administrateur requises", 
+      status: 403 
+    };
+  }
+
+  return { session, error: null, status: null };
+}
+
+/**
+ * Vérifie les permissions livreur ou admin pour les routes API
+ * Pour utilisation dans les API Routes
+ */
+export async function requireDeliveryOrAdminAPI(request: Request) {
+  const { session, error, status } = await requireAuthAPI(request);
+  
+  if (error) {
+    return { error, status };
+  }
+
+  if (session!.user.role !== "delivery" && session!.user.role !== "admin") {
+    return { 
+      error: "Accès refusé : permissions livreur ou administrateur requises", 
       status: 403 
     };
   }

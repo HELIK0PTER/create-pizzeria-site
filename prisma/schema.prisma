@@ -106,7 +106,7 @@ model User {
   emailVerified Boolean   @default(false)
   image         String?
   phone         String?
-  role          String    @default("customer")
+  role          String    @default("customer") // "customer", "delivery", "admin"
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   banned        Boolean?
@@ -116,6 +116,7 @@ model User {
   addresses     Address[] @relation("UserAddresses")
   favouriteAddress Address? @relation("UserFavouriteAddress", fields: [favouriteAddressId], references: [id])
   orders        Order[]
+  deliveries    Order[]   @relation("OrderDeliverer")
   accounts      Account[]
   sessions      Session[]
   favorites     Favorite[]
@@ -244,6 +245,7 @@ model Order {
   id              String      @id @default(cuid())
   orderNumber     String      @unique
   userId          String?
+  delivererId     String?
   customerName    String
   customerEmail   String?
   customerPhone   String
@@ -261,6 +263,7 @@ model Order {
   updatedAt       DateTime    @updatedAt
   orderItems      OrderItem[]
   user            User?       @relation(fields: [userId], references: [id])
+  deliverer       User?       @relation("OrderDeliverer", fields: [delivererId], references: [id])
 
   @@map("order")
 }

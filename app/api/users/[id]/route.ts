@@ -19,9 +19,9 @@ export async function PATCH(
     let { role } = body
 
     // Validation et normalisation du rôle
-    if (!role || !['admin', 'customer', 'user'].includes(role)) {
+    if (!role || !['admin', 'customer', 'delivery', 'user'].includes(role)) {
       return NextResponse.json(
-        { error: 'Rôle invalide. Utilisez "admin" ou "customer"' },
+        { error: 'Rôle invalide. Utilisez "admin", "delivery" ou "customer"' },
         { status: 400 }
       )
     }

@@ -127,6 +127,17 @@ export function UserMenu() {
           </DropdownMenuItem>
           </>
         )}
+        {(session?.user as unknown as { role: string })?.role === 'delivery' || (session?.user as unknown as { role: string })?.role === 'admin' ? (
+          <>
+            <DropdownMenuSeparator className='my-[3px] pb-[1px]'/>
+            <DropdownMenuItem asChild>
+              <Link href="/livreur" className="cursor-pointer">
+                <Shield className="mr-2 h-4 w-4" />
+                <span>Espace Livreur</span>
+              </Link>
+            </DropdownMenuItem>
+          </>
+        ) : null}
         <DropdownMenuSeparator />
         <DropdownMenuItem
           className="cursor-pointer text-red-600 focus:text-red-600"
