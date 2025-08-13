@@ -14,12 +14,10 @@ import { usePathname } from "next/navigation";
 import ScrollingBanner from "@/components/layout/ScrollingBanner"
 import { variables } from "@/settings/config";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { useSession } from "@/lib/auth-client";
 
 function BaseHeader() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
-  const { data: session } = useSession();
 
   const { getItemsCount } = useCart();
   const itemsCount = getItemsCount();

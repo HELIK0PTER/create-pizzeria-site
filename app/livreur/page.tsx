@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSession } from "@/lib/auth-client";
 import { DeliveryCheck } from "@/components/auth/delivery-check";
 import {
@@ -12,7 +12,6 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import {
   Table,
   TableBody,
@@ -56,6 +55,11 @@ interface Order {
   updatedAt?: string;
 }
 
+interface User {
+  name?: string;
+  role?: string;
+}
+
 function LivreurContent() {
   const { data: session } = useSession();
   const [orders, setOrders] = useState<Order[]>([]);
@@ -97,9 +101,24 @@ function LivreurContent() {
     return () => clearInterval(id);
   }, []);
 
+  const fetchHistory = useCallback(async () => {
+    try {
+      const response = await fetch(`/api/orders/history?period=${period}`);
+      if (response.ok) {
+        const data = await response.json();
+        setHistoryOrders(Array.isArray(data) ? data : []);
+      } else {
+        setHistoryOrders([]);
+      }
+    } catch (error) {
+      console.error("Erreur historique:", error);
+      setHistoryOrders([]);
+    }
+  }, [period]);
+
   useEffect(() => {
     fetchHistory();
-  }, [period]);
+  }, [period, fetchHistory]);
 
   useEffect(() => {
     if (orders.length > 0) {
@@ -125,21 +144,6 @@ function LivreurContent() {
       setOrders([]);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const fetchHistory = async () => {
-    try {
-      const response = await fetch(`/api/orders/history?period=${period}`);
-      if (response.ok) {
-        const data = await response.json();
-        setHistoryOrders(Array.isArray(data) ? data : []);
-      } else {
-        setHistoryOrders([]);
-      }
-    } catch (error) {
-      console.error("Erreur historique:", error);
-      setHistoryOrders([]);
     }
   };
 
@@ -187,7 +191,7 @@ function LivreurContent() {
   };
 
   const getStatusBadge = (status: string) => {
-    const statusConfig = {
+    const statusConfig: Record<string, { label: string; variant: string; icon: React.ComponentType<{ className?: string }> }> = {
       confirmed: { label: "Confirmée", variant: "secondary", icon: CheckCircle },
       preparing: { label: "En préparation", variant: "default", icon: Clock },
       ready: { label: "Prête", variant: "default", icon: Package },
@@ -196,11 +200,11 @@ function LivreurContent() {
       cancelled: { label: "Annulée", variant: "destructive", icon: AlertCircle },
     };
 
-    const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.confirmed;
+    const config = statusConfig[status] || statusConfig.confirmed;
     const Icon = config.icon;
 
     return (
-      <Badge variant={config.variant as any} className="flex items-center gap-1">
+      <Badge variant={config.variant as "default" | "secondary" | "destructive" | "outline"} className="flex items-center gap-1">
         <Icon className="h-3 w-3" />
         {config.label}
       </Badge>
@@ -215,7 +219,7 @@ function LivreurContent() {
     );
   }
 
-  const user = session?.user as any;
+  const user = session?.user as User;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -271,7 +275,7 @@ function LivreurContent() {
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <AlertTriangle className="h-5 w-5 text-amber-600" />
-                Confirmer la prise d'une 2e livraison
+                Confirmer la prise d&apos;une 2e livraison
               </DialogTitle>
               <DialogDescription>
                 Vous avez déjà une livraison en cours. Êtes-vous sûr de vouloir en prendre une seconde ?
@@ -332,7 +336,7 @@ function LivreurContent() {
                 {completedOrders.length}
               </div>
               <p className="text-xs text-muted-foreground">
-                Livrées aujourd'hui
+                Livrées aujourd&apos;hui
               </p>
             </CardContent>
           </Card>

@@ -1,12 +1,27 @@
 import { NextResponse } from "next/server";
 import { Stripe } from "stripe";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2025-05-28.basil",
-});
+// Vérifier si la clé Stripe est configurée
+if (!process.env.STRIPE_SECRET_KEY) {
+  console.warn("STRIPE_SECRET_KEY n'est pas configurée. Le paiement Stripe ne fonctionnera pas.");
+}
+
+const stripe = process.env.STRIPE_SECRET_KEY 
+  ? new Stripe(process.env.STRIPE_SECRET_KEY, {
+      apiVersion: "2025-05-28.basil",
+    })
+  : null;
 
 export async function POST(req: Request) {
   try {
+    // Vérifier si Stripe est configuré
+    if (!stripe) {
+      return NextResponse.json(
+        { error: "Service de paiement non configuré" },
+        { status: 503 }
+      );
+    }
+
     // Récupérer les articles du panier, le mode de livraison et les informations client depuis le corps de la requête
     const { items, deliveryMethod, deliveryFee, customerInfo, promotionData } =
       await req.json();
