@@ -23,8 +23,11 @@ export default function CartPage() {
   const router = useRouter();
   const {
     items,
+    menuItems,
     removeItem,
+    removeMenuItem,
     updateQuantity,
+    updateMenuQuantity,
     getSubTotal,
     getTotal,
     deliveryMethod,
@@ -69,7 +72,7 @@ export default function CartPage() {
 
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Liste des articles */}
-          {items.length === 0 && (
+          {items.length === 0 && menuItems.length === 0 && (
             <div className="lg:col-span-2 space-y-4">
               <p className="text-gray-600">{`Votre panier est vide.`}</p>
               <Link href="/menu" className="text-red-600 hover:underline">
@@ -77,7 +80,7 @@ export default function CartPage() {
               </Link>
             </div>
           )}
-          {items.length > 0 && (
+          {(items.length > 0 || menuItems.length > 0) && (
             <div className="lg:col-span-2 space-y-4">
               {/* Affichage de la promotion si applicable */}
               {promotionApplied && (
@@ -202,6 +205,105 @@ export default function CartPage() {
                   </Card>
                 );
               })}
+
+              {/* Affichage des menus */}
+              {menuItems.map((menuItem) => {
+                return (
+                  <Card key={`menu-${menuItem.id}`}>
+                    <CardContent className="p-4">
+                      <div className="flex items-start gap-4">
+                        <div className="w-20 h-20 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                          <span className="text-3xl">
+                            {menuItem.image ? (
+                              <Image
+                                src={menuItem.image}
+                                alt={menuItem.name}
+                                width={80}
+                                height={80}
+                                className="rounded-lg"
+                              />
+                            ) : (
+                              <span className="text-3xl">🍽️</span>
+                            )}
+                          </span>
+                        </div>
+
+                        <div className="flex-1">
+                          <div className="flex items-start gap-2">
+                            <h3 className="font-semibold text-lg">
+                              {menuItem.name}
+                            </h3>
+                            <span className="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded-full">
+                              🍽️ Menu
+                            </span>
+                          </div>
+                          
+                          {menuItem.description && (
+                            <p className="text-sm text-gray-500 mt-1">
+                              {menuItem.description}
+                            </p>
+                          )}
+
+                          {/* Détails des sélections */}
+                          <div className="mt-2 space-y-1">
+                            {menuItem.selections.pizzas.length > 0 && (
+                              <div className="text-sm text-gray-600">
+                                <span className="font-medium">Pizzas:</span> {menuItem.selections.pizzas.map(p => `${p.productName} (x${p.quantity})`).join(', ')}
+                              </div>
+                            )}
+                            {menuItem.selections.drinks.length > 0 && (
+                              <div className="text-sm text-gray-600">
+                                <span className="font-medium">Boissons:</span> {menuItem.selections.drinks.map(d => `${d.productName} (x${d.quantity})`).join(', ')}
+                              </div>
+                            )}
+                            {menuItem.selections.desserts.length > 0 && (
+                              <div className="text-sm text-gray-600">
+                                <span className="font-medium">Desserts:</span> {menuItem.selections.desserts.map(d => `${d.productName} (x${d.quantity})`).join(', ')}
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="flex items-center justify-between mt-4">
+                            <div className="flex items-center gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => updateMenuQuantity(menuItem.id, menuItem.quantity - 1)}
+                                disabled={menuItem.quantity <= 1}
+                              >
+                                <Minus className="h-3 w-3" />
+                              </Button>
+                              <span className="w-8 text-center font-medium">
+                                {menuItem.quantity}
+                              </span>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => updateMenuQuantity(menuItem.id, menuItem.quantity + 1)}
+                              >
+                                <Plus className="h-3 w-3" />
+                              </Button>
+                            </div>
+
+                            <div className="flex items-center gap-4">
+                              <span className="font-semibold">
+                                {formatPrice(menuItem.price * menuItem.quantity)}
+                              </span>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => removeMenuItem(menuItem.id)}
+                              >
+                                <Trash2 className="h-4 w-4 text-red-600" />
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
           )}
 
@@ -277,7 +379,7 @@ export default function CartPage() {
                   className="w-full"
                   size="lg"
                   onClick={handleProceedToCheckout}
-                  disabled={items.length === 0}
+                  disabled={items.length === 0 && menuItems.length === 0}
                 >
                   {`Passer la commande`}
                   <ArrowRight className="ml-2 h-4 w-4" />

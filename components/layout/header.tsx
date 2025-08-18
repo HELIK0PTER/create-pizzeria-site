@@ -294,6 +294,7 @@ export function AdminHeader() {
       children: [
         { name: "Gérer les produits", href: "/admin/products", active: isActive("/admin/products") },
         { name: "Ajouter un produit", href: "/admin/products/add", active: isActive("/admin/products/add") },
+        { name: "Gérer les menus", href: "/admin/menus", active: isActive("/admin/menus") },
         { name: "Ajouter un menu", href: "/admin/menus/add", active: isActive("/admin/menus/add") },
       ]
     },

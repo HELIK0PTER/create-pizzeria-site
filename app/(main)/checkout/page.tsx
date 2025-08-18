@@ -87,6 +87,7 @@ export default function CheckoutPage() {
   const { data: session } = useSession();
   const {
     items,
+    menuItems,
     getSubTotal,
     getTotal,
     getPromotionApplied,
@@ -258,6 +259,7 @@ export default function CheckoutPage() {
         },
         body: JSON.stringify({
           items,
+          menuItems,
           deliveryMethod,
           deliveryFee,
           customerInfo: addressForm,
@@ -300,7 +302,7 @@ export default function CheckoutPage() {
     router.push("/cart");
   };
 
-  if (items.length === 0) {
+  if (items.length === 0 && menuItems.length === 0) {
     return (
       <div className="py-8">
         <div className="container mx-auto px-4 text-center">

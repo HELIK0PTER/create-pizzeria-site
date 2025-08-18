@@ -83,29 +83,76 @@ export async function POST(req: Request) {
         deliveryFee: parseFloat(session.metadata?.deliveryFee as string ?? '0'), 
         paymentStatus: 'paid', // Paiement confirmé
         orderItems: {
-          create: session.line_items?.data
-            ?.filter((item) => {
-              // Filtrer les frais de livraison et vérifier la validité du produit
-              if (item.description === 'Frais de livraison') return false;
-              if (typeof item.price?.product !== 'object' || item.price.product === null) return false;
+          create: (() => {
+            const orderItems = [];
+            
+            for (const item of session.line_items?.data || []) {
+              // Filtrer les frais de livraison
+              if (item.description === 'Frais de livraison') continue;
+              if (typeof item.price?.product !== 'object' || item.price.product === null) continue;
               
               const product = item.price?.product as Stripe.Product;
-              const productId = product?.metadata?.productId;
-              return productId && productId.trim() !== '';
-            })
-            .map((item) => {
-              const product = item.price?.product as Stripe.Product; 
-              const productId = product.metadata?.productId || ''; // Sûr car filtré au-dessus
-              const variantId = product.metadata?.variantId || undefined;
-
-              return {
-                productId, 
-                quantity: item.quantity || 1,
-                unitPrice: item.price?.unit_amount ? item.price.unit_amount / 100 : 0,
-                totalPrice: (item.price?.unit_amount && item.quantity) ? (item.price.unit_amount / 100) * item.quantity : 0,
-                variantId,
-              };
-            }) || [], 
+              
+              // Vérifier si c'est un menu
+              if (product.metadata?.menuId) {
+                // C'est un menu, créer les items à partir des sélections
+                const menuSelections = JSON.parse(product.metadata?.menuSelections || '{}');
+                const quantity = item.quantity || 1;
+                
+                // Ajouter les pizzas du menu
+                for (const pizzaSelection of menuSelections.pizzas || []) {
+                  orderItems.push({
+                    productId: pizzaSelection.productId,
+                    quantity: pizzaSelection.quantity * quantity,
+                    unitPrice: 0, // Prix inclus dans le menu
+                    totalPrice: 0, // Prix inclus dans le menu
+                    variantId: null,
+                    notes: `Menu: ${product.name}`,
+                  });
+                }
+                
+                // Ajouter les boissons du menu
+                for (const drinkSelection of menuSelections.drinks || []) {
+                  orderItems.push({
+                    productId: drinkSelection.productId,
+                    quantity: drinkSelection.quantity * quantity,
+                    unitPrice: 0, // Prix inclus dans le menu
+                    totalPrice: 0, // Prix inclus dans le menu
+                    variantId: null,
+                    notes: `Menu: ${product.name}`,
+                  });
+                }
+                
+                // Ajouter les desserts du menu
+                for (const dessertSelection of menuSelections.desserts || []) {
+                  orderItems.push({
+                    productId: dessertSelection.productId,
+                    quantity: dessertSelection.quantity * quantity,
+                    unitPrice: 0, // Prix inclus dans le menu
+                    totalPrice: 0, // Prix inclus dans le menu
+                    variantId: null,
+                    notes: `Menu: ${product.name}`,
+                  });
+                }
+              } else {
+                // C'est un produit normal
+                const productId = product.metadata?.productId;
+                if (!productId || productId.trim() === '') continue;
+                
+                const variantId = product.metadata?.variantId || undefined;
+                
+                orderItems.push({
+                  productId,
+                  quantity: item.quantity || 1,
+                  unitPrice: item.price?.unit_amount ? item.price.unit_amount / 100 : 0,
+                  totalPrice: (item.price?.unit_amount && item.quantity) ? (item.price.unit_amount / 100) * item.quantity : 0,
+                  variantId,
+                });
+              }
+            }
+            
+            return orderItems;
+          })(),
         },
         notes: session.metadata?.notes || null,
       },

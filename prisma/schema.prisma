@@ -307,6 +307,7 @@ model Menu {
   name        String
   image       String?
   price       Float
+  description String?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
@@ -318,6 +319,9 @@ model MenuProduct {
   menuId    String
   productId String
   type      String // "pizza", "drink", "dessert"
+  allowChoice Boolean @default(false) // Si l'utilisateur peut choisir
+  minQuantity Int     @default(1)     // Quantité minimale à choisir
+  maxQuantity Int     @default(1)     // Quantité maximale à choisir
 
   menu      Menu      @relation(fields: [menuId], references: [id])
   product   Product   @relation(fields: [productId], references: [id])

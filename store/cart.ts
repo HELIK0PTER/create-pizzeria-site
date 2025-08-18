@@ -3,6 +3,21 @@ import { persist } from "zustand/middleware";
 import { Product, Variant, Category } from "@prisma/client";
 import { useEffect } from "react";
 
+// Type pour les items de menu dans le panier
+interface MenuItem {
+  id: string;
+  name: string;
+  price: number;
+  description?: string;
+  image?: string;
+  quantity: number;
+  selections: {
+    pizzas: { productId: string; productName: string; quantity: number }[];
+    drinks: { productId: string; productName: string; quantity: number }[];
+    desserts: { productId: string; productName: string; quantity: number }[];
+  };
+}
+
 // Type spécifique pour les items du panier (différent de OrderItem de Prisma)
 interface CartItem {
   productId: string;
@@ -35,6 +50,7 @@ interface PromotionSettings {
 
 interface CartStore {
   items: CartItem[];
+  menuItems: MenuItem[];
   deliveryMethod: "delivery" | "pickup";
   deliveryFee: number;
   promotionSettings: PromotionSettings | null;
@@ -45,12 +61,15 @@ interface CartStore {
     quantity?: number,
     notes?: string
   ) => void;
+  addMenuItem: (menuItem: MenuItem) => void;
   removeItem: (productId: string, variantId?: string | null) => void;
+  removeMenuItem: (menuId: string) => void;
   updateQuantity: (
     productId: string,
     variantId: string | null | undefined,
     quantity: number
   ) => void;
+  updateMenuQuantity: (menuId: string, quantity: number) => void;
   updateNotes: (
     productId: string,
     variantId: string | null | undefined,
@@ -131,6 +150,7 @@ export const useCart = create<CartStore>()(
   persist(
     (set, get) => ({
       items: [],
+      menuItems: [],
       deliveryMethod: "delivery",
       deliveryFee: 3.5,
       promotionSettings: null,
@@ -198,7 +218,44 @@ export const useCart = create<CartStore>()(
         }));
       },
 
-      clearCart: () => set({ items: [] }),
+             clearCart: () => set({ items: [], menuItems: [] }),
+
+       addMenuItem: (menuItem) => {
+         set((state) => {
+           const existingMenuIndex = state.menuItems.findIndex(
+             (item) => item.id === menuItem.id
+           );
+
+           if (existingMenuIndex > -1) {
+             const newMenuItems = [...state.menuItems];
+             newMenuItems[existingMenuIndex].quantity += menuItem.quantity;
+             return { menuItems: newMenuItems };
+           }
+
+           return {
+             menuItems: [...state.menuItems, menuItem],
+           };
+         });
+       },
+
+       removeMenuItem: (menuId) => {
+         set((state) => ({
+           menuItems: state.menuItems.filter((item) => item.id !== menuId),
+         }));
+       },
+
+       updateMenuQuantity: (menuId, quantity) => {
+         if (quantity <= 0) {
+           get().removeMenuItem(menuId);
+           return;
+         }
+
+         set((state) => ({
+           menuItems: state.menuItems.map((item) =>
+             item.id === menuId ? { ...item, quantity } : item
+           ),
+         }));
+       },
 
       setDeliveryMethod: (method) => {
         set({
@@ -224,15 +281,21 @@ export const useCart = create<CartStore>()(
         return calculatePromotion(pizzaItems, deliveryMethod, promotionSettings);
       },
 
-      // Sous-total sans promotion
-      getSubTotal: () => {
-        const { items } = get();
-        return items.reduce((total, item) => {
-          const basePrice = item.product.price;
-          const variantPrice = item.variant?.price || 0;
-          return total + (basePrice + variantPrice) * item.quantity;
-        }, 0);
-      },
+             // Sous-total sans promotion
+       getSubTotal: () => {
+         const { items, menuItems } = get();
+         const itemsTotal = items.reduce((total, item) => {
+           const basePrice = item.product.price;
+           const variantPrice = item.variant?.price || 0;
+           return total + (basePrice + variantPrice) * item.quantity;
+         }, 0);
+         
+         const menuItemsTotal = menuItems.reduce((total, item) => {
+           return total + item.price * item.quantity;
+         }, 0);
+         
+         return itemsTotal + menuItemsTotal;
+       },
 
       // Calcul de la remise promotion
       getPromotionDiscount: () => {
@@ -275,10 +338,12 @@ export const useCart = create<CartStore>()(
         return get().getSubTotalWithPromotion() + deliveryFee;
       },
 
-      getItemsCount: () => {
-        const { items } = get();
-        return items.reduce((count, item) => count + item.quantity, 0);
-      },
+             getItemsCount: () => {
+         const { items, menuItems } = get();
+         const itemsCount = items.reduce((count, item) => count + item.quantity, 0);
+         const menuItemsCount = menuItems.reduce((count, item) => count + item.quantity, 0);
+         return itemsCount + menuItemsCount;
+       },
 
       saveLastOrder: (orderData) => {
         try {

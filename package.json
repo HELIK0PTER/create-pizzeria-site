@@ -9,7 +9,8 @@
     "lint": "next lint",
     "seed": "tsx prisma/seed.ts",
     "postinstall": "prisma generate",
-    "migrate:delivery": "node scripts/add-delivery-role.js"
+    "migrate:delivery": "node scripts/add-delivery-role.js",
+    "migrate:menu-config": "node scripts/migrate-menu-config.js"
   },
   "dependencies": {
     "@better-auth/cli": "^1.2.8",

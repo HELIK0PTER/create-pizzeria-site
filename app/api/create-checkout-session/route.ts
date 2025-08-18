@@ -23,11 +23,11 @@ export async function POST(req: Request) {
     }
 
     // Récupérer les articles du panier, le mode de livraison et les informations client depuis le corps de la requête
-    const { items, deliveryMethod, deliveryFee, customerInfo, promotionData } =
+    const { items, menuItems, deliveryMethod, deliveryFee, customerInfo, promotionData } =
       await req.json();
 
     // Vérifier si le panier est vide
-    if (!items || items.length === 0) {
+    if ((!items || items.length === 0) && (!menuItems || menuItems.length === 0)) {
       return NextResponse.json(
         { error: "Le panier est vide" },
         { status: 400 }
@@ -35,41 +35,75 @@ export async function POST(req: Request) {
     }
 
     // Transformer les articles du panier au format attendu par Stripe
-    const line_items = items.map(
-      (item: {
-        product: {
+    const line_items = [
+      // Items normaux
+      ...(items || []).map(
+        (item: {
+          product: {
+            id: string;
+            name: string;
+            description: string;
+            image: string;
+            price: number;
+          };
+          variant?: { id: string; name: string; price: number } | null;
+          quantity: number;
+        }) => {
+          const unit_amount = Math.round(
+            (item.product.price + (item.variant?.price || 0)) * 100
+          ); // Convertir en centimes
+
+          return {
+            price_data: {
+              currency: "eur", // ou votre devise
+              product_data: {
+                name: item.product.name,
+                description:
+                  item.variant?.name || item.product.description || undefined,
+                images: item.product.image ? [item.product.image] : undefined,
+                metadata: {
+                  productId: item.product.id,
+                  ...(item.variant?.id && { variantId: item.variant.id }),
+                },
+              },
+              unit_amount: unit_amount,
+            },
+            quantity: item.quantity,
+          };
+        }
+      ),
+      // Menus
+      ...(menuItems || []).map(
+        (menuItem: {
           id: string;
           name: string;
-          description: string;
-          image: string;
           price: number;
-        };
-        variant?: { id: string; name: string; price: number } | null;
-        quantity: number;
-      }) => {
-        const unit_amount = Math.round(
-          (item.product.price + (item.variant?.price || 0)) * 100
-        ); // Convertir en centimes
+          description?: string;
+          image?: string;
+          quantity: number;
+          selections: unknown;
+        }) => {
+          const unit_amount = Math.round(menuItem.price * 100); // Convertir en centimes
 
-        return {
-          price_data: {
-            currency: "eur", // ou votre devise
-            product_data: {
-              name: item.product.name,
-              description:
-                item.variant?.name || item.product.description || undefined,
-              images: item.product.image ? [item.product.image] : undefined,
-              metadata: {
-                productId: item.product.id,
-                ...(item.variant?.id && { variantId: item.variant.id }),
+          return {
+            price_data: {
+              currency: "eur",
+              product_data: {
+                name: menuItem.name,
+                description: menuItem.description || "Menu personnalisé",
+                images: menuItem.image ? [menuItem.image] : undefined,
+                metadata: {
+                  menuId: menuItem.id,
+                  menuSelections: JSON.stringify(menuItem.selections),
+                },
               },
+              unit_amount: unit_amount,
             },
-            unit_amount: unit_amount,
-          },
-          quantity: item.quantity,
-        };
-      }
-    );
+            quantity: menuItem.quantity,
+          };
+        }
+      ),
+    ];
 
     // Ajouter les frais de livraison comme un article si la livraison est sélectionnée
     if (deliveryMethod === "delivery" && deliveryFee > 0) {

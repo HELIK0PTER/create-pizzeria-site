@@ -76,6 +76,7 @@ import {
 interface ExtendedOrderItem extends OrderItem {
   product: Product & { category: Category };
   variant?: Variant | null;
+  notes?: string | null;
 }
 
 interface ExtendedOrder extends Order {
@@ -740,35 +741,75 @@ export default function AdminOrdersPage() {
                                   {/* Détails de la commande */}
                                   <div>
                                     <h3 className="font-semibold mb-3">{`Articles commandés`}</h3>
-                                    <div className="space-y-2">
-                                      {(selectedOrder.orderItems || []).map(
-                                        (item: ExtendedOrderItem, index: number) => (
-                                          <div
-                                            key={index}
-                                            className="flex justify-between items-center p-3 bg-gray-50 rounded"
-                                          >
-                                            <div>
-                                              <p className="font-medium">
-                                                {item.product.name}
-                                              </p>
-                                              {item.variant && (
-                                                <p className="text-sm text-gray-600">
-                                                  {item.variant.name}
-                                                </p>
-                                              )}
+                                    <div className="space-y-4">
+                                      {(() => {
+                                        // Grouper les items par catégorie
+                                        const itemsByCategory = (selectedOrder.orderItems || []).reduce((acc, item) => {
+                                          const categorySlug = item.product.category?.slug || 'other';
+                                          if (!acc[categorySlug]) {
+                                            acc[categorySlug] = [];
+                                          }
+                                          acc[categorySlug].push(item);
+                                          return acc;
+                                        }, {} as Record<string, ExtendedOrderItem[]>);
+
+                                        // Définir l'ordre et les icônes des catégories
+                                        const categoryConfig = {
+                                          pizzas: { name: 'Pizzas', icon: '🍕', color: 'bg-red-50 border-red-200' },
+                                          boissons: { name: 'Boissons', icon: '🥤', color: 'bg-blue-50 border-blue-200' },
+                                          desserts: { name: 'Desserts', icon: '🍰', color: 'bg-purple-50 border-purple-200' },
+                                          other: { name: 'Autres', icon: '🍽️', color: 'bg-gray-50 border-gray-200' }
+                                        };
+
+                                        return Object.entries(itemsByCategory).map(([categorySlug, items]) => {
+                                          const config = categoryConfig[categorySlug as keyof typeof categoryConfig] || categoryConfig.other;
+                                          
+                                          return (
+                                            <div key={categorySlug} className={`border rounded-lg p-4 ${config.color}`}>
+                                              <div className="flex items-center gap-2 mb-3">
+                                                <span className="text-xl">{config.icon}</span>
+                                                <h4 className="font-semibold text-lg">{config.name}</h4>
+                                                <Badge variant="outline" className="ml-auto">
+                                                  {items.reduce((total, item) => total + item.quantity, 0)} articles
+                                                </Badge>
+                                              </div>
+                                              <div className="space-y-2">
+                                                {items.map((item, index) => (
+                                                  <div
+                                                    key={index}
+                                                    className="flex justify-between items-center p-3 bg-white rounded border"
+                                                  >
+                                                    <div>
+                                                      <p className="font-medium">
+                                                        {item.product.name}
+                                                      </p>
+                                                      {item.variant && (
+                                                        <p className="text-sm text-gray-600">
+                                                          {item.variant.name}
+                                                        </p>
+                                                      )}
+                                                      {item.notes && (
+                                                        <p className="text-sm text-blue-600">
+                                                          Note: {item.notes}
+                                                        </p>
+                                                      )}
+                                                    </div>
+                                                    <div className="text-right">
+                                                      <p className="font-medium">
+                                                        {item.quantity} x{" "}
+                                                        {formatPrice(item.unitPrice)}
+                                                      </p>
+                                                      <p className="text-sm text-gray-600">
+                                                        {formatPrice(item.totalPrice)}
+                                                      </p>
+                                                    </div>
+                                                  </div>
+                                                ))}
+                                              </div>
                                             </div>
-                                            <div className="text-right">
-                                              <p className="font-medium">
-                                                {item.quantity} x{" "}
-                                                {formatPrice(item.unitPrice)}
-                                              </p>
-                                              <p className="text-sm text-gray-600">
-                                                {formatPrice(item.totalPrice)}
-                                              </p>
-                                            </div>
-                                          </div>
-                                        )
-                                      )}
+                                          );
+                                        });
+                                      })()}
                                     </div>
                                   </div>
 

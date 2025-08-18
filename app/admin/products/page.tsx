@@ -12,6 +12,7 @@ import {
   Package,
   X,
   CheckCircle,
+  Utensils,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -209,6 +210,20 @@ export default function AdminProductsPage() {
           <p className="text-gray-600 mt-2">
             Gérez votre catalogue de produits et leurs informations
           </p>
+        </div>
+        <div className="flex gap-3">
+          <Button asChild>
+            <Link href="/admin/products/add">
+              <Package className="h-4 w-4 mr-2" />
+              Ajouter un Produit
+            </Link>
+          </Button>
+          <Button asChild variant="outline" className="border-orange-500 text-orange-600 hover:bg-orange-50">
+            <Link href="/admin/menus/add">
+              <Utensils className="h-4 w-4 mr-2" />
+              Créer un Menu
+            </Link>
+          </Button>
         </div>
       </div>
 
