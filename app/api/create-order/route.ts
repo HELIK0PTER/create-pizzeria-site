@@ -23,13 +23,7 @@ export async function POST(req: Request) {
       expand: ['line_items.data.price.product'], // Inclure les détails du produit
     });
 
-    // Log pour debug des promotions
-    console.log('📋 Métadonnées de promotion:', {
-      promotion_applied: session.metadata?.promotion_applied,
-      promotion_discount: session.metadata?.promotion_discount,
-      original_subtotal: session.metadata?.original_subtotal,
-      promotion_type: session.metadata?.promotion_type,
-    });
+
 
     if (session.payment_status !== 'paid') {
       return NextResponse.json({ error: 'Payment not successful' }, { status: 400 });
@@ -60,7 +54,6 @@ export async function POST(req: Request) {
     });
 
     if (recentOrder) {
-      console.log(`🔄 Commande existante trouvée: ${recentOrder.orderNumber}`);
       return NextResponse.json({ orderId: recentOrder.id, order: recentOrder });
     }
 
@@ -70,13 +63,13 @@ export async function POST(req: Request) {
         orderNumber: generateOrderNumber(),
         userId: userId, // Peut être null pour les utilisateurs non connectés
         customerName: customerName,
-        customerEmail: customerEmail,
+        customerEmail: customerEmail || undefined,
         customerPhone: customerPhone,
-        deliveryAddress: deliveryAddress,
+        deliveryAddress: deliveryAddress || undefined,
         total: session.amount_total ? session.amount_total / 100 : 0, // Convertir en unité de devise
         status: 'confirmed', // Statut confirmed car le paiement est validé
-        deliveryMethod: session.metadata?.deliveryMethod as string ?? '', 
-        paymentMethod: session.payment_method_types?.[0] as string ?? '', 
+        deliveryMethod: session.metadata?.deliveryMethod as string ?? 'delivery', 
+        paymentMethod: session.payment_method_types?.[0] as string ?? 'card', 
         subTotal: session.metadata?.promotion_applied === "true" 
           ? parseFloat(session.metadata?.original_subtotal || '0')
           : (session.amount_total ? session.amount_total / 100 : 0) - (parseFloat(session.metadata?.deliveryFee as string ?? '0')),
@@ -106,7 +99,7 @@ export async function POST(req: Request) {
                     quantity: pizzaSelection.quantity * quantity,
                     unitPrice: 0, // Prix inclus dans le menu
                     totalPrice: 0, // Prix inclus dans le menu
-                    variantId: null,
+                    variantId: pizzaSelection.variantId || null,
                     notes: `Menu: ${product.name}`,
                   });
                 }
@@ -118,7 +111,7 @@ export async function POST(req: Request) {
                     quantity: drinkSelection.quantity * quantity,
                     unitPrice: 0, // Prix inclus dans le menu
                     totalPrice: 0, // Prix inclus dans le menu
-                    variantId: null,
+                    variantId: drinkSelection.variantId || null,
                     notes: `Menu: ${product.name}`,
                   });
                 }
@@ -130,7 +123,7 @@ export async function POST(req: Request) {
                     quantity: dessertSelection.quantity * quantity,
                     unitPrice: 0, // Prix inclus dans le menu
                     totalPrice: 0, // Prix inclus dans le menu
-                    variantId: null,
+                    variantId: dessertSelection.variantId || null,
                     notes: `Menu: ${product.name}`,
                   });
                 }
@@ -154,7 +147,7 @@ export async function POST(req: Request) {
             return orderItems;
           })(),
         },
-        notes: session.metadata?.notes || null,
+        notes: session.metadata?.notes || undefined,
       },
       include: {
         orderItems: {
@@ -169,14 +162,12 @@ export async function POST(req: Request) {
     // 5. Déclencher les notifications pour la nouvelle commande confirmée
     try {
       await orderStatusManager.generateAndSendNotifications(order.id, 'confirmed');
-      console.log(`✅ Notifications envoyées pour commande ${order.orderNumber}`);
-    } catch (notificationError) {
-      console.error('❌ Erreur notifications:', notificationError);
+    } catch {
       // Ne pas faire échouer la création de commande si les notifications échouent
     }
 
     // 6. Retourner la confirmation de commande
-    return NextResponse.json({ orderId: order.id });
+    return NextResponse.json({ orderId: order.id, order });
 
   } catch (error: unknown) {
     console.error('Erreur lors de la création de la commande:', error);

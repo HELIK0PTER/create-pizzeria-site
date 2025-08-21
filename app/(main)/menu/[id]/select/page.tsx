@@ -9,6 +9,8 @@ import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import Image from 'next/image'
 import { ArrowLeft, Pizza, Coffee, IceCream, Plus, Settings, CheckCircle, XCircle, Minus } from 'lucide-react'
 import { formatPrice } from '@/lib/utils'
 import { useCart } from '@/store/cart'
@@ -31,6 +33,7 @@ type ProductSelection = {
   productId: string;
   variantId: string;
   quantity: number;
+  selectedVariantId?: string; // Pour stocker la variante sélectionnée
 };
 
 export default function MenuSelectionPage({ params }: { params: Promise<{ id: string }> }) {
@@ -59,29 +62,29 @@ export default function MenuSelectionPage({ params }: { params: Promise<{ id: st
   }, [params])
 
   useEffect(() => {
+    const fetchMenu = async () => {
+      try {
+        setLoading(true)
+        const response = await fetch(`/api/menus/${menuId}`)
+        
+        if (!response.ok) {
+          throw new Error('Erreur lors du chargement du menu')
+        }
+
+        const menuData = await response.json()
+        setMenu(menuData)
+      } catch (err) {
+        setError('Erreur lors du chargement du menu')
+        console.error(err)
+      } finally {
+        setLoading(false)
+      }
+    }
+
     if (menuId) {
       fetchMenu()
     }
   }, [menuId])
-
-  const fetchMenu = async () => {
-    try {
-      setLoading(true)
-      const response = await fetch(`/api/menus/${menuId}`)
-      
-      if (!response.ok) {
-        throw new Error('Erreur lors du chargement du menu')
-      }
-
-      const menuData = await response.json()
-      setMenu(menuData)
-    } catch (err) {
-      setError('Erreur lors du chargement du menu')
-      console.error(err)
-    } finally {
-      setLoading(false)
-    }
-  }
 
   const getMenuConfiguration = (menu: MenuWithProducts) => {
     const config = {
@@ -126,7 +129,8 @@ export default function MenuSelectionPage({ params }: { params: Promise<{ id: st
         const newSelection: ProductSelection = {
           productId,
           variantId,
-          quantity: 1
+          quantity: 1,
+          selectedVariantId: variantId // Utiliser la première variante par défaut
         }
         return { ...prev, [type]: [...currentSelections, newSelection] }
       }
@@ -163,6 +167,28 @@ export default function MenuSelectionPage({ params }: { params: Promise<{ id: st
   const getProductQuantity = (type: 'pizzas' | 'drinks' | 'desserts', productId: string) => {
     const selection = selections[type].find(s => s.productId === productId)
     return selection ? selection.quantity : 0
+  }
+
+  const getSelectedVariantId = (type: 'pizzas' | 'drinks' | 'desserts', productId: string) => {
+    const selection = selections[type].find(s => s.productId === productId)
+    return selection?.selectedVariantId || ''
+  }
+
+  const updateSelectedVariant = (type: 'pizzas' | 'drinks' | 'desserts', productId: string, variantId: string) => {
+    setSelections(prev => {
+      const currentSelections = prev[type]
+      const existingIndex = currentSelections.findIndex(s => s.productId === productId)
+
+      if (existingIndex >= 0) {
+        const updatedSelections = [...currentSelections]
+        updatedSelections[existingIndex] = {
+          ...updatedSelections[existingIndex],
+          selectedVariantId: variantId
+        }
+        return { ...prev, [type]: updatedSelections }
+      }
+      return prev
+    })
   }
 
 
@@ -224,6 +250,7 @@ export default function MenuSelectionPage({ params }: { params: Promise<{ id: st
         return {
           productId: selection.productId,
           productName: menuProduct?.product.name || '',
+          variantId: selection.selectedVariantId || selection.variantId,
           quantity: selection.quantity
         }
       }),
@@ -232,6 +259,7 @@ export default function MenuSelectionPage({ params }: { params: Promise<{ id: st
         return {
           productId: selection.productId,
           productName: menuProduct?.product.name || '',
+          variantId: selection.selectedVariantId || selection.variantId,
           quantity: selection.quantity
         }
       }),
@@ -240,6 +268,7 @@ export default function MenuSelectionPage({ params }: { params: Promise<{ id: st
         return {
           productId: selection.productId,
           productName: menuProduct?.product.name || '',
+          variantId: selection.selectedVariantId || selection.variantId,
           quantity: selection.quantity
         }
       })
@@ -473,13 +502,27 @@ export default function MenuSelectionPage({ params }: { params: Promise<{ id: st
                              </Label>
                              <p className="text-sm text-gray-600 mt-1">{formatPrice(mp.product.price)}</p>
                              {mp.product.variants.length > 0 && (
-                               <p className="text-xs text-gray-500 mt-1">
-                                 {mp.product.variants[0].name}
-                               </p>
+                               <div className="mt-2">
+                                 <Select
+                                   value={getSelectedVariantId('pizzas', mp.productId)}
+                                   onValueChange={(variantId) => updateSelectedVariant('pizzas', mp.productId, variantId)}
+                                 >
+                                   <SelectTrigger className="w-full text-xs">
+                                     <SelectValue placeholder="Choisir la taille" />
+                                   </SelectTrigger>
+                                   <SelectContent>
+                                     {mp.product.variants.map((variant) => (
+                                       <SelectItem key={variant.id} value={variant.id}>
+                                         {variant.name} (+{formatPrice(variant.price)})
+                                       </SelectItem>
+                                     ))}
+                                   </SelectContent>
+                                 </Select>
+                               </div>
                              )}
                            </div>
                            {mp.product.image && (
-                             <img src={mp.product.image} alt={mp.product.name} className="w-16 h-16 object-cover rounded-lg" />
+                             <Image src={mp.product.image} alt={mp.product.name} width={64} height={64} className="w-16 h-16 object-cover rounded-lg" />
                            )}
                          </div>
 
@@ -567,13 +610,27 @@ export default function MenuSelectionPage({ params }: { params: Promise<{ id: st
                              </Label>
                              <p className="text-sm text-gray-600 mt-1">{formatPrice(mp.product.price)}</p>
                              {mp.product.variants.length > 0 && (
-                               <p className="text-xs text-gray-500 mt-1">
-                                 {mp.product.variants[0].name}
-                               </p>
+                               <div className="mt-2">
+                                 <Select
+                                   value={getSelectedVariantId('drinks', mp.productId)}
+                                   onValueChange={(variantId) => updateSelectedVariant('drinks', mp.productId, variantId)}
+                                 >
+                                   <SelectTrigger className="w-full text-xs">
+                                     <SelectValue placeholder="Choisir la taille" />
+                                   </SelectTrigger>
+                                   <SelectContent>
+                                     {mp.product.variants.map((variant) => (
+                                       <SelectItem key={variant.id} value={variant.id}>
+                                         {variant.name} (+{formatPrice(variant.price)})
+                                       </SelectItem>
+                                     ))}
+                                   </SelectContent>
+                                 </Select>
+                               </div>
                              )}
                            </div>
                            {mp.product.image && (
-                             <img src={mp.product.image} alt={mp.product.name} className="w-16 h-16 object-cover rounded-lg" />
+                             <Image src={mp.product.image} alt={mp.product.name} width={64} height={64} className="w-16 h-16 object-cover rounded-lg" />
                            )}
                          </div>
 
@@ -661,13 +718,27 @@ export default function MenuSelectionPage({ params }: { params: Promise<{ id: st
                              </Label>
                              <p className="text-sm text-gray-600 mt-1">{formatPrice(mp.product.price)}</p>
                              {mp.product.variants.length > 0 && (
-                               <p className="text-xs text-gray-500 mt-1">
-                                 {mp.product.variants[0].name}
-                               </p>
+                               <div className="mt-2">
+                                 <Select
+                                   value={getSelectedVariantId('desserts', mp.productId)}
+                                   onValueChange={(variantId) => updateSelectedVariant('desserts', mp.productId, variantId)}
+                                 >
+                                   <SelectTrigger className="w-full text-xs">
+                                     <SelectValue placeholder="Choisir la taille" />
+                                   </SelectTrigger>
+                                   <SelectContent>
+                                     {mp.product.variants.map((variant) => (
+                                       <SelectItem key={variant.id} value={variant.id}>
+                                         {variant.name} (+{formatPrice(variant.price)})
+                                       </SelectItem>
+                                     ))}
+                                   </SelectContent>
+                                 </Select>
+                               </div>
                              )}
                            </div>
                            {mp.product.image && (
-                             <img src={mp.product.image} alt={mp.product.name} className="w-16 h-16 object-cover rounded-lg" />
+                             <Image src={mp.product.image} alt={mp.product.name} width={64} height={64} className="w-16 h-16 object-cover rounded-lg" />
                            )}
                          </div>
 

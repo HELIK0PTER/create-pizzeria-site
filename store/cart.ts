@@ -12,9 +12,9 @@ interface MenuItem {
   image?: string;
   quantity: number;
   selections: {
-    pizzas: { productId: string; productName: string; quantity: number }[];
-    drinks: { productId: string; productName: string; quantity: number }[];
-    desserts: { productId: string; productName: string; quantity: number }[];
+    pizzas: { productId: string; productName: string; variantId: string; quantity: number }[];
+    drinks: { productId: string; productName: string; variantId: string; quantity: number }[];
+    desserts: { productId: string; productName: string; variantId: string; quantity: number }[];
   };
 }
 

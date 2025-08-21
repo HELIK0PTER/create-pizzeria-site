@@ -14,6 +14,7 @@ import Link from 'next/link'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Switch } from '@/components/ui/switch'
 import { Badge } from '@/components/ui/badge'
+import Image from 'next/image'
 
 type Product = {
   id: string;
@@ -468,7 +469,7 @@ export default function AddMenuPage() {
                               <p className="text-xs text-gray-500">{product.price.toFixed(2)} €</p>
                             </div>
                             {product.image && (
-                              <img src={product.image} alt={product.name} className="w-12 h-12 object-cover rounded" />
+                              <Image src={product.image} alt={product.name} width={48} height={48} className="w-12 h-12 object-cover rounded" />
                             )}
                           </div>
                         ))}
@@ -499,7 +500,7 @@ export default function AddMenuPage() {
                             <p className="text-xs text-gray-500">{product.price.toFixed(2)} €</p>
                           </div>
                           {product.image && (
-                            <img src={product.image} alt={product.name} className="w-12 h-12 object-cover rounded" />
+                            <Image src={product.image} alt={product.name} width={48} height={48} className="w-12 h-12 object-cover rounded" />
                           )}
                         </div>
                       ))}

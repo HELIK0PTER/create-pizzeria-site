@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Trash2, Plus, Minus, ArrowRight, Gift } from "lucide-react";
+import { Trash2, Plus, Minus, ArrowRight, Gift, ChevronDown, ChevronUp } from "lucide-react";
 import { useCart, usePromotionSettings } from "@/store/cart";
 import { formatPrice } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -16,11 +16,13 @@ import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { XCircle } from "lucide-react";
-import { Suspense } from "react";
+import { Suspense, useState } from "react";
 import { useRouter } from "next/navigation";
 
 export default function CartPage() {
   const router = useRouter();
+  const [expandedMenus, setExpandedMenus] = useState<Set<string>>(new Set());
+  
   const {
     items,
     menuItems,
@@ -58,6 +60,18 @@ export default function CartPage() {
 
   const handleProceedToCheckout = () => {
     router.push("/checkout");
+  };
+
+  const toggleMenuExpansion = (menuId: string) => {
+    setExpandedMenus(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(menuId)) {
+        newSet.delete(menuId);
+      } else {
+        newSet.add(menuId);
+      }
+      return newSet;
+    });
   };
 
   return (
@@ -238,32 +252,74 @@ export default function CartPage() {
                             </span>
                           </div>
                           
-                          {menuItem.description && (
-                            <p className="text-sm text-gray-500 mt-1">
-                              {menuItem.description}
-                            </p>
-                          )}
+                                                     {menuItem.description && (
+                             <p className="text-sm text-gray-500 mt-1">
+                               {menuItem.description}
+                             </p>
+                           )}
 
-                          {/* Détails des sélections */}
-                          <div className="mt-2 space-y-1">
-                            {menuItem.selections.pizzas.length > 0 && (
-                              <div className="text-sm text-gray-600">
-                                <span className="font-medium">Pizzas:</span> {menuItem.selections.pizzas.map(p => `${p.productName} (x${p.quantity})`).join(', ')}
-                              </div>
-                            )}
-                            {menuItem.selections.drinks.length > 0 && (
-                              <div className="text-sm text-gray-600">
-                                <span className="font-medium">Boissons:</span> {menuItem.selections.drinks.map(d => `${d.productName} (x${d.quantity})`).join(', ')}
-                              </div>
-                            )}
-                            {menuItem.selections.desserts.length > 0 && (
-                              <div className="text-sm text-gray-600">
-                                <span className="font-medium">Desserts:</span> {menuItem.selections.desserts.map(d => `${d.productName} (x${d.quantity})`).join(', ')}
-                              </div>
-                            )}
-                          </div>
+                           {/* Bouton pour afficher/masquer les détails */}
+                           <div className="mt-2">
+                             <Button
+                               variant="ghost"
+                               size="sm"
+                               onClick={() => toggleMenuExpansion(menuItem.id)}
+                               className="text-gray-600 hover:text-gray-800 p-0 h-auto"
+                             >
+                               <span className="text-sm">
+                                 {expandedMenus.has(menuItem.id) ? "Masquer les détails" : "Voir les détails"}
+                               </span>
+                               {expandedMenus.has(menuItem.id) ? (
+                                 <ChevronUp className="h-4 w-4 ml-1" />
+                               ) : (
+                                 <ChevronDown className="h-4 w-4 ml-1" />
+                               )}
+                             </Button>
+                           </div>
 
-                          <div className="flex items-center justify-between mt-4">
+                           {/* Détails des sélections (déroulable) */}
+                           {expandedMenus.has(menuItem.id) && (
+                             <div className="mt-3 p-3 bg-gray-50 rounded-lg space-y-2">
+                               {menuItem.selections.pizzas.length > 0 && (
+                                 <div className="text-sm">
+                                   <span className="font-medium text-gray-700">🍕 Pizzas:</span>
+                                   <div className="ml-4 mt-1 space-y-1">
+                                     {menuItem.selections.pizzas.map((pizza, index) => (
+                                       <div key={index} className="text-gray-600">
+                                         • {pizza.productName} (x{pizza.quantity})
+                                       </div>
+                                     ))}
+                                   </div>
+                                 </div>
+                               )}
+                               {menuItem.selections.drinks.length > 0 && (
+                                 <div className="text-sm">
+                                   <span className="font-medium text-gray-700">🥤 Boissons:</span>
+                                   <div className="ml-4 mt-1 space-y-1">
+                                     {menuItem.selections.drinks.map((drink, index) => (
+                                       <div key={index} className="text-gray-600">
+                                         • {drink.productName} (x{drink.quantity})
+                                       </div>
+                                     ))}
+                                   </div>
+                                 </div>
+                               )}
+                               {menuItem.selections.desserts.length > 0 && (
+                                 <div className="text-sm">
+                                   <span className="font-medium text-gray-700">🍰 Desserts:</span>
+                                   <div className="ml-4 mt-1 space-y-1">
+                                     {menuItem.selections.desserts.map((dessert, index) => (
+                                       <div key={index} className="text-gray-600">
+                                         • {dessert.productName} (x{dessert.quantity})
+                                       </div>
+                                     ))}
+                                   </div>
+                                 </div>
+                               )}
+                             </div>
+                           )}
+
+                           <div className="flex items-center justify-between mt-4">
                             <div className="flex items-center gap-2">
                               <Button
                                 variant="outline"

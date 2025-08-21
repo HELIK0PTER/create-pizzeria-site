@@ -87,23 +87,21 @@ export async function POST(request: Request) {
 
 export async function GET(req: Request) {
   try {
-    // 1. Récupérer l'utilisateur connecté
-    const authSession = await auth.api.getSession({
-      headers: req.headers,
-    });
-
-    if (!authSession?.user) {
-      return NextResponse.json({ error: 'User not authenticated' }, { status: 401 });
-    }
-
-    const userId = authSession.user.id;
     const url = new URL(req.url);
     const isAdminRequest = url.searchParams.get('admin') === 'true';
 
-    // Vérifier si l'utilisateur est admin pour les requêtes admin
+    // Pour les requêtes admin, vérifier l'authentification et les droits
     if (isAdminRequest) {
+      const authSession = await auth.api.getSession({
+        headers: req.headers,
+      });
+
+      if (!authSession?.user) {
+        return NextResponse.json({ error: 'User not authenticated' }, { status: 401 });
+      }
+
       const user = await prisma.user.findUnique({
-        where: { id: userId },
+        where: { id: authSession.user.id },
         select: { role: true }
       });
 
@@ -139,10 +137,19 @@ export async function GET(req: Request) {
 
       return NextResponse.json(orders);
     } else {
-      // 2. Récupérer les commandes de l'utilisateur connecté
+      // Pour les requêtes non-admin, vérifier l'authentification
+      const authSession = await auth.api.getSession({
+        headers: req.headers,
+      });
+
+      if (!authSession?.user) {
+        return NextResponse.json({ error: 'User not authenticated' }, { status: 401 });
+      }
+
+      // Récupérer les commandes de l'utilisateur connecté
       const orders = await prisma.order.findMany({
         where: {
-          userId: userId,
+          userId: authSession.user.id,
         },
         include: {
           orderItems: {

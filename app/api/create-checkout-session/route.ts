@@ -191,7 +191,24 @@ export async function POST(req: Request) {
         sessionOptions.metadata.shipping_address = customerInfo.address || "";
         sessionOptions.metadata.shipping_city = customerInfo.city || "";
         sessionOptions.metadata.shipping_postal_code = customerInfo.postalCode || "";
-        sessionOptions.metadata.full_delivery_address = `${customerInfo.address || ""}, ${customerInfo.postalCode || ""} ${customerInfo.city || ""}`.trim();
+        // Formater l'adresse sans répétition
+        const address = customerInfo.address || "";
+        const postalCode = customerInfo.postalCode || "";
+        const city = customerInfo.city || "";
+        
+        // Vérifier si l'adresse contient déjà la ville et le code postal
+        const addressContainsCity = city && address.toLowerCase().includes(city.toLowerCase());
+        const addressContainsPostalCode = postalCode && address.includes(postalCode);
+        
+        let fullAddress = address;
+        if (!addressContainsPostalCode && postalCode) {
+          fullAddress += `, ${postalCode}`;
+        }
+        if (!addressContainsCity && city) {
+          fullAddress += ` ${city}`;
+        }
+        
+        sessionOptions.metadata.full_delivery_address = fullAddress.trim();
       }
       
       if (customerInfo.notes) {

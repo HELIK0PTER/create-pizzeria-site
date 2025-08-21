@@ -53,6 +53,12 @@ interface Order {
   createdAt: string;
   pickupTime?: string;
   updatedAt?: string;
+  delivererId?: string;
+  deliverer?: {
+    id: string;
+    name: string;
+    email: string;
+  };
 }
 
 interface User {
@@ -97,7 +103,7 @@ function LivreurContent() {
 
   useEffect(() => {
     fetchOrders();
-    const id = setInterval(fetchOrders, 10000);
+    const id = setInterval(fetchOrders, 5000);
     return () => clearInterval(id);
   }, []);
 
@@ -379,6 +385,7 @@ function LivreurContent() {
                     <TableHead>Client</TableHead>
                     <TableHead>Adresse</TableHead>
                     <TableHead>Statut</TableHead>
+                    <TableHead>Livreur</TableHead>
                     <TableHead>Total</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
@@ -417,6 +424,22 @@ function LivreurContent() {
                         </div>
                       </TableCell>
                       <TableCell>{getStatusBadge(order.status)}</TableCell>
+                      <TableCell>
+                        {order.status === "delivering" && order.deliverer ? (
+                          <div className="flex items-center gap-1 text-sm text-purple-600">
+                            <User className="h-3 w-3" />
+                            <span className="font-medium">{order.deliverer.name}</span>
+                          </div>
+                        ) : order.status === "ready" ? (
+                          <div className="text-sm text-gray-500">
+                            En attente
+                          </div>
+                        ) : (
+                          <div className="text-sm text-gray-500">
+                            -
+                          </div>
+                        )}
+                      </TableCell>
                       <TableCell className="font-medium">
                         {order.total.toFixed(2)} €
                       </TableCell>
@@ -477,6 +500,7 @@ function LivreurContent() {
                     <TableHead>N° Commande</TableHead>
                     <TableHead>Client</TableHead>
                     <TableHead>Statut final</TableHead>
+                    <TableHead>Livreur</TableHead>
                     <TableHead>Total</TableHead>
                     <TableHead>Date</TableHead>
                   </TableRow>
@@ -491,6 +515,18 @@ function LivreurContent() {
                         <div className="font-medium">{order.customerName}</div>
                       </TableCell>
                       <TableCell>{getStatusBadge(order.status)}</TableCell>
+                      <TableCell>
+                        {order.deliverer ? (
+                          <div className="flex items-center gap-1 text-sm text-purple-600">
+                            <User className="h-3 w-3" />
+                            <span className="font-medium">{order.deliverer.name}</span>
+                          </div>
+                        ) : (
+                          <div className="text-sm text-gray-500">
+                            -
+                          </div>
+                        )}
+                      </TableCell>
                       <TableCell className="font-medium">
                         {order.total.toFixed(2)} €
                       </TableCell>

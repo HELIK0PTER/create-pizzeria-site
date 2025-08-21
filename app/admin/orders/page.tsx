@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   ShoppingCart,
   Package,
@@ -12,8 +13,6 @@ import {
   CheckCircle2,
   AlertCircle,
   X,
-  Eye,
-  Phone,
   Calendar,
   Euro,
   RefreshCw,
@@ -38,14 +37,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+
 import {
   Select,
   SelectContent,
@@ -73,7 +65,7 @@ import {
 } from "@prisma/client";
 
 // Types étendus pour inclure les relations
-interface ExtendedOrderItem extends OrderItem {
+interface ExtendedOrderItem extends Omit<OrderItem, 'notes'> {
   product: Product & { category: Category };
   variant?: Variant | null;
   notes?: string | null;
@@ -118,6 +110,7 @@ export default function AdminOrdersPage() {
   const [statusUpdateError, setStatusUpdateError] = useState<string | null>(
     null
   );
+  const [checkedItems, setCheckedItems] = useState<Set<string>>(new Set());
 
   {
     /* Filtrer les commandes */
@@ -319,6 +312,53 @@ export default function AdminOrdersPage() {
     return { totalOrders, totalRevenue, pendingOrders, todayOrders };
   };
 
+  const handleItemCheck = (itemId: string, checked: boolean) => {
+    setCheckedItems(prev => {
+      const newSet = new Set(prev);
+      if (checked) {
+        newSet.add(itemId);
+      } else {
+        newSet.delete(itemId);
+      }
+      return newSet;
+    });
+  };
+
+  // Fonction pour obtenir le nom de taille avec dimensions
+  const getSizeWithDimensions = (variantName: string | null | undefined) => {
+    if (!variantName) return 'Moyenne (30cm)';
+    
+    // Mapper les noms de variantes vers les bonnes dimensions
+    const sizeMap: Record<string, string> = {
+      'Petite': 'Petite (26cm)',
+      'Moyenne': 'Moyenne (30cm)',
+      'Grande': 'Grande (34cm)',
+      'Petite (26cm)': 'Petite (26cm)',
+      'Moyenne (30cm)': 'Moyenne (30cm)',
+      'Grande (34cm)': 'Grande (34cm)',
+      'Taille M': 'Moyenne (30cm)',
+      'Taille L': 'Grande (34cm)',
+      'Taille S': 'Petite (26cm)'
+    };
+    
+    return sizeMap[variantName] || 'Moyenne (30cm)';
+  };
+
+  // Fonction pour générer les items individuels
+  const generateIndividualItems = (item: ExtendedOrderItem) => {
+    const items = [];
+    for (let i = 0; i < item.quantity; i++) {
+      const individualItemId = `${item.id}_${i}`;
+      items.push({
+        ...item,
+        id: individualItemId,
+        quantity: 1,
+        originalItem: item
+      });
+    }
+    return items;
+  };
+
   const getValidStatusOptions = (
     currentStatus: OrderStatus,
     deliveryMethod: DeliveryMethod
@@ -385,14 +425,25 @@ export default function AdminOrdersPage() {
             {`Gérez toutes les commandes de votre pizzeria avec suivi des statuts`}
           </p>
         </div>
-        <Button
-          onClick={fetchOrders}
-          variant="outline"
-          className="flex items-center gap-2"
-        >
-          <RefreshCw className="h-4 w-4" />
-          {`Actualiser`}
-        </Button>
+                 <div className="flex items-center gap-2">
+           <Button
+             onClick={() => setCheckedItems(new Set())}
+             variant="outline"
+             size="sm"
+             className="flex items-center gap-2"
+           >
+             <RefreshCw className="h-4 w-4" />
+             Réinitialiser
+           </Button>
+           <Button
+             onClick={fetchOrders}
+             variant="outline"
+             className="flex items-center gap-2"
+           >
+             <RefreshCw className="h-4 w-4" />
+             {`Actualiser`}
+           </Button>
+         </div>
       </div>
 
       {/* Alerte d'erreur de mise à jour */}
@@ -533,17 +584,17 @@ export default function AdminOrdersPage() {
         <CardContent>
           <div className="rounded-md border">
             <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{`Commande`}</TableHead>
-                  <TableHead>{`Client`}</TableHead>
-                  <TableHead>{`Mode`}</TableHead>
-                  <TableHead>{`Statut`}</TableHead>
-                  <TableHead>{`Total`}</TableHead>
-                  <TableHead>{`Date`}</TableHead>
-                  <TableHead>{`Actions`}</TableHead>
-                </TableRow>
-              </TableHeader>
+                             <TableHeader>
+                 <TableRow>
+                   <TableHead>{`Commande`}</TableHead>
+                   <TableHead>{`Client`}</TableHead>
+                   <TableHead>{`Mode`}</TableHead>
+                   <TableHead>{`Statut`}</TableHead>
+                   <TableHead>{`Total`}</TableHead>
+                   <TableHead>{`Date`}</TableHead>
+                   <TableHead>{`Infos`}</TableHead>
+                 </TableRow>
+               </TableHeader>
               <TableBody>
                 {filteredOrders.length === 0 ? (
                   <TableRow>
@@ -575,18 +626,155 @@ export default function AdminOrdersPage() {
                         key={order.id}
                         className="cursor-pointer hover:bg-gray-50"
                       >
-                        <TableCell className="font-medium">
-                          <div>
-                            <div className="font-bold">{order.orderNumber}</div>
-                            <div className="text-sm text-gray-500">
-                              {(order.orderItems || []).reduce(
-                                (total: number, item: ExtendedOrderItem) => total + item.quantity,
-                                0
-                              )}{" "}
-                              {`articles`}
-                            </div>
-                          </div>
-                        </TableCell>
+                                                 <TableCell className="font-medium">
+                           <div>
+                                                           <div className="font-bold">{order.orderNumber}</div>
+                              <div className="text-sm text-gray-500">
+                                {(order.orderItems || []).reduce(
+                                  (total: number, item: ExtendedOrderItem) => total + item.quantity,
+                                  0
+                                )}{" "}
+                                {`articles`}
+                              </div>
+                              
+                             
+                             {/* Affichage direct des articles */}
+                             <div className="mt-3 space-y-2">
+                               {(() => {
+                                 // Grouper les items par menus et par catégorie
+                                 const menuItems: Record<string, ExtendedOrderItem[]> = {};
+                                 const regularItems: Record<string, ExtendedOrderItem[]> = {};
+                                 
+                                 (order.orderItems || []).forEach(item => {
+                                   // Vérifier si c'est un item de menu
+                                   if (item.notes && item.notes.startsWith('Menu: ')) {
+                                     const menuName = item.notes.replace('Menu: ', '');
+                                     if (!menuItems[menuName]) {
+                                       menuItems[menuName] = [];
+                                     }
+                                     menuItems[menuName].push(item);
+                                   } else {
+                                     // Item régulier
+                                     const categorySlug = item.product.category?.slug || 'other';
+                                     if (!regularItems[categorySlug]) {
+                                       regularItems[categorySlug] = [];
+                                     }
+                                     regularItems[categorySlug].push(item);
+                                   }
+                                 });
+
+                                 return (
+                                   <>
+                                     {/* Afficher les menus d'abord */}
+                                     {Object.entries(menuItems).map(([menuName, items]) => (
+                                       <div key={menuName} className="bg-orange-50 border border-orange-200 rounded p-2">
+                                         <div className="flex items-center gap-1 mb-1">
+                                           <span className="text-sm">🍽️</span>
+                                           <span className="text-xs font-medium text-orange-800">{menuName}</span>
+                                           <Badge variant="outline" className="ml-auto text-xs bg-orange-100">
+                                             Menu
+                                           </Badge>
+                                         </div>
+                                                                                   <div className="space-y-1">
+                                            {items.flatMap(item => generateIndividualItems(item)).map((individualItem, index) => (
+                                              <div key={index} className="text-xs bg-white rounded p-1 border">
+                                                <div className="flex items-center gap-2">
+                                                  <Checkbox
+                                                    checked={checkedItems.has(individualItem.id)}
+                                                    onCheckedChange={(checked) => handleItemCheck(individualItem.id, checked as boolean)}
+                                                    className="h-4 w-4"
+                                                  />
+                                                  <span className={`font-medium ${checkedItems.has(individualItem.id) ? 'line-through text-gray-400' : ''}`}>
+                                                    1x {individualItem.product.name}
+                                                  </span>
+                                                  
+                                                   {/* Badge pour les pizzas (avec ou sans variante) */}
+                                                   {individualItem.product.category?.slug === 'pizzas' && (
+                                                     <Badge variant="outline" className="text-xs px-1 py-0 bg-red-50 text-red-700 border-red-200">
+                                                       {getSizeWithDimensions(individualItem.variant?.name)}
+                                                     </Badge>
+                                                   )}
+                                                   {/* Badge pour les autres produits avec variantes */}
+                                                   {individualItem.variant && individualItem.product.category?.slug !== 'pizzas' && (
+                                                     <Badge variant="secondary" className="text-xs px-1 py-0">
+                                                       {individualItem.variant.name}
+                                                     </Badge>
+                                                   )}
+                                                </div>
+                                                {individualItem.product.ingredients && (
+                                                  <p className={`text-xs text-gray-500 mt-1 ${checkedItems.has(individualItem.id) ? 'line-through' : ''}`}>
+                                                    {individualItem.product.ingredients}
+                                                  </p>
+                                                )}
+                                              </div>
+                                            ))}
+                                          </div>
+                                       </div>
+                                     ))}
+
+                                     {/* Afficher les items réguliers */}
+                                     {Object.entries(regularItems).map(([categorySlug, items]) => {
+                                       const categoryConfig = {
+                                         pizzas: { name: 'Pizzas', icon: '🍕', color: 'bg-red-50 border-red-200' },
+                                         boissons: { name: 'Boissons', icon: '🥤', color: 'bg-blue-50 border-blue-200' },
+                                         desserts: { name: 'Desserts', icon: '🍰', color: 'bg-purple-50 border-purple-200' },
+                                         other: { name: 'Autres', icon: '🍽️', color: 'bg-gray-50 border-gray-200' }
+                                       };
+                                       const config = categoryConfig[categorySlug as keyof typeof categoryConfig] || categoryConfig.other;
+                                       
+                                       return (
+                                         <div key={categorySlug} className={`${config.color} border rounded p-2`}>
+                                           <div className="flex items-center gap-1 mb-1">
+                                             <span className="text-sm">{config.icon}</span>
+                                             <span className="text-xs font-medium">{config.name}</span>
+                                           </div>
+                                                                                       <div className="space-y-1">
+                                              {items.flatMap(item => generateIndividualItems(item)).map((individualItem, index) => (
+                                                <div key={index} className="text-xs bg-white rounded p-1 border">
+                                                  <div className="flex items-center gap-2">
+                                                    <Checkbox
+                                                      checked={checkedItems.has(individualItem.id)}
+                                                      onCheckedChange={(checked) => handleItemCheck(individualItem.id, checked as boolean)}
+                                                      className="h-4 w-4"
+                                                    />
+                                                                                                         <span className={`font-medium ${checkedItems.has(individualItem.id) ? 'line-through text-gray-400' : ''}`}>
+                                                       1x {individualItem.product.name}
+                                                     </span>
+                                                     {/* Badge pour les pizzas (avec ou sans variante) */}
+                                                     {individualItem.product.category?.slug === 'pizzas' && (
+                                                       <Badge variant="outline" className="text-xs px-1 py-0 bg-red-50 text-red-700 border-red-200">
+                                                         {getSizeWithDimensions(individualItem.variant?.name)}
+                                                       </Badge>
+                                                     )}
+                                                     {/* Badge pour les autres produits avec variantes */}
+                                                     {individualItem.variant && individualItem.product.category?.slug !== 'pizzas' && (
+                                                       <Badge variant="secondary" className="text-xs px-1 py-0">
+                                                         {individualItem.variant.name}
+                                                       </Badge>
+                                                     )}
+                                                  </div>
+                                                  {individualItem.product.ingredients && (
+                                                    <p className={`text-xs text-gray-500 mt-1 ${checkedItems.has(individualItem.id) ? 'line-through' : ''}`}>
+                                                      {individualItem.product.ingredients}
+                                                    </p>
+                                                  )}
+                                                  {individualItem.notes && !individualItem.notes.startsWith('Menu: ') && (
+                                                    <p className={`text-xs text-blue-600 mt-1 ${checkedItems.has(individualItem.id) ? 'line-through' : ''}`}>
+                                                      Note: {individualItem.notes}
+                                                    </p>
+                                                  )}
+                                                </div>
+                                              ))}
+                                            </div>
+                                         </div>
+                                       );
+                                     })}
+                                   </>
+                                 );
+                               })()}
+                             </div>
+                           </div>
+                         </TableCell>
                         <TableCell>
                           <div>
                             <div className="font-medium">
@@ -654,207 +842,43 @@ export default function AdminOrdersPage() {
                         <TableCell className="text-sm">
                           {formatDate(new Date(order.createdAt))}
                         </TableCell>
-                        <TableCell>
-                          <Dialog>
-                            <DialogTrigger asChild>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => setSelectedOrder(order)}
-                              >
-                                <Eye className="h-4 w-4" />
-                              </Button>
-                            </DialogTrigger>
-                            <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-                              <DialogHeader>
-                                <DialogTitle className="flex items-center gap-2">
-                                  <Package className="h-5 w-5" />
-                                  {`Commande ${order.orderNumber}`}
-                                </DialogTitle>
-                                <DialogDescription>
-                                  {`Détails complets de la commande`}
-                                </DialogDescription>
-                              </DialogHeader>
-
-                              {selectedOrder && (
-                                <div className="space-y-6">
-                                  {/* Statut et progression */}
-                                  <div className="bg-blue-50 p-4 rounded-lg">
-                                    <h3 className="font-semibold mb-3">{`Statut actuel`}</h3>
-                                    <div className="flex items-center justify-between">
-                                      {getStatusBadge(
-                                        selectedOrder.status as OrderStatus
-                                      )}
-                                      <div className="text-sm text-gray-600">
-                                        {
-                                          ORDER_STATUS_CONFIG[
-                                            selectedOrder.status as OrderStatus
-                                          ]?.description
-                                        }
-                                      </div>
-                                    </div>
-                                  </div>
-
-                                  {/* Informations client */}
-                                  <div className="bg-gray-50 p-4 rounded-lg">
-                                    <h3 className="font-semibold mb-3 flex items-center gap-2">
-                                      <Phone className="h-4 w-4" />
-                                      {`Informations client`}
-                                    </h3>
-                                    <div className="grid grid-cols-2 gap-4">
-                                      <div>
-                                        <p className="text-sm text-gray-600">{`Nom`}</p>
-                                        <p className="font-medium">
-                                          {selectedOrder.customerName}
-                                        </p>
-                                      </div>
-                                      <div>
-                                        <p className="text-sm text-gray-600">{`Téléphone`}</p>
-                                        <p className="font-medium">
-                                          <a
-                                            href={`tel:${selectedOrder.customerPhone}`}
-                                            className="text-blue-600 hover:underline"
-                                          >
-                                            {selectedOrder.customerPhone}
-                                          </a>
-                                        </p>
-                                      </div>
-                                      {selectedOrder.customerEmail && (
-                                        <div>
-                                          <p className="text-sm text-gray-600">{`Email`}</p>
-                                          <p className="font-medium">
-                                            {selectedOrder.customerEmail}
-                                          </p>
-                                        </div>
-                                      )}
-                                      {selectedOrder.deliveryAddress && (
-                                        <div className="col-span-2">
-                                          <p className="text-sm text-gray-600">{`Adresse de livraison`}</p>
-                                          <p className="font-medium">
-                                            {selectedOrder.deliveryAddress}
-                                          </p>
-                                        </div>
-                                      )}
-                                    </div>
-                                  </div>
-
-                                  {/* Détails de la commande */}
-                                  <div>
-                                    <h3 className="font-semibold mb-3">{`Articles commandés`}</h3>
-                                    <div className="space-y-4">
-                                      {(() => {
-                                        // Grouper les items par catégorie
-                                        const itemsByCategory = (selectedOrder.orderItems || []).reduce((acc, item) => {
-                                          const categorySlug = item.product.category?.slug || 'other';
-                                          if (!acc[categorySlug]) {
-                                            acc[categorySlug] = [];
-                                          }
-                                          acc[categorySlug].push(item);
-                                          return acc;
-                                        }, {} as Record<string, ExtendedOrderItem[]>);
-
-                                        // Définir l'ordre et les icônes des catégories
-                                        const categoryConfig = {
-                                          pizzas: { name: 'Pizzas', icon: '🍕', color: 'bg-red-50 border-red-200' },
-                                          boissons: { name: 'Boissons', icon: '🥤', color: 'bg-blue-50 border-blue-200' },
-                                          desserts: { name: 'Desserts', icon: '🍰', color: 'bg-purple-50 border-purple-200' },
-                                          other: { name: 'Autres', icon: '🍽️', color: 'bg-gray-50 border-gray-200' }
-                                        };
-
-                                        return Object.entries(itemsByCategory).map(([categorySlug, items]) => {
-                                          const config = categoryConfig[categorySlug as keyof typeof categoryConfig] || categoryConfig.other;
-                                          
-                                          return (
-                                            <div key={categorySlug} className={`border rounded-lg p-4 ${config.color}`}>
-                                              <div className="flex items-center gap-2 mb-3">
-                                                <span className="text-xl">{config.icon}</span>
-                                                <h4 className="font-semibold text-lg">{config.name}</h4>
-                                                <Badge variant="outline" className="ml-auto">
-                                                  {items.reduce((total, item) => total + item.quantity, 0)} articles
-                                                </Badge>
-                                              </div>
-                                              <div className="space-y-2">
-                                                {items.map((item, index) => (
-                                                  <div
-                                                    key={index}
-                                                    className="flex justify-between items-center p-3 bg-white rounded border"
-                                                  >
-                                                    <div>
-                                                      <p className="font-medium">
-                                                        {item.product.name}
-                                                      </p>
-                                                      {item.variant && (
-                                                        <p className="text-sm text-gray-600">
-                                                          {item.variant.name}
-                                                        </p>
-                                                      )}
-                                                      {item.notes && (
-                                                        <p className="text-sm text-blue-600">
-                                                          Note: {item.notes}
-                                                        </p>
-                                                      )}
-                                                    </div>
-                                                    <div className="text-right">
-                                                      <p className="font-medium">
-                                                        {item.quantity} x{" "}
-                                                        {formatPrice(item.unitPrice)}
-                                                      </p>
-                                                      <p className="text-sm text-gray-600">
-                                                        {formatPrice(item.totalPrice)}
-                                                      </p>
-                                                    </div>
-                                                  </div>
-                                                ))}
-                                              </div>
-                                            </div>
-                                          );
-                                        });
-                                      })()}
-                                    </div>
-                                  </div>
-
-                                  {/* Total */}
-                                  <div className="bg-orange-50 p-4 rounded-lg">
-                                    <div className="space-y-2">
-                                      <div className="flex justify-between">
-                                        <span>{`Sous-total`}</span>
-                                        <span>
-                                          {formatPrice(selectedOrder.subTotal)}
-                                        </span>
-                                      </div>
-                                      {selectedOrder.deliveryFee > 0 && (
-                                        <div className="flex justify-between">
-                                          <span>{`Frais de livraison`}</span>
-                                          <span>
-                                            {formatPrice(
-                                              selectedOrder.deliveryFee
-                                            )}
-                                          </span>
-                                        </div>
-                                      )}
-                                      <div className="flex justify-between font-bold text-lg border-t pt-2">
-                                        <span>{`Total`}</span>
-                                        <span>
-                                          {formatPrice(selectedOrder.total)}
-                                        </span>
-                                      </div>
-                                    </div>
-                                  </div>
-
-                                  {/* Notes */}
-                                  {selectedOrder.notes && (
-                                    <div className="bg-blue-50 p-4 rounded-lg">
-                                      <h3 className="font-semibold mb-2">{`Notes de la commande`}</h3>
-                                      <p className="text-gray-700">
-                                        {selectedOrder.notes}
-                                      </p>
-                                    </div>
-                                  )}
+                                                 <TableCell>
+                           {/* Informations client détaillées */}
+                           <div className="text-xs text-gray-500 space-y-1">
+                             {order.customerEmail && (
+                               <div>{order.customerEmail}</div>
+                             )}
+                                                           {order.deliveryAddress && (
+                                <div className="text-blue-600">
+                                  📍 {(() => {
+                                    // Nettoyer l'adresse des répétitions
+                                    const address = order.deliveryAddress;
+                                    if (!address) return address;
+                                    
+                                    // Supprimer les répétitions de ville et code postal
+                                    const parts = address.split(',');
+                                    const cleanedParts = [];
+                                    const seen = new Set();
+                                    
+                                    for (const part of parts) {
+                                      const trimmed = part.trim();
+                                      if (!seen.has(trimmed)) {
+                                        cleanedParts.push(trimmed);
+                                        seen.add(trimmed);
+                                      }
+                                    }
+                                    
+                                    return cleanedParts.join(', ');
+                                  })()}
                                 </div>
                               )}
-                            </DialogContent>
-                          </Dialog>
-                        </TableCell>
+                             {order.notes && (
+                               <div className="text-orange-600 font-medium">
+                                 📝 {order.notes}
+                               </div>
+                             )}
+                           </div>
+                         </TableCell>
                       </TableRow>
                     );
                   })

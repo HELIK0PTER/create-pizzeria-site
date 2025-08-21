@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Search, Plus, Utensils, Pizza, Coffee, IceCream, Edit, Trash2, Eye } from 'lucide-react'
 import { formatPrice } from '@/lib/utils'
+import Image from 'next/image'
 import { Menu, MenuProduct, Product, Category } from '@prisma/client'
 
 type MenuWithProducts = Menu & {
@@ -258,9 +259,11 @@ export default function AdminMenusPage() {
                           )}
                         </div>
                         {menu.image && (
-                          <img
+                          <Image
                             src={menu.image}
                             alt={menu.name}
+                            width={64}
+                            height={64}
                             className="w-16 h-16 object-cover rounded-lg ml-4"
                           />
                         )}

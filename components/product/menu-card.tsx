@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Pizza, Coffee, IceCream, Settings } from "lucide-react";
 import { formatPrice } from "@/lib/utils";
-
+import Image from "next/image";
 import Link from "next/link";
 
 type MenuWithProducts = Menu & {
@@ -50,9 +50,11 @@ export function MenuCard({ menu, isCompact = false }: MenuCardProps) {
           </div>
           {menu.image && (
             <div className="ml-4">
-              <img
+              <Image
                 src={menu.image}
                 alt={menu.name}
+                width={64}
+                height={64}
                 className="w-16 h-16 object-cover rounded-lg"
               />
             </div>

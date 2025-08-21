@@ -13,12 +13,10 @@ export async function GET(request: Request) {
 
     if (list) {
       // Vérifier permissions livreur/admin
-      const { error, status, session } = await requireDeliveryOrAdminAPI(request)
+      const { error, status } = await requireDeliveryOrAdminAPI(request)
       if (error) {
         return NextResponse.json({ error }, { status: status || 403 })
       }
-
-      const currentUserId = session!.user.id
 
       const orders = await prisma.order.findMany({
         where: {
@@ -32,7 +30,7 @@ export async function GET(request: Request) {
             {
               OR: [
                 { status: 'ready' },
-                { AND: [{ status: 'delivering' }, { delivererId: currentUserId }] }
+                { status: 'delivering' }
               ]
             }
           ]
@@ -49,6 +47,13 @@ export async function GET(request: Request) {
           createdAt: true,
           pickupTime: true,
           delivererId: true,
+          deliverer: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            }
+          },
         },
         orderBy: {
           createdAt: 'asc'
