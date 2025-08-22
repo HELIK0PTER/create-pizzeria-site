@@ -50,11 +50,12 @@ export default function CartPage() {
     variantId: string | null | undefined,
     delta: number
   ) => {
+    const normalizedVariantId = variantId || null;
     const item = items.find(
-      (i) => i.productId === productId && i.variantId === variantId
+      (i) => i.productId === productId && i.variantId === normalizedVariantId
     );
     if (item) {
-      updateQuantity(productId, variantId, item.quantity + delta);
+      updateQuantity(productId, normalizedVariantId, item.quantity + delta, item.notes);
     }
   };
 
@@ -62,13 +63,13 @@ export default function CartPage() {
     router.push("/checkout");
   };
 
-  const toggleMenuExpansion = (menuId: string) => {
+  const toggleMenuExpansion = (uniqueKey: string) => {
     setExpandedMenus(prev => {
       const newSet = new Set(prev);
-      if (newSet.has(menuId)) {
-        newSet.delete(menuId);
+      if (newSet.has(uniqueKey)) {
+        newSet.delete(uniqueKey);
       } else {
-        newSet.add(menuId);
+        newSet.add(uniqueKey);
       }
       return newSet;
     });
@@ -120,7 +121,7 @@ export default function CartPage() {
                 const isPizza = item.product.category?.slug === "pizzas" || item.product.baseType !== null;
                 
                 return (
-                  <Card key={`${item.productId}-${item.variantId}`}>
+                  <Card key={`${item.productId}-${item.variantId || 'no-variant'}-${item.notes || 'no-notes'}`}>
                     <CardContent className="p-4">
                       <div className="flex items-start gap-4">
                         <div className="w-20 h-20 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -205,7 +206,8 @@ export default function CartPage() {
                                 onClick={() =>
                                   removeItem(
                                     item.productId,
-                                    item.variantId
+                                    item.variantId,
+                                    item.notes
                                   )
                                 }
                               >
@@ -223,7 +225,7 @@ export default function CartPage() {
               {/* Affichage des menus */}
               {menuItems.map((menuItem) => {
                 return (
-                  <Card key={`menu-${menuItem.id}`}>
+                  <Card key={`menu-${menuItem.uniqueKey}`}>
                     <CardContent className="p-4">
                       <div className="flex items-start gap-4">
                         <div className="w-20 h-20 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -260,25 +262,25 @@ export default function CartPage() {
 
                            {/* Bouton pour afficher/masquer les détails */}
                            <div className="mt-2">
-                             <Button
-                               variant="ghost"
-                               size="sm"
-                               onClick={() => toggleMenuExpansion(menuItem.id)}
-                               className="text-gray-600 hover:text-gray-800 p-0 h-auto"
-                             >
-                               <span className="text-sm">
-                                 {expandedMenus.has(menuItem.id) ? "Masquer les détails" : "Voir les détails"}
-                               </span>
-                               {expandedMenus.has(menuItem.id) ? (
-                                 <ChevronUp className="h-4 w-4 ml-1" />
-                               ) : (
-                                 <ChevronDown className="h-4 w-4 ml-1" />
-                               )}
-                             </Button>
+                                                           <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => toggleMenuExpansion(menuItem.uniqueKey)}
+                                className="text-gray-600 hover:text-gray-800 p-0 h-auto"
+                              >
+                                <span className="text-sm">
+                                  {expandedMenus.has(menuItem.uniqueKey) ? "Masquer les détails" : "Voir les détails"}
+                                </span>
+                                {expandedMenus.has(menuItem.uniqueKey) ? (
+                                  <ChevronUp className="h-4 w-4 ml-1" />
+                                ) : (
+                                  <ChevronDown className="h-4 w-4 ml-1" />
+                                )}
+                              </Button>
                            </div>
 
-                           {/* Détails des sélections (déroulable) */}
-                           {expandedMenus.has(menuItem.id) && (
+                                                       {/* Détails des sélections (déroulable) */}
+                            {expandedMenus.has(menuItem.uniqueKey) && (
                              <div className="mt-3 p-3 bg-gray-50 rounded-lg space-y-2">
                                {menuItem.selections.pizzas.length > 0 && (
                                  <div className="text-sm">
@@ -324,7 +326,7 @@ export default function CartPage() {
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => updateMenuQuantity(menuItem.id, menuItem.quantity - 1)}
+                                onClick={() => updateMenuQuantity(menuItem.uniqueKey, menuItem.quantity - 1)}
                                 disabled={menuItem.quantity <= 1}
                               >
                                 <Minus className="h-3 w-3" />
@@ -335,7 +337,7 @@ export default function CartPage() {
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => updateMenuQuantity(menuItem.id, menuItem.quantity + 1)}
+                                onClick={() => updateMenuQuantity(menuItem.uniqueKey, menuItem.quantity + 1)}
                               >
                                 <Plus className="h-3 w-3" />
                               </Button>
@@ -348,7 +350,7 @@ export default function CartPage() {
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                onClick={() => removeMenuItem(menuItem.id)}
+                                onClick={() => removeMenuItem(menuItem.uniqueKey)}
                               >
                                 <Trash2 className="h-4 w-4 text-red-600" />
                               </Button>

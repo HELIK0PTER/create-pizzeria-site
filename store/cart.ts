@@ -11,6 +11,7 @@ interface MenuItem {
   description?: string;
   image?: string;
   quantity: number;
+  uniqueKey: string; // Clé unique basée sur l'ID et les sélections
   selections: {
     pizzas: { productId: string; productName: string; variantId: string; quantity: number }[];
     drinks: { productId: string; productName: string; variantId: string; quantity: number }[];
@@ -62,18 +63,20 @@ interface CartStore {
     notes?: string
   ) => void;
   addMenuItem: (menuItem: MenuItem) => void;
-  removeItem: (productId: string, variantId?: string | null) => void;
-  removeMenuItem: (menuId: string) => void;
+  removeItem: (productId: string, variantId?: string | null, notes?: string | null) => void;
+  removeMenuItem: (uniqueKey: string) => void;
   updateQuantity: (
     productId: string,
     variantId: string | null | undefined,
-    quantity: number
+    quantity: number,
+    notes?: string | null
   ) => void;
-  updateMenuQuantity: (menuId: string, quantity: number) => void;
+  updateMenuQuantity: (uniqueKey: string, quantity: number) => void;
   updateNotes: (
     productId: string,
     variantId: string | null | undefined,
-    notes: string
+    notes: string,
+    oldNotes?: string | null
   ) => void;
   clearCart: () => void;
   setDeliveryMethod: (method: "delivery" | "pickup") => void;
@@ -157,9 +160,14 @@ export const useCart = create<CartStore>()(
 
       addItem: (product, variant, quantity = 1, notes) => {
         set((state) => {
+          const variantId = variant?.id || null;
+          const normalizedNotes = notes || null;
+          
           const existingItemIndex = state.items.findIndex(
             (item) =>
-              item.productId === product.id && item.variantId === variant?.id
+              item.productId === product.id && 
+              item.variantId === variantId &&
+              item.notes === normalizedNotes
           );
 
           if (existingItemIndex > -1) {
@@ -173,9 +181,9 @@ export const useCart = create<CartStore>()(
               ...state.items,
               {
                 productId: product.id,
-                variantId: variant?.id || null,
+                variantId: variantId,
                 quantity,
-                notes: notes || null,
+                notes: normalizedNotes,
                 product,
                 variant: variant || null,
               },
@@ -184,38 +192,59 @@ export const useCart = create<CartStore>()(
         });
       },
 
-      removeItem: (productId, variantId) => {
-        set((state) => ({
-          items: state.items.filter(
-            (item) =>
-              !(item.productId === productId && item.variantId === variantId)
-          ),
-        }));
+      removeItem: (productId, variantId, notes) => {
+        set((state) => {
+          const normalizedVariantId = variantId || null;
+          const normalizedNotes = notes || null;
+          
+          return {
+            items: state.items.filter(
+              (item) =>
+                !(item.productId === productId && 
+                  item.variantId === normalizedVariantId && 
+                  item.notes === normalizedNotes)
+            ),
+          };
+        });
       },
 
-      updateQuantity: (productId, variantId, quantity) => {
+      updateQuantity: (productId, variantId, quantity, notes) => {
         if (quantity <= 0) {
-          get().removeItem(productId, variantId);
+          get().removeItem(productId, variantId, notes);
           return;
         }
 
-        set((state) => ({
-          items: state.items.map((item) =>
-            item.productId === productId && item.variantId === variantId
-              ? { ...item, quantity }
-              : item
-          ),
-        }));
+        set((state) => {
+          const normalizedVariantId = variantId || null;
+          const normalizedNotes = notes || null;
+          
+          return {
+            items: state.items.map((item) =>
+              item.productId === productId && 
+              item.variantId === normalizedVariantId &&
+              item.notes === normalizedNotes
+                ? { ...item, quantity }
+                : item
+            ),
+          };
+        });
       },
 
-      updateNotes: (productId, variantId, notes) => {
-        set((state) => ({
-          items: state.items.map((item) =>
-            item.productId === productId && item.variantId === variantId
-              ? { ...item, notes }
-              : item
-          ),
-        }));
+      updateNotes: (productId, variantId, notes, oldNotes) => {
+        set((state) => {
+          const normalizedVariantId = variantId || null;
+          const normalizedOldNotes = oldNotes || null;
+          
+          return {
+            items: state.items.map((item) =>
+              item.productId === productId && 
+              item.variantId === normalizedVariantId &&
+              item.notes === normalizedOldNotes
+                ? { ...item, notes }
+                : item
+            ),
+          };
+        });
       },
 
              clearCart: () => set({ items: [], menuItems: [] }),
@@ -223,7 +252,7 @@ export const useCart = create<CartStore>()(
        addMenuItem: (menuItem) => {
          set((state) => {
            const existingMenuIndex = state.menuItems.findIndex(
-             (item) => item.id === menuItem.id
+             (item) => item.uniqueKey === menuItem.uniqueKey
            );
 
            if (existingMenuIndex > -1) {
@@ -238,21 +267,21 @@ export const useCart = create<CartStore>()(
          });
        },
 
-       removeMenuItem: (menuId) => {
+       removeMenuItem: (uniqueKey) => {
          set((state) => ({
-           menuItems: state.menuItems.filter((item) => item.id !== menuId),
+           menuItems: state.menuItems.filter((item) => item.uniqueKey !== uniqueKey),
          }));
        },
 
-       updateMenuQuantity: (menuId, quantity) => {
+       updateMenuQuantity: (uniqueKey, quantity) => {
          if (quantity <= 0) {
-           get().removeMenuItem(menuId);
+           get().removeMenuItem(uniqueKey);
            return;
          }
 
          set((state) => ({
            menuItems: state.menuItems.map((item) =>
-             item.id === menuId ? { ...item, quantity } : item
+             item.uniqueKey === uniqueKey ? { ...item, quantity } : item
            ),
          }));
        },
@@ -414,5 +443,17 @@ export const getLastOrder = () => {
   } catch (error) {
     console.error("Erreur lors de la récupération de la dernière commande:", error);
     return null;
+  }
+};
+
+// Fonction pour vider complètement le localStorage du panier (pour debug)
+export const clearCartStorage = () => {
+  try {
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("pizza-cart");
+      console.log("Panier localStorage vidé");
+    }
+  } catch (error) {
+    console.error("Erreur lors du vidage du localStorage:", error);
   }
 };

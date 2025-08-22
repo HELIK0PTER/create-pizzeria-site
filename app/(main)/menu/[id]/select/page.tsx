@@ -125,6 +125,11 @@ export default function MenuSelectionPage({ params }: { params: Promise<{ id: st
         const newSelections = currentSelections.filter(s => s.productId !== productId)
         return { ...prev, [type]: newSelections }
       } else {
+        // Vérifier si on peut ajouter plus de produits
+        if (!canAddMoreProducts(type)) {
+          return prev // Ne pas ajouter si la limite est atteinte
+        }
+        
         // Ajouter le produit
         const newSelection: ProductSelection = {
           productId,
@@ -158,6 +163,25 @@ export default function MenuSelectionPage({ params }: { params: Promise<{ id: st
 
   const isProductSelected = (type: 'pizzas' | 'drinks' | 'desserts', productId: string) => {
     return selections[type].some(s => s.productId === productId)
+  }
+
+  const canAddMoreProducts = (type: 'pizzas' | 'drinks' | 'desserts') => {
+    if (!menu) return false
+    const config = getMenuConfiguration(menu)
+    const currentCount = getSelectionCount(type)
+    return currentCount < config[type].maxQuantity
+  }
+
+  const getMaxQuantityMessage = (type: 'pizzas' | 'drinks' | 'desserts') => {
+    if (!menu) return ''
+    const config = getMenuConfiguration(menu)
+    const currentCount = getSelectionCount(type)
+    const maxCount = config[type].maxQuantity
+    
+    if (currentCount >= maxCount) {
+      return `Limite de ${maxCount} ${type === 'pizzas' ? 'pizza' : type === 'drinks' ? 'boisson' : 'dessert'}${maxCount > 1 ? 's' : ''} atteinte`
+    }
+    return ''
   }
 
   const getSelectionCount = (type: 'pizzas' | 'drinks' | 'desserts') => {
@@ -201,7 +225,7 @@ export default function MenuSelectionPage({ params }: { params: Promise<{ id: st
     // Vérifier les pizzas
     if (config.pizzas.allowChoice) {
       const pizzaCount = getSelectionCount('pizzas')
-      if (pizzaCount < config.pizzas.minQuantity) {
+      if (pizzaCount < config.pizzas.minQuantity || pizzaCount > config.pizzas.maxQuantity) {
         return false
       }
     } else if (config.pizzas.products.length > 0) {
@@ -214,7 +238,7 @@ export default function MenuSelectionPage({ params }: { params: Promise<{ id: st
     // Vérifier les boissons
     if (config.drinks.allowChoice) {
       const drinkCount = getSelectionCount('drinks')
-      if (drinkCount < config.drinks.minQuantity) {
+      if (drinkCount < config.drinks.minQuantity || drinkCount > config.drinks.maxQuantity) {
         return false
       }
     } else if (config.drinks.products.length > 0) {
@@ -226,7 +250,7 @@ export default function MenuSelectionPage({ params }: { params: Promise<{ id: st
     // Vérifier les desserts
     if (config.desserts.allowChoice) {
       const dessertCount = getSelectionCount('desserts')
-      if (dessertCount < config.desserts.minQuantity) {
+      if (dessertCount < config.desserts.minQuantity || dessertCount > config.desserts.maxQuantity) {
         return false
       }
     } else if (config.desserts.products.length > 0) {
@@ -282,6 +306,7 @@ export default function MenuSelectionPage({ params }: { params: Promise<{ id: st
       description: menu.description,
       image: menu.image || undefined,
       quantity: 1,
+      uniqueKey: `${menu.id}-${JSON.stringify(menuSelections)}`,
       selections: menuSelections
     }
 
@@ -381,6 +406,11 @@ export default function MenuSelectionPage({ params }: { params: Promise<{ id: st
                       : 'Produits fixes inclus'
                     }
                   </p>
+                  {getMaxQuantityMessage('pizzas') && (
+                    <p className="text-sm text-red-600 mt-1">
+                      {getMaxQuantityMessage('pizzas')}
+                    </p>
+                  )}
                 </div>
               )}
 
@@ -400,6 +430,11 @@ export default function MenuSelectionPage({ params }: { params: Promise<{ id: st
                       : 'Produits fixes inclus'
                     }
                   </p>
+                  {getMaxQuantityMessage('drinks') && (
+                    <p className="text-sm text-red-600 mt-1">
+                      {getMaxQuantityMessage('drinks')}
+                    </p>
+                  )}
                 </div>
               )}
 
@@ -419,6 +454,11 @@ export default function MenuSelectionPage({ params }: { params: Promise<{ id: st
                       : 'Produits fixes inclus'
                     }
                   </p>
+                  {getMaxQuantityMessage('desserts') && (
+                    <p className="text-sm text-red-600 mt-1">
+                      {getMaxQuantityMessage('desserts')}
+                    </p>
+                  )}
                 </div>
               )}
 
