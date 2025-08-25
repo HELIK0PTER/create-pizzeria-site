@@ -123,6 +123,7 @@ export default function MenuPage() {
       product.ingredients?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       product.baseType?.toLowerCase().includes(searchTerm.toLowerCase());
 
+    // Afficher tous les produits (disponibles et indisponibles) mais les marquer correctement
     return matchesCategory && matchesSearch;
   });
 
@@ -231,8 +232,18 @@ export default function MenuPage() {
               {/* Affichage des résultats de recherche */}
               {searchTerm && (
                 <div className="mb-4 text-sm text-gray-600">
-                  {filteredProducts.length} résultat(s) pour &quot;{searchTerm}
-                  &quot;
+                  {filteredProducts.length} résultat(s) pour &ldquo;{searchTerm}
+                  &rdquo;
+                </div>
+              )}
+
+              {/* Message informatif sur les produits indisponibles */}
+              {filteredProducts.filter(p => !p.isAvailable).length > 0 && (
+                <div className="mb-4 p-3 bg-orange-50 border border-orange-200 rounded-lg">
+                  <p className="text-sm text-orange-800">
+                    <span className="font-medium">Note :</span> Certains produits sont actuellement indisponibles et affichent un badge &ldquo;Indisponible&rdquo;. 
+                    Ces produits ne peuvent pas être ajoutés au panier.
+                  </p>
                 </div>
               )}
 
@@ -257,7 +268,7 @@ export default function MenuPage() {
                 <div className="text-center py-12">
                   <p className="text-gray-500 text-lg">
                     {searchTerm
-                      ? `Aucun produit trouvé pour "${searchTerm}"`
+                      ? `Aucun produit trouvé pour &ldquo;{searchTerm}&rdquo;`
                       : "Aucun produit trouvé dans cette catégorie."}
                   </p>
                   {searchTerm && (
@@ -304,7 +315,7 @@ export default function MenuPage() {
                 <div className="text-center py-12">
                   <p className="text-gray-500 text-lg">
                     {searchTerm
-                      ? `Aucun menu trouvé pour "${searchTerm}"`
+                      ? `Aucun menu trouvé pour &ldquo;{searchTerm}&rdquo;`
                       : "Aucun menu disponible pour le moment."}
                   </p>
                   {searchTerm && (

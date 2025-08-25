@@ -8,6 +8,9 @@ async function main() {
   // Nettoyer les données existantes
   await prisma.orderItem.deleteMany();
   await prisma.order.deleteMany();
+  await prisma.menuProduct.deleteMany();
+  await prisma.menu.deleteMany();
+  await prisma.favorite.deleteMany();
   await prisma.variant.deleteMany();
   await prisma.product.deleteMany();
   await prisma.category.deleteMany();

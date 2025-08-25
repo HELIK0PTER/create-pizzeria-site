@@ -147,11 +147,11 @@ export default function AdminDashboard() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
-              <Pizza className="h-8 w-8 text-orange-600" />
+            <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+              <Pizza className="h-6 w-6 text-orange-600" />
               Dashboard {settings?.name || variables.title}
             </h1>
-            <p className="text-gray-600 mt-1">
+            <p className="text-gray-600 mt-1 text-sm">
               Vue d&apos;ensemble de votre pizzeria
             </p>
           </div>
@@ -166,7 +166,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Statistiques */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">

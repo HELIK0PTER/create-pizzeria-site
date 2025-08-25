@@ -12,7 +12,10 @@ import {
   Package,
   X,
   CheckCircle,
-  Utensils,
+
+  ChefHat,
+  Sparkles,
+  TrendingUp,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,6 +40,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { formatPrice } from "@/lib/utils";
 import { Prisma, Product, Category } from "@prisma/client";
 import Image from "next/image";
+
 type ProductWithRelations = Prisma.ProductGetPayload<{
   include: {
     category: true;
@@ -44,13 +48,36 @@ type ProductWithRelations = Prisma.ProductGetPayload<{
   };
 }>;
 
+type MenuWithProducts = {
+  id: string;
+  name: string;
+  image: string | null;
+  price: number;
+  description: string | null;
+  isActive?: boolean; // Optionnel car pas dans le schéma actuel
+  createdAt: string;
+  updatedAt: string;
+  menuProducts: Array<{
+    id: string;
+    type: string;
+    allowChoice: boolean;
+    minQuantity: number;
+    maxQuantity: number;
+    product: Product & {
+      category: Category;
+    };
+  }>;
+};
+
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<ProductWithRelations[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [menus, setMenus] = useState<MenuWithProducts[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [error, setError] = useState("");
+  const [activeTab, setActiveTab] = useState<"products" | "menus">("products");
 
   useEffect(() => {
     fetchData();
@@ -59,18 +86,20 @@ export default function AdminProductsPage() {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [productsRes, categoriesRes] = await Promise.all([
+      const [productsRes, categoriesRes, menusRes] = await Promise.all([
         fetch("/api/products"),
         fetch("/api/categories"),
+        fetch("/api/menus"),
       ]);
 
-      if (!productsRes.ok || !categoriesRes.ok) {
+      if (!productsRes.ok || !categoriesRes.ok || !menusRes.ok) {
         throw new Error("Erreur lors du chargement");
       }
 
-      const [productsData, categoriesData] = await Promise.all([
+      const [productsData, categoriesData, menusData] = await Promise.all([
         productsRes.json(),
         categoriesRes.json(),
+        menusRes.json(),
       ]);
 
       // Trier les produits par ordre de catégorie
@@ -86,6 +115,7 @@ export default function AdminProductsPage() {
 
       setProducts(orderedProducts);
       setCategories(categoriesData);
+      setMenus(menusData);
     } catch (err) {
       setError("Erreur lors du chargement des données");
       console.error(err);
@@ -178,6 +208,17 @@ export default function AdminProductsPage() {
     return matchesSearch && matchesCategory;
   });
 
+  const filteredMenus = menus.filter((menu) => {
+    const matchesSearch =
+      menu.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      menu.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      menu.menuProducts.some(mp => 
+        mp.product.name.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+
+    return matchesSearch;
+  });
+
   const getVariantRange = (product: ProductWithRelations) => {
     if (!product.variants || product.variants.length === 0) {
       return formatPrice(product.price);
@@ -199,16 +240,46 @@ export default function AdminProductsPage() {
     e.stopPropagation();
   };
 
+  const handleDeleteMenu = async (menuId: string) => {
+    if (!confirm("Êtes-vous sûr de vouloir supprimer ce menu ?")) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/menus/${menuId}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        throw new Error("Erreur lors de la suppression");
+      }
+
+      // Supprimer le menu de la liste locale
+      setMenus(menus.filter((m) => m.id !== menuId));
+      setError("");
+    } catch (err) {
+      setError("Erreur lors de la suppression du menu");
+      console.error(err);
+    }
+  };
+
+  const getProductCounts = (menu: MenuWithProducts) => {
+    const pizzas = menu.menuProducts.filter(mp => mp.type === 'pizza').length;
+    const drinks = menu.menuProducts.filter(mp => mp.type === 'drink').length;
+    const desserts = menu.menuProducts.filter(mp => mp.type === 'dessert').length;
+    return { pizzas, drinks, desserts };
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">
-            Gestion des Produits
+          <h1 className="text-2xl font-bold text-gray-900">
+            Gestion des Produits & Menus
           </h1>
-          <p className="text-gray-600 mt-2">
-            Gérez votre catalogue de produits et leurs informations
+          <p className="text-gray-600 mt-1 text-sm">
+            Gérez votre catalogue de produits et menus
           </p>
         </div>
         <div className="flex gap-3">
@@ -220,56 +291,154 @@ export default function AdminProductsPage() {
           </Button>
           <Button asChild variant="outline" className="border-orange-500 text-orange-600 hover:bg-orange-50">
             <Link href="/admin/menus/add">
-              <Utensils className="h-4 w-4 mr-2" />
+              <ChefHat className="h-4 w-4 mr-2" />
               Créer un Menu
             </Link>
           </Button>
         </div>
       </div>
 
-      {/* Stats rapides */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <Package className="h-8 w-8 text-blue-600" />
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">
-                  Total Produits
-                </p>
-                <p className="text-2xl font-bold text-gray-900">
+      {/* Onglets */}
+      <div className="mb-6">
+        <div className="border-b border-gray-200">
+          <nav className="-mb-px flex space-x-8" aria-label="Tabs">
+            <button
+              onClick={() => setActiveTab("products")}
+              className={`
+                group relative min-w-0 flex-1 overflow-hidden py-4 px-1 text-center text-sm font-medium hover:text-orange-600 focus:z-10 focus:outline-none
+                ${activeTab === "products"
+                  ? "border-b-2 border-orange-500 text-orange-600"
+                  : "border-b-2 border-transparent text-gray-500 hover:text-gray-700"
+                }
+              `}
+            >
+              <div className="flex items-center justify-center gap-2">
+                <Package className={`h-5 w-5 transition-colors ${activeTab === "products" ? "text-orange-600" : "text-gray-400"}`} />
+                <span>Produits</span>
+                <Badge variant="secondary" className="ml-2 bg-gray-100 text-gray-600">
                   {products.length}
-                </p>
+                </Badge>
               </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <Eye className="h-8 w-8 text-green-600" />
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Disponibles</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {products.filter((p) => p.isAvailable).length}
-                </p>
+              {activeTab === "products" && (
+                <div className="absolute inset-x-0 bottom-0 h-0.5 bg-orange-500" />
+              )}
+            </button>
+            <button
+              onClick={() => setActiveTab("menus")}
+              className={`
+                group relative min-w-0 flex-1 overflow-hidden py-4 px-1 text-center text-sm font-medium hover:text-orange-600 focus:z-10 focus:outline-none
+                ${activeTab === "menus"
+                  ? "border-b-2 border-orange-500 text-orange-600"
+                  : "border-b-2 border-transparent text-gray-500 hover:text-gray-700"
+                }
+              `}
+            >
+              <div className="flex items-center justify-center gap-2">
+                <ChefHat className={`h-5 w-5 transition-colors ${activeTab === "menus" ? "text-orange-600" : "text-gray-400"}`} />
+                <span>Menus</span>
+                                 <Badge variant="secondary" className="ml-2 bg-gray-100 text-gray-600">
+                   {menus.length}
+                 </Badge>
               </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <Filter className="h-8 w-8 text-purple-600" />
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Catégories</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {categories.length}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+              {activeTab === "menus" && (
+                <div className="absolute inset-x-0 bottom-0 h-0.5 bg-orange-500" />
+              )}
+            </button>
+          </nav>
+        </div>
+      </div>
+
+      {/* Stats rapides */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        {activeTab === "products" ? (
+          <>
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center">
+                  <Package className="h-6 w-6 text-blue-600" />
+                  <div className="ml-3">
+                    <p className="text-xs font-medium text-gray-600">
+                      Total Produits
+                    </p>
+                    <p className="text-xl font-bold text-gray-900">
+                      {products.length}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center">
+                  <Eye className="h-6 w-6 text-green-600" />
+                  <div className="ml-3">
+                    <p className="text-xs font-medium text-gray-600">Disponibles</p>
+                    <p className="text-xl font-bold text-gray-900">
+                      {products.filter((p) => p.isAvailable).length}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center">
+                  <Filter className="h-6 w-6 text-purple-600" />
+                  <div className="ml-3">
+                    <p className="text-xs font-medium text-gray-600">Catégories</p>
+                    <p className="text-xl font-bold text-gray-900">
+                      {categories.length}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </>
+        ) : (
+          <>
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center">
+                  <ChefHat className="h-6 w-6 text-orange-600" />
+                                     <div className="ml-3">
+                     <p className="text-xs font-medium text-gray-600">
+                       Total Menus
+                     </p>
+                     <p className="text-xl font-bold text-gray-900">
+                       {menus.length}
+                     </p>
+                   </div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center">
+                  <Sparkles className="h-6 w-6 text-yellow-600" />
+                                     <div className="ml-3">
+                     <p className="text-xs font-medium text-gray-600">Actifs</p>
+                     <p className="text-xl font-bold text-gray-900">
+                       {menus.filter(m => m.isActive !== false).length}
+                     </p>
+                   </div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center">
+                  <TrendingUp className="h-6 w-6 text-green-600" />
+                                     <div className="ml-3">
+                     <p className="text-xs font-medium text-gray-600">Populaires</p>
+                     <p className="text-xl font-bold text-gray-900">
+                       {menus.filter(m => m.menuProducts.length > 2).length}
+                     </p>
+                   </div>
+                </div>
+              </CardContent>
+            </Card>
+          </>
+        )}
       </div>
 
       {error && (
@@ -279,12 +448,12 @@ export default function AdminProductsPage() {
       )}
 
       {/* Filtres et recherche */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle>Filtres</CardTitle>
+      <Card className="mb-4">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg">Filtres</CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="flex flex-col sm:flex-row gap-4">
+        <CardContent className="pt-0">
+          <div className="flex flex-col sm:flex-row gap-3">
             <div className="flex-1">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
@@ -321,10 +490,12 @@ export default function AdminProductsPage() {
         </CardContent>
       </Card>
 
-      {/* Table des produits */}
+      {/* Table des produits/menus */}
       <Card>
         <CardHeader>
-          <CardTitle>Produits ({filteredProducts.length})</CardTitle>
+                     <CardTitle>
+             {activeTab === "products" ? `Produits (${filteredProducts.length})` : `Menus (${filteredMenus.length})`}
+           </CardTitle>
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -332,7 +503,7 @@ export default function AdminProductsPage() {
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600"></div>
               <span className="ml-3 text-gray-600">Chargement...</span>
             </div>
-          ) : (
+          ) : activeTab === "products" ? (
             <div className="rounded-md border">
               <div className="h-[500px] overflow-hidden">
                 <div className="sticky top-0 bg-white z-50">
@@ -506,6 +677,165 @@ export default function AdminProductsPage() {
                 </div>
               </div>
             </div>
+          ) : (
+                         // Vue des menus
+             <div className="rounded-md border">
+               <div className="h-[500px] overflow-hidden">
+                 <div className="sticky top-0 bg-white z-50">
+                   <table className="w-full text-sm">
+                     <thead>
+                                               <tr className="border-b">
+                          <th className="h-12 px-4 text-left align-middle w-[300px]">Menu</th>
+                          <th className="hidden md:table-cell h-12 px-4 text-left align-middle w-[150px]">Type</th>
+                          <th className="hidden md:table-cell h-12 px-4 text-left align-middle w-[100px]">Prix</th>
+                          <th className="h-12 px-4 text-right align-middle w-[100px]">Actions</th>
+                        </tr>
+                     </thead>
+                   </table>
+                 </div>
+                 <div className="overflow-y-auto h-[calc(500px-48px)]">
+                   <table className="w-full text-sm">
+                     <tbody>
+                       {filteredMenus.length === 0 ? (
+                         <tr>
+                           <td colSpan={4} className="text-center py-12">
+                             <div className="text-gray-500">
+                               <ChefHat className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                               <p className="text-lg font-medium">
+                                 Aucun menu trouvé
+                               </p>
+                               <p className="text-sm mb-4">
+                                 {searchTerm
+                                   ? "Essayez de modifier vos filtres"
+                                   : "Créez votre premier menu pour commencer"}
+                               </p>
+                               {!searchTerm && (
+                                 <Button asChild>
+                                   <Link href="/admin/menus/add">
+                                     <ChefHat className="h-4 w-4 mr-2" />
+                                     Créer un menu
+                                   </Link>
+                                 </Button>
+                               )}
+                             </div>
+                           </td>
+                         </tr>
+                       ) : (
+                         filteredMenus.map((menu) => {
+                           const productCounts = getProductCounts(menu);
+                           return (
+                             <tr
+                               key={menu.id}
+                               className="hover:bg-gray-50 cursor-pointer group border-b"
+                               tabIndex={0}
+                               onClick={() => {
+                                 window.location.href = `/admin/menus/${menu.id}`;
+                               }}
+                               onKeyDown={(e) => {
+                                 if (e.key === "Enter" || e.key === " ") {
+                                   window.location.href = `/admin/menus/${menu.id}`;
+                                 }
+                               }}
+                             >
+                               <td className="p-4 align-middle w-[300px]">
+                                 <div className="flex items-center space-x-3">
+                                   <div className="flex-shrink-0">
+                                     {menu.image ? (
+                                       <Image
+                                         src={menu.image}
+                                         alt={menu.name}
+                                         width={100}
+                                         height={100}
+                                         className="h-12 w-12 rounded-lg object-cover"
+                                       />
+                                     ) : (
+                                       <div className="h-12 w-12 rounded-lg bg-orange-100 flex items-center justify-center">
+                                         <ChefHat className="h-6 w-6 text-orange-600" />
+                                       </div>
+                                     )}
+                                   </div>
+                                   <div>
+                                     <p className="font-medium text-gray-900">
+                                       {menu.name}
+                                     </p>
+                                     {menu.description && (
+                                       <p className="text-xs text-gray-500 mt-1">
+                                         {menu.description}
+                                       </p>
+                                     )}
+                                   </div>
+                                 </div>
+                               </td>
+                               <td className="hidden md:table-cell p-4 align-middle w-[150px]">
+                                 <div className="flex flex-wrap gap-1">
+                                   {productCounts.pizzas > 0 && (
+                                     <Badge variant="secondary" className="text-xs">
+                                       {productCounts.pizzas} Pizza{productCounts.pizzas > 1 ? 's' : ''}
+                                     </Badge>
+                                   )}
+                                   {productCounts.drinks > 0 && (
+                                     <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-700">
+                                       {productCounts.drinks} Boisson{productCounts.drinks > 1 ? 's' : ''}
+                                     </Badge>
+                                   )}
+                                   {productCounts.desserts > 0 && (
+                                     <Badge variant="secondary" className="text-xs bg-yellow-100 text-yellow-700">
+                                       {productCounts.desserts} Dessert{productCounts.desserts > 1 ? 's' : ''}
+                                     </Badge>
+                                   )}
+                                 </div>
+                               </td>
+                                                                                               <td className="hidden md:table-cell p-4 align-middle w-[100px] font-medium text-xs">
+                                  {formatPrice(menu.price)}
+                                </td>
+                               <td
+                                 className="p-4 align-middle w-[100px] text-right"
+                                 onClick={stopRowClick}
+                                 onKeyDown={stopRowClick}
+                               >
+                                 <DropdownMenu>
+                                   <DropdownMenuTrigger asChild>
+                                     <Button variant="ghost" className="h-8 w-8 p-0">
+                                       <MoreHorizontal className="h-4 w-4" />
+                                     </Button>
+                                   </DropdownMenuTrigger>
+                                   <DropdownMenuContent align="end">
+                                     <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                     <DropdownMenuItem asChild>
+                                       <Link href={`/admin/menus/${menu.id}`}>
+                                         <Eye className="h-4 w-4 mr-2" />
+                                         Voir les détails
+                                       </Link>
+                                     </DropdownMenuItem>
+                                                                           <DropdownMenuItem asChild>
+                                        <Link href={`/admin/menus/${menu.id}`}>
+                                          <Pencil className="h-4 w-4 mr-2" />
+                                          Modifier
+                                        </Link>
+                                      </DropdownMenuItem>
+                                     <DropdownMenuSeparator />
+                                     <DropdownMenuItem
+                                       className="text-red-600"
+                                       onClick={(e) => {
+                                         stopRowClick(e);
+                                         handleDeleteMenu(menu.id);
+                                       }}
+                                     >
+                                       <Trash2 className="h-4 w-4 mr-2" />
+                                       Supprimer
+                                     </DropdownMenuItem>
+                                   </DropdownMenuContent>
+                                 </DropdownMenu>
+                               </td>
+                             </tr>
+                           );
+                         })
+                       )}
+                     </tbody>
+                   </table>
+                 </div>
+               </div>
+             </div>
           )}
         </CardContent>
       </Card>

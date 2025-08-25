@@ -519,28 +519,43 @@ export default function MenuSelectionPage({ params }: { params: Promise<{ id: st
                       const quantity = getProductQuantity('pizzas', mp.productId)
                      
                      return (
-                       <div 
-                         key={mp.id} 
-                         className={`p-4 border-2 rounded-lg transition-all duration-200 ${
-                           isSelected 
-                             ? 'border-orange-500 bg-orange-50' 
-                             : 'border-gray-200 hover:border-orange-300'
-                         }`}
-                       >
-                         {/* En-tête du produit */}
-                         <div className="flex items-start gap-3 mb-3">
-                           <Checkbox
-                             id={`pizza-${mp.productId}`}
-                             checked={isSelected}
-                             onCheckedChange={() => toggleProductSelection('pizzas', mp.productId, mp.product.variants[0]?.id || '')}
-                             disabled={config.pizzas.allowChoice && getSelectionCount('pizzas') >= config.pizzas.maxQuantity && !isSelected}
-                             className="mt-1"
-                           />
-                           <div className="flex-1">
-                             <Label htmlFor={`pizza-${mp.productId}`} className="font-semibold text-lg cursor-pointer">
-                               {mp.product.name}
-                             </Label>
-                             <p className="text-sm text-gray-600 mt-1">{formatPrice(mp.product.price)}</p>
+                                                <div 
+                           key={mp.id} 
+                           className={`p-4 border-2 rounded-lg transition-all duration-200 relative ${
+                             isSelected 
+                               ? 'border-orange-500 bg-orange-50' 
+                               : 'border-gray-200 hover:border-orange-300'
+                           } ${!mp.product.isAvailable ? 'opacity-60' : ''}`}
+                         >
+                           {/* Badge Indisponible */}
+                           {!mp.product.isAvailable && (
+                             <div className="absolute inset-0 flex items-center justify-center z-10">
+                               <span className="text-white font-semibold text-lg px-4 py-2 rounded-md bg-orange-600 shadow-lg">
+                                 Indisponible
+                               </span>
+                             </div>
+                           )}
+                           
+                           {/* En-tête du produit */}
+                           <div className="flex items-start gap-3 mb-3">
+                             <Checkbox
+                               id={`pizza-${mp.productId}`}
+                               checked={isSelected}
+                               onCheckedChange={() => toggleProductSelection('pizzas', mp.productId, mp.product.variants[0]?.id || '')}
+                               disabled={
+                                 !mp.product.isAvailable || 
+                                 (config.pizzas.allowChoice && getSelectionCount('pizzas') >= config.pizzas.maxQuantity && !isSelected)
+                               }
+                               className="mt-1"
+                             />
+                             <div className="flex-1">
+                               <Label 
+                                 htmlFor={`pizza-${mp.productId}`} 
+                                 className={`font-semibold text-lg ${!mp.product.isAvailable ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+                               >
+                                 {mp.product.name}
+                               </Label>
+                               <p className="text-sm text-gray-600 mt-1">{formatPrice(mp.product.price)}</p>
                              {mp.product.variants.length > 0 && (
                                <div className="mt-2">
                                  <Select
@@ -629,23 +644,38 @@ export default function MenuSelectionPage({ params }: { params: Promise<{ id: st
                      return (
                        <div 
                          key={mp.id} 
-                         className={`p-4 border-2 rounded-lg transition-all duration-200 ${
+                         className={`p-4 border-2 rounded-lg transition-all duration-200 relative ${
                            isSelected 
                              ? 'border-blue-500 bg-blue-50' 
                              : 'border-gray-200 hover:border-blue-300'
-                         }`}
+                         } ${!mp.product.isAvailable ? 'opacity-60' : ''}`}
                        >
+                         {/* Badge Indisponible */}
+                         {!mp.product.isAvailable && (
+                           <div className="absolute inset-0 flex items-center justify-center z-10">
+                             <span className="text-white font-semibold text-lg px-4 py-2 rounded-md bg-orange-600 shadow-lg">
+                               Indisponible
+                             </span>
+                           </div>
+                         )}
+                         
                          {/* En-tête du produit */}
                          <div className="flex items-start gap-3 mb-3">
                            <Checkbox
                              id={`drink-${mp.productId}`}
                              checked={isSelected}
                              onCheckedChange={() => toggleProductSelection('drinks', mp.productId, mp.product.variants[0]?.id || '')}
-                             disabled={config.drinks.allowChoice && getSelectionCount('drinks') >= config.drinks.maxQuantity && !isSelected}
+                             disabled={
+                               !mp.product.isAvailable || 
+                               (config.drinks.allowChoice && getSelectionCount('drinks') >= config.drinks.maxQuantity && !isSelected)
+                             }
                              className="mt-1"
                            />
                            <div className="flex-1">
-                             <Label htmlFor={`drink-${mp.productId}`} className="font-semibold text-lg cursor-pointer">
+                             <Label 
+                               htmlFor={`drink-${mp.productId}`} 
+                               className={`font-semibold text-lg ${!mp.product.isAvailable ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+                             >
                                {mp.product.name}
                              </Label>
                              <p className="text-sm text-gray-600 mt-1">{formatPrice(mp.product.price)}</p>
@@ -737,23 +767,38 @@ export default function MenuSelectionPage({ params }: { params: Promise<{ id: st
                      return (
                        <div 
                          key={mp.id} 
-                         className={`p-4 border-2 rounded-lg transition-all duration-200 ${
+                         className={`p-4 border-2 rounded-lg transition-all duration-200 relative ${
                            isSelected 
                              ? 'border-purple-500 bg-purple-50' 
                              : 'border-gray-200 hover:border-purple-300'
-                         }`}
+                         } ${!mp.product.isAvailable ? 'opacity-60' : ''}`}
                        >
+                         {/* Badge Indisponible */}
+                         {!mp.product.isAvailable && (
+                           <div className="absolute inset-0 flex items-center justify-center z-10">
+                             <span className="text-white font-semibold text-lg px-4 py-2 rounded-md bg-orange-600 shadow-lg">
+                               Indisponible
+                             </span>
+                           </div>
+                         )}
+                         
                          {/* En-tête du produit */}
                          <div className="flex items-start gap-3 mb-3">
                            <Checkbox
                              id={`dessert-${mp.productId}`}
                              checked={isSelected}
                              onCheckedChange={() => toggleProductSelection('desserts', mp.productId, mp.product.variants[0]?.id || '')}
-                             disabled={config.desserts.allowChoice && getSelectionCount('desserts') >= config.desserts.maxQuantity && !isSelected}
+                             disabled={
+                               !mp.product.isAvailable || 
+                               (config.desserts.allowChoice && getSelectionCount('desserts') >= config.desserts.maxQuantity && !isSelected)
+                             }
                              className="mt-1"
                            />
                            <div className="flex-1">
-                             <Label htmlFor={`dessert-${mp.productId}`} className="font-semibold text-lg cursor-pointer">
+                             <Label 
+                               htmlFor={`dessert-${mp.productId}`} 
+                               className={`font-semibold text-lg ${!mp.product.isAvailable ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+                             >
                                {mp.product.name}
                              </Label>
                              <p className="text-sm text-gray-600 mt-1">{formatPrice(mp.product.price)}</p>

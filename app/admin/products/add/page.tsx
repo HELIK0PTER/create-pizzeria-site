@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+
 import { ImageUpload } from '@/components/ui/image-upload'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Loader2, Save, ArrowLeft } from 'lucide-react'
@@ -33,7 +33,7 @@ export default function AddProductPage() {
     slug: '',
     description: '',
     image: '',
-    categoryId: '',
+    categoryIds: [] as string[],
     price: '',
     ingredients: '',
     allergens: '',
@@ -92,8 +92,8 @@ export default function AddProductPage() {
       return
     }
 
-    if (!formData.categoryId) {
-      setError('Veuillez sélectionner une catégorie')
+    if (formData.categoryIds.length === 0) {
+      setError('Veuillez sélectionner au moins une catégorie')
       setIsLoading(false)
       return
     }
@@ -165,6 +165,16 @@ export default function AddProductPage() {
         </Alert>
       )}
 
+      {/* Note sur les catégories */}
+      <Alert className="mb-6 bg-blue-50 text-blue-700 border-blue-200">
+        <AlertDescription>
+          <strong>💡 Organisation des produits :</strong> Vous pouvez sélectionner plusieurs catégories pour un produit. La première catégorie sélectionnée sera utilisée comme catégorie principale. 
+          <Link href="/admin/categories" className="text-blue-600 hover:text-blue-800 underline ml-1">
+            Gérer les catégories →
+          </Link>
+        </AlertDescription>
+      </Alert>
+
       <form onSubmit={handleSubmit} className="space-y-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Informations générales */}
@@ -208,24 +218,61 @@ export default function AddProductPage() {
               </div>
 
               <div>
-                <Label htmlFor="category">Catégorie *</Label>
-                <Select
-                  value={formData.categoryId}
-                  onValueChange={(value) => setFormData(prev => ({...prev, categoryId: value}))}
-                  required
-                  disabled={loadingCategories}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder={loadingCategories ? "Chargement..." : "Sélectionner une catégorie"} />
-                  </SelectTrigger>
-                  <SelectContent>
+                <Label htmlFor="categories">Catégories *</Label>
+                {categories.length === 0 ? (
+                  <div className="space-y-2">
+                    <div className="p-3 border border-orange-200 bg-orange-50 rounded-md">
+                      <p className="text-sm text-orange-800">
+                        Aucune catégorie disponible. Vous devez créer au moins une catégorie avant d&apos;ajouter un produit.
+                      </p>
+                    </div>
+                    <Button type="button" variant="outline" asChild className="w-full">
+                      <Link href="/admin/categories">
+                        Créer une catégorie
+                      </Link>
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-3 max-h-48 overflow-y-auto border rounded-md p-3">
                     {categories.map((category) => (
-                      <SelectItem key={category.id} value={category.id}>
-                        {category.name}
-                      </SelectItem>
+                      <div key={category.id} className="flex items-center space-x-3">
+                        <input
+                          type="checkbox"
+                          id={`category-${category.id}`}
+                          checked={formData.categoryIds.includes(category.id)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setFormData(prev => ({
+                                ...prev,
+                                categoryIds: [...prev.categoryIds, category.id]
+                              }))
+                            } else {
+                              setFormData(prev => ({
+                                ...prev,
+                                categoryIds: prev.categoryIds.filter(id => id !== category.id)
+                              }))
+                            }
+                          }}
+                          className="rounded border-gray-300 text-orange-600 focus:ring-orange-500"
+                        />
+                        <label 
+                          htmlFor={`category-${category.id}`}
+                          className="text-sm font-medium text-gray-700 cursor-pointer flex-1"
+                        >
+                          {category.name}
+                        </label>
+                      </div>
                     ))}
-                  </SelectContent>
-                </Select>
+                  </div>
+                )}
+                <p className="text-xs text-gray-500 mt-1">
+                  Sélectionnez une ou plusieurs catégories pour organiser votre produit.
+                </p>
+                {formData.categoryIds.length > 0 && (
+                  <p className="text-xs text-green-600 mt-1">
+                    ✓ {formData.categoryIds.length} catégorie(s) sélectionnée(s)
+                  </p>
+                )}
               </div>
 
               <div>
@@ -261,7 +308,7 @@ export default function AddProductPage() {
                   id="ingredients"
                   value={formData.ingredients}
                   onChange={(e) => setFormData(prev => ({...prev, ingredients: e.target.value}))}
-                  placeholder="Sauce tomate, mozzarella, basilic frais, huile d'olive"
+                  placeholder="Sauce tomate, mozzarella, basilic frais, huile d&apos;olive"
                   rows={2}
                 />
               </div>
@@ -284,11 +331,19 @@ export default function AddProductPage() {
           <Button type="button" variant="outline" onClick={() => router.back()}>
             Annuler
           </Button>
-          <Button type="submit" disabled={isLoading || loadingCategories}>
+          <Button 
+            type="submit" 
+            disabled={isLoading || loadingCategories || formData.categoryIds.length === 0 || categories.length === 0}
+          >
             {isLoading ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                 Création...
+              </>
+            ) : categories.length === 0 ? (
+              <>
+                <Save className="h-4 w-4 mr-2" />
+                Créez d&apos;abord une catégorie
               </>
             ) : (
               <>
@@ -308,7 +363,7 @@ export default function AddProductPage() {
             <div className="text-sm text-gray-700 space-y-2">
               <p><strong>Catégories chargées:</strong> {categories.length}</p>
               <p><strong>Image URL:</strong> {formData.image || 'Aucune'}</p>
-              <p><strong>Category ID sélectionné:</strong> {formData.categoryId || 'Aucun'}</p>
+              <p><strong>Category ID sélectionné:</strong> {formData.categoryIds.length > 0 ? formData.categoryIds[0] : 'Aucun'}</p>
             </div>
           </CardContent>
         </Card>

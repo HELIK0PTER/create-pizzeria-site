@@ -2,7 +2,7 @@
 import React from 'react';
 
 import Link from "next/link";
-import { ShoppingCart, Menu, X, Pizza, Heart, LayoutDashboard, ChevronDown } from "lucide-react";
+import { ShoppingCart, Menu, X, Pizza, Heart, LayoutDashboard, ChevronDown, Package, Users, Bell, Settings, Plus, List, UtensilsCrossed } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useCart, usePromotionSettings } from "@/store/cart";
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
 import { usePathname } from "next/navigation";
 import ScrollingBanner from "@/components/layout/ScrollingBanner"
 import { variables } from "@/settings/config";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 
 function BaseHeader() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -290,28 +290,59 @@ export function AdminHeader() {
     {
       name: "Produits",
       href: "/admin/products",
-      active: currentPath.startsWith("/admin/products"),
+      active: currentPath.startsWith("/admin/products") || currentPath.startsWith("/admin/menus"),
       children: [
-        { name: "Gérer les produits", href: "/admin/products", active: isActive("/admin/products") },
-        { name: "Ajouter un produit", href: "/admin/products/add", active: isActive("/admin/products/add") },
-        { name: "Gérer les menus", href: "/admin/menus", active: isActive("/admin/menus") },
-        { name: "Ajouter un menu", href: "/admin/menus/add", active: isActive("/admin/menus/add") },
+        { 
+          name: "Gérer les produits & menus", 
+          href: "/admin/products", 
+          active: isActive("/admin/products") || isActive("/admin/menus"),
+          icon: Package,
+          description: "Voir et modifier tous les produits et menus",
+          badge: "Gestion"
+        },
+        { 
+          name: "Gérer les catégories", 
+          href: "/admin/categories", 
+          active: isActive("/admin/categories"),
+          icon: List,
+          description: "Voir et modifier les catégories",
+          badge: "Gestion"
+        },
+        { 
+          name: "Ajouter un produit", 
+          href: "/admin/products/add", 
+          active: isActive("/admin/products/add"),
+          icon: Plus,
+          description: "Créer un nouveau produit",
+          badge: "Nouveau"
+        },
+        { 
+          name: "Ajouter un menu", 
+          href: "/admin/menus/add", 
+          active: isActive("/admin/menus/add"),
+          icon: UtensilsCrossed,
+          description: "Créer un nouveau menu",
+          badge: "Créer"
+        },
       ]
     },
     {
       name: "Utilisateurs",
       href: "/admin/users",
       active: currentPath.startsWith("/admin/users"),
+      icon: Users
     },
     {
       name: "Notifications",
       href: "/admin/notifications",
       active: currentPath.startsWith("/admin/notifications"),
+      icon: Bell
     },
     {
       name: "Infos",
       href: "/admin/infos",
       active: currentPath.startsWith("/admin/infos"),
+      icon: Settings
     },
   ];
 
@@ -336,36 +367,82 @@ export function AdminHeader() {
                     <Button
                       variant="ghost"
                       className={cn(
-                        "px-4 py-2 text-sm font-medium transition-colors hover:text-orange-600",
-                        item.active && "bg-orange-50 text-orange-600"
+                        "px-4 py-2 text-sm font-medium transition-all duration-200 hover:text-orange-600 hover:bg-orange-50/50 group",
+                        item.active && "bg-orange-50 text-orange-600 shadow-sm"
                       )}
                     >
-                      {item.name} <ChevronDown className="ml-2 h-4 w-4" />
+                      <Package className="mr-2 h-4 w-4 group-hover:scale-110 transition-transform" />
+                      {item.name} 
+                      <ChevronDown className="ml-2 h-4 w-4 transition-transform group-hover:rotate-180" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-56">
-                    {item.children.map((child) => (
-                      <DropdownMenuItem key={child.name} asChild>
-                        <Link href={child.href} className={cn(
-                          "block w-full text-left px-2 py-1.5 text-sm rounded-sm transition-colors duration-200 cursor-pointer",
-                          "hover:bg-orange-50 hover:text-orange-600",
-                          child.active && child.href === '/admin/products' ? "bg-orange-50 font-medium" : "",
-                          child.active && child.href !== '/admin/products' && "font-medium"
-                        )}>
-                          {child.name}
-                        </Link>
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
+                                     <DropdownMenuContent className="w-72 p-1.5 bg-white/95 backdrop-blur-sm border-orange-100 shadow-xl">
+                     <div className="grid gap-0.5">
+                       {item.children.map((child, index) => (
+                         <React.Fragment key={child.name}>
+                           <DropdownMenuItem asChild className="p-0">
+                             <Link href={child.href} className={cn(
+                               "flex items-center gap-2.5 p-2 rounded-md transition-all duration-200 cursor-pointer group",
+                               "hover:bg-gradient-to-r hover:from-orange-50 hover:to-red-50 hover:shadow-sm",
+                               child.active && "bg-gradient-to-r from-orange-50 to-red-50 shadow-sm border border-orange-200"
+                             )}>
+                               <div className={cn(
+                                 "p-1.5 rounded-md transition-all duration-200",
+                                 child.active 
+                                   ? "bg-orange-100 text-orange-600" 
+                                   : "bg-gray-100 text-gray-600 group-hover:bg-orange-100 group-hover:text-orange-600"
+                               )}>
+                                 {child.icon && <child.icon className="h-3.5 w-3.5" />}
+                               </div>
+                               <div className="flex-1 min-w-0">
+                                 <div className="flex items-center gap-1.5">
+                                   <span className={cn(
+                                     "text-xs font-medium transition-colors",
+                                     child.active ? "text-orange-600" : "text-gray-900 group-hover:text-orange-600"
+                                   )}>
+                                     {child.name}
+                                   </span>
+                                   {child.badge && (
+                                     <Badge variant="secondary" className={cn(
+                                       "text-xs px-1.5 py-0.5",
+                                       child.active 
+                                         ? "bg-orange-200 text-orange-700" 
+                                         : "bg-gray-200 text-gray-600 group-hover:bg-orange-200 group-hover:text-orange-700"
+                                     )}>
+                                       {child.badge}
+                                     </Badge>
+                                   )}
+                                 </div>
+                                 {child.description && (
+                                   <p className="text-xs text-gray-500 mt-0.5 group-hover:text-gray-600">
+                                     {child.description}
+                                   </p>
+                                 )}
+                               </div>
+                               {child.active && (
+                                 <div className="flex items-center">
+                                   <div className="w-1.5 h-1.5 bg-orange-500 rounded-full animate-pulse" />
+                                 </div>
+                               )}
+                             </Link>
+                           </DropdownMenuItem>
+                           {index < item.children.length - 1 && (
+                             <DropdownMenuSeparator className="my-0.5 bg-gray-100" />
+                           )}
+                         </React.Fragment>
+                       ))}
+                     </div>
+                   </DropdownMenuContent>
                 </DropdownMenu>
               ) : (
                 <Link
                   href={item.href}
                   className={cn(
-                    "group relative px-4 py-2 text-sm font-medium transition-colors hover:text-orange-600",
-                    item.active && "bg-orange-50 text-orange-600"
+                    "group relative px-4 py-2 text-sm font-medium transition-all duration-200 hover:text-orange-600 hover:bg-orange-50/50 flex items-center gap-2",
+                    item.active && "bg-orange-50 text-orange-600 shadow-sm"
                   )}
                 >
+                  {item.icon && <item.icon className="h-4 w-4 group-hover:scale-110 transition-transform" />}
                   {item.name}
                   {item.active && (
                     <div className="absolute bottom-0 left-1/2 h-0.5 w-6 -translate-x-1/2 bg-orange-600 rounded-full" />
@@ -402,47 +479,99 @@ export function AdminHeader() {
                   <Button
                     variant="ghost"
                     className={cn(
-                      "w-full justify-between text-left px-4 py-3 text-sm font-medium transition-colors hover:text-orange-600",
-                      item.active && "bg-orange-50 text-orange-600"
+                      "w-full justify-between text-left px-4 py-3 text-sm font-medium transition-all duration-200 hover:text-orange-600 hover:bg-orange-50/50",
+                      item.active && "bg-orange-50 text-orange-600 shadow-sm"
                     )}
                     onClick={() => toggleDropdown(item.name)}
                   >
-                    {item.name} 
+                    <div className="flex items-center gap-2">
+                      <Package className="h-4 w-4" />
+                      {item.name}
+                    </div>
                     <ChevronDown className={cn(
                       "ml-2 h-4 w-4 transition-transform duration-200",
                       openDropdowns[item.name] ? "rotate-180" : "rotate-0"
                     )} />
                   </Button>
                   <div className={cn(
-                    "ml-4 border-l pl-4 space-y-1 overflow-hidden transition-all duration-300",
-                    openDropdowns[item.name] ? "max-h-48 opacity-100 py-2" : "max-h-0 opacity-0 py-0"
+                    "ml-4 border-l-2 border-orange-200 pl-4 space-y-2 overflow-hidden transition-all duration-300",
+                    openDropdowns[item.name] ? "max-h-96 opacity-100 py-2" : "max-h-0 opacity-0 py-0"
                   )}>
-                    {item.children.map((child) => (
-                      <Link
-                        key={child.name}
-                        href={child.href}
-                        className={cn(
-                          "block px-4 py-2 text-sm font-medium transition-colors hover:text-orange-600",
-                          child.active && "text-orange-600 font-medium"
-                        )}
-                        onClick={() => setIsMenuOpen(false)}
-                      >
-                        {child.name}
-                      </Link>
-                    ))}
+                                         {item.children.map((child) => (
+                       <Link
+                         key={child.name}
+                         href={child.href}
+                         className={cn(
+                           "flex items-center gap-2.5 px-3 py-2.5 rounded-md text-sm font-medium transition-all duration-200",
+                           "hover:bg-gradient-to-r hover:from-orange-50 hover:to-red-50 hover:shadow-sm",
+                           child.active && "bg-gradient-to-r from-orange-50 to-red-50 shadow-sm border border-orange-200"
+                         )}
+                         onClick={() => setIsMenuOpen(false)}
+                       >
+                         <div className={cn(
+                           "p-1 rounded-md transition-all duration-200",
+                           child.active 
+                             ? "bg-orange-100 text-orange-600" 
+                             : "bg-gray-100 text-gray-600"
+                         )}>
+                           {child.icon && <child.icon className="h-3 w-3" />}
+                         </div>
+                         <div className="flex-1">
+                           <div className="flex items-center gap-1.5">
+                             <span className={cn(
+                               "text-xs font-medium",
+                               child.active ? "text-orange-600" : "text-gray-900"
+                             )}>
+                               {child.name}
+                             </span>
+                             {child.badge && (
+                               <Badge variant="secondary" className={cn(
+                                 "text-xs px-1.5 py-0.5",
+                                 child.active 
+                                   ? "bg-orange-200 text-orange-700" 
+                                   : "bg-gray-200 text-gray-600"
+                               )}>
+                                 {child.badge}
+                               </Badge>
+                             )}
+                           </div>
+                           {child.description && (
+                             <p className="text-xs text-gray-500 mt-0.5">
+                               {child.description}
+                             </p>
+                           )}
+                         </div>
+                         {child.active && (
+                           <div className="w-1.5 h-1.5 bg-orange-500 rounded-full animate-pulse" />
+                         )}
+                       </Link>
+                     ))}
                   </div>
                 </>
               ) : (
                 <Link
                   href={item.href}
                   className={cn(
-                    "block px-4 py-3 text-sm font-medium rounded-lg transition-colors duration-200",
-                    "hover:bg-orange-50 hover:text-orange-600",
-                    item.active && "bg-orange-50 text-orange-600"
+                    "flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200",
+                    "hover:bg-gradient-to-r hover:from-orange-50 hover:to-red-50 hover:shadow-sm",
+                    item.active && "bg-gradient-to-r from-orange-50 to-red-50 shadow-sm border border-orange-200"
                   )}
                   onClick={() => setIsMenuOpen(false)}
                 >
+                  {item.icon && (
+                    <div className={cn(
+                      "p-1.5 rounded-md transition-all duration-200",
+                      item.active 
+                        ? "bg-orange-100 text-orange-600" 
+                        : "bg-gray-100 text-gray-600"
+                    )}>
+                      <item.icon className="h-3 w-3" />
+                    </div>
+                  )}
                   {item.name}
+                  {item.active && (
+                    <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse ml-auto" />
+                  )}
                 </Link>
               )}
             </React.Fragment>

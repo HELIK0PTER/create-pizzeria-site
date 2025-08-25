@@ -142,7 +142,10 @@ export async function PUT(
     if (slug !== undefined) updateData.slug = slug
     if (description !== undefined) updateData.description = description
     if (image !== undefined) updateData.image = image
-    if (categoryId !== undefined) updateData.category = { connect: { id: categoryId } }
+    if (categoryId !== undefined) {
+      const categoryIdNumber = parseInt(categoryId.toString())
+      updateData.category = { connect: { id: categoryIdNumber } }
+    }
     if (price !== undefined) updateData.price = price
     if (ingredients !== undefined) updateData.ingredients = ingredients
     if (allergens !== undefined) updateData.allergens = allergens
@@ -182,6 +185,76 @@ export async function PUT(
     return NextResponse.json(updatedProduct)
   } catch (error) {
     console.error('Error updating product:', error)
+    return NextResponse.json(
+      { error: 'Erreur lors de la mise à jour du produit' },
+      { status: 500 }
+    )
+  }
+}
+
+// PATCH /api/products/[id] - Mettre à jour partiellement un produit
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params
+    const body = await request.json()
+    const { categoryId } = body
+
+    // Vérifier que le produit existe
+    const existingProduct = await prisma.product.findUnique({
+      where: { id }
+    })
+
+    if (!existingProduct) {
+      return NextResponse.json(
+        { error: 'Produit non trouvé' },
+        { status: 404 }
+      )
+    }
+
+    // Vérifier que la catégorie existe si categoryId est fourni
+    if (categoryId !== undefined) {
+      const categoryIdNumber = parseInt(categoryId.toString())
+      if (isNaN(categoryIdNumber)) {
+        return NextResponse.json(
+          { error: 'ID de catégorie invalide' },
+          { status: 400 }
+        )
+      }
+
+      const category = await prisma.category.findUnique({
+        where: { id: categoryIdNumber }
+      })
+
+      if (!category) {
+        return NextResponse.json(
+          { error: 'Catégorie non trouvée' },
+          { status: 400 }
+        )
+      }
+    }
+
+    // Créer un objet de données à mettre à jour
+    const updateData: UpdateProductData = {}
+    if (categoryId !== undefined) {
+      const categoryIdNumber = parseInt(categoryId.toString())
+      updateData.category = { connect: { id: categoryIdNumber } }
+    }
+
+    // Mettre à jour le produit
+    const updatedProduct = await prisma.product.update({
+      where: { id },
+      data: updateData,
+      include: {
+        category: true
+      }
+    })
+
+    return NextResponse.json(updatedProduct)
+  } catch (error) {
+    console.error('Error patching product:', error)
     return NextResponse.json(
       { error: 'Erreur lors de la mise à jour du produit' },
       { status: 500 }

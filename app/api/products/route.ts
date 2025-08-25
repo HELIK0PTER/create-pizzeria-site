@@ -1,40 +1,20 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { Prisma } from '@prisma/client'
+
 import { requireAdminAPI } from '@/lib/auth-helpers'
 
-export async function GET(request: Request) {
+export async function GET() {
   try {
-    const { searchParams } = new URL(request.url)
-    const categoryId = parseInt(searchParams.get('categoryId') || '0')
-    const categorySlug = searchParams.get('category')
-    const limitParam = searchParams.get('limit')
-    const limit = limitParam ? parseInt(limitParam) : undefined
-
-    const where: Prisma.ProductWhereInput = {}
-
-    // Support pour categoryId (pour compatibilité avec page menu)
-    if (categoryId) {
-      where.categoryId = categoryId
-    }
-
-    // Support pour category slug (pour page d'accueil)
-    if (categorySlug) {
-      where.category = {
-        slug: categorySlug
-      }
-    }
-
     const products = await prisma.product.findMany({
-      where,
       include: {
         category: true,
         variants: {
           orderBy: { price: 'asc' }
         }
       },
-      orderBy: { createdAt: 'desc' },
-      ...(limit && { take: limit })
+      orderBy: {
+        name: 'asc'
+      }
     })
 
     return NextResponse.json(products)
@@ -63,6 +43,7 @@ export async function POST(request: Request) {
       description,
       image,
       categoryId,
+      categoryIds,
       price,
       ingredients,
       allergens,
@@ -70,9 +51,19 @@ export async function POST(request: Request) {
     } = body
 
     // Validation des champs requis
-    if (!name || !slug || !description || !categoryId || !price) {
+    if (!name || !slug || !description || !price) {
       return NextResponse.json(
-        { error: 'Les champs nom, slug, description, catégorie et prix sont requis' },
+        { error: 'Les champs nom, slug, description et prix sont requis' },
+        { status: 400 }
+      )
+    }
+
+    // Gérer les catégories (support pour l'ancien format categoryId et le nouveau categoryIds)
+    const selectedCategoryIds = categoryIds || (categoryId ? [categoryId] : [])
+    
+    if (selectedCategoryIds.length === 0) {
+      return NextResponse.json(
+        { error: 'Veuillez sélectionner au moins une catégorie' },
         { status: 400 }
       )
     }
@@ -89,17 +80,20 @@ export async function POST(request: Request) {
       )
     }
 
-    // Vérifier que la catégorie existe
-    const category = await prisma.category.findUnique({
-      where: { id: categoryId }
+    // Vérifier que toutes les catégories existent
+    const categories = await prisma.category.findMany({
+      where: { id: { in: selectedCategoryIds } }
     })
 
-    if (!category) {
+    if (categories.length !== selectedCategoryIds.length) {
       return NextResponse.json(
-        { error: 'Catégorie non trouvée' },
+        { error: 'Une ou plusieurs catégories sélectionnées n\'existent pas' },
         { status: 400 }
       )
     }
+
+    // Utiliser la première catégorie comme catégorie principale (pour la compatibilité avec le schéma actuel)
+    const primaryCategoryId = selectedCategoryIds[0]
 
     // Créer le produit
     const newProduct = await prisma.product.create({
@@ -108,7 +102,7 @@ export async function POST(request: Request) {
         slug,
         description,
         image: image || null, // L'image peut être nulle
-        categoryId,
+        categoryId: primaryCategoryId,
         price: parseFloat(price),
         ingredients: ingredients || null,
         allergens: allergens || null,
